@@ -1,6 +1,6 @@
 abstract type Lens end
 
-function update(f, l::Lens, obj)
+@inline function update(f, l::Lens, obj)
     old_val = get(l, obj)
     new_val = f(old_val)
     set(l, obj, new_val)
@@ -49,7 +49,7 @@ end
 
 compose(l::Lens) = l
 compose(l1::Lens, l2 ::Lens) = ComposedLens(l1, l2)
-compose(l::Lens, ls::Lens...) = compose(l, compose(ls))
+compose(l::Lens, ls::Lens...) = compose(l, compose(ls...))
 
 struct IndexLens{I} <: Lens
     indices::I
@@ -59,7 +59,7 @@ IndexLens(indices...) = IndexLens(indices)
 get(l::IndexLens, obj) = getindex(obj, l.indices...)
 set(l::IndexLens, obj, val) = setindex(obj, val, l.indices...)
 # hack
-setindex(obj, val, inds...) = (setindex!(obj, val, inds...); obj)
+# setindex(obj, val, inds...) = (setindex!(obj, val, inds...); obj)
 # TODO setindex for tuple?
 
 import Base: ∘

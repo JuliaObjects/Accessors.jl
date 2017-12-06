@@ -51,6 +51,29 @@ function destruct_deepfieldref(ex)
     a, tuple(middle..., last)
 end
 
+parse_obj_lenses(obj::Symbol) = esc(obj), ()
+
+function parse_obj_lenses(ex::Expr)
+    @assert ex.head isa Symbol
+    @assert length(ex.args) == 2
+    if Meta.isexpr(ex, :ref)
+        index = esc(ex.args[2])
+        lens = :(IndexLens($index))
+    elseif Meta.isexpr(ex, :(.))
+        field = ex.args[2]
+        lens = :(FieldLens{$field}())
+    end
+    obj, lenses_tail = parse_obj_lenses(ex.args[1])
+    lenses = tuple(lens, lenses_tail...)
+    obj, lenses
+end
+
+function parse_obj_lens(ex::Expr)
+    obj, lenses = parse_obj_lenses(ex)
+    lens = Expr(:call, :compose, lenses...)
+    obj, lens
+end
+
 const UPDATE_OPERATOR_TABLE = Dict(
 :(+=) => +,
 :(-=) => -,
@@ -63,23 +86,21 @@ struct _UpdateOp{OP,V}
 end
 (u::_UpdateOp)(x) = u.op(x, u.val)
 
-struct _UpdateConst{C}
-    val::C
-end
-(u::_UpdateConst)(_) = u.val
-
 function atset_impl(ex::Expr)
     @assert ex.head isa Symbol
     @assert length(ex.args) == 2
     ref, val = ex.args
-    obj, path = destruct_deepfieldref(ref)
-    obj = esc(obj); val = esc(val)
-    if ex.head == :(=)
-        f = :(_UpdateConst($val))
+    obj, lens = parse_obj_lens(ref)
+    val = esc(val)
+    ret = if ex.head == :(=)
+        quote
+            lens = $lens
+            $obj = set(lens, $obj, $val)
+        end
     else
         op = UPDATE_OPERATOR_TABLE[ex.head]
         f = :(_UpdateOp($op,$val))
+        :($obj = update($f, $lens, $obj))
     end
-    lens = mapreduce(FieldLens, compose, reverse(path))
-    :($obj = update($f, $lens, $obj))
+    ret
 end
