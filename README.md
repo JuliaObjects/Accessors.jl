@@ -6,17 +6,20 @@
 Update deeply nested immutable structs.
 
 ## Usage
-```julia
-struct T
-    a
-    b
-end
+```juliarepl
+julia> using Setfield
 
-t = T(1,1)
-@set t.a = 5
-# T(5, 1)
+julia> struct T;a;b end
 
-t = T(1, T(2, T(3,3)))
-@set t.b.b.a = 42
-# T(1, T(2, T(42,3)))
+julia> t = T(1,2)
+T(1, 2)
+
+julia> @set t.a = 5
+T(5, 2)
+
+julia> @set t.a = T(2,2)
+T(T(2, 2), 2)
+
+julia> @set t.a.b = 3
+T(T(2, 3), 2)
 ```
