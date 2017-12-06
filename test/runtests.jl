@@ -12,7 +12,7 @@ end
     @test_throws ArgumentError @set t.c = 3
 
     t = T(T(2,2), 1)
-    @set t.a.a=3
+    @set t.a.a = 3
     @test t === T(T(3, 2), 1)
         
     t = T(1, T(2, T(T(4,4),3)))
@@ -22,4 +22,16 @@ end
     @set t.b.b.a.a = 5
     @test t === T(1, T(2, T(T(5, 4), 3)))
     @test_throws ArgumentError @set t.b.b.a.a.a = 3
+
+    t = T(1,2)
+    @set t.a += 1
+    @test t === T(2,2)
+
+    t = T(1,2)
+    @set t.b -= 2
+    @test t === T(1,0)
+
+    t = T(10, 20)
+    @set t.a *= 10
+    @test t === T(100, 20)
 end
