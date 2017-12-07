@@ -9,6 +9,8 @@ A `Lens` allows to access or replace deeply nested parts of complicated objects.
 
 # Example
 ```jldoctest
+julia> using Setfield
+
 julia> struct T;a;b; end
 
 julia> t = T("AA", "BB")
@@ -40,7 +42,7 @@ These must be pure functions, that satisfy the three lens laws:
 * `set(lens, obj, get(lens, obj)) == obj` (Setting what was already there changes nothing.)
 * `set(lens, set(lens, obj, val1), val2) == set(lens, obj, val2)` (The last set wins.)
 
-See also [`@lens`](@ref), [`set`](@ref), [`get`](@ref)`, [`update`](@ref).
+See also [`@lens`](@ref), [`set`](@ref), [`get`](@ref), [`update`](@ref).
 """
 abstract type Lens end
 

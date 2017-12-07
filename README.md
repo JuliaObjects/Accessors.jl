@@ -32,10 +32,10 @@ ERROR: type Person is immutable
 ```
 Oh right, the struct is immutable, so we have to do:
 ```julia
-julia> SpaceShipt(Person("JULIA", s.captain.age), s.velocity, s.position)
+julia> SpaceShip(Person("JULIA", s.captain.age), s.velocity, s.position)
 SpaceShip(Person(:JULIA, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 ```
-This is messy and things get worse, if the structs are deeper. `Setfields` to the rescue!
+This is messy and things get worse, if the structs are bigger. `Setfields` to the rescue!
 
 ```julia
 julia> using Setfield

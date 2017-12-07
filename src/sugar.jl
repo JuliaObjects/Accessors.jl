@@ -1,4 +1,5 @@
 export @set, @lens
+
 """
     @set assignment
 
@@ -89,6 +90,8 @@ Construct a lens from a field access.
 # Example
 
 ```jldoctest
+julia> using Setfield
+
 julia> struct T;a;b;end
 
 julia> t = T("A1", T(T("A3", "B3"), "B2"))
