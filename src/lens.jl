@@ -1,6 +1,11 @@
 abstract type Lens end
 
 export Lens, set, get, update
+import Base: get, setindex
+
+struct IdentityLens <: Lens end
+set(::IdentityLens, obj, val) = val
+get(::IdentityLens, obj) = obj
 
 @inline function update(f, l::Lens, obj)
     old_val = get(l, obj)
@@ -11,7 +16,6 @@ end
 struct FieldLens{fieldname} <: Lens end
 FieldLens(s::Symbol) = FieldLens{s}()
 
-import Base.get
 @generated function get(l::FieldLens{field}, obj) where {field}
     @assert field isa Symbol
     assert_hasfield(obj, field)
@@ -49,9 +53,28 @@ struct ComposedLens{L1, L2} <: Lens
     lens2::L2
 end
 
+compose() = IdentityLens()
 compose(l::Lens) = l
+compose(::IdentityLens, ::IdentityLens) = IdentityLens()
+compose(::IdentityLens, l::Lens) = l
+compose(l::Lens, ::IdentityLens) = l
 compose(l1::Lens, l2 ::Lens) = ComposedLens(l1, l2)
-compose(l::Lens, ls::Lens...) = compose(l, compose(ls...))
+function compose(ls::Lens...)
+    # We can build .a.b.c as (.a.b).c or .a.(b.c)
+    # The compiler prefers (.a.b).c
+    compose(compose(Base.front(ls)...), last(ls))
+end
+
+function get(l::ComposedLens, obj)
+    inner_obj = get(l.lens2, obj)
+    get(l.lens1, inner_obj)
+end
+
+function set(l::ComposedLens, obj, val)
+    inner_obj = get(l.lens2, obj)
+    inner_val = set(l.lens1, inner_obj, val)
+    set(l.lens2, obj, inner_val)
+end
 
 struct IndexLens{I} <: Lens
     indices::I
@@ -67,17 +90,6 @@ if Pkg.installed("StaticArrays") != nothing
     Base.setindex(arr::StaticArrays.StaticArray, args...) = StaticArrays.setindex(arr,args...)
 end
 
-
-function get(l::ComposedLens, obj)
-    inner_obj = get(l.lens2, obj)
-    get(l.lens1, inner_obj)
-end
-
-function set(l::ComposedLens, obj, val)
-    inner_obj = get(l.lens2, obj)
-    inner_val = set(l.lens1, inner_obj, val)
-    set(l.lens2, obj, inner_val)
-end
 
 struct Focused{O, L <: Lens}
     object::O

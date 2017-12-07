@@ -42,7 +42,7 @@ function parse_obj_lenses(ex::Expr)
     obj, lenses
 end
 
-function parse_obj_lens(ex::Expr)
+function parse_obj_lens(ex)
     obj, lenses = parse_obj_lenses(ex)
     lens = Expr(:call, :compose, lenses...)
     obj, lens
@@ -95,6 +95,8 @@ end
 
 print_application(io::IO, l::FieldLens{field}) where {field} = print(io, ".", field)
 print_application(io::IO, l::IndexLens) = print(io, "[", join(l.indices, ", "), "]")
+print_application(io::IO, l::IdentityLens) = print(io, "")
+
 function print_application(io::IO, l::ComposedLens)
     print_application(io, l.lens2)
     print_application(io, l.lens1)
@@ -107,7 +109,7 @@ function Base.show(io::IO, l::Lens)
 end
 
 function show_generic(io::IO, args...)
-    types = map(typeof, tuple(io, args...))
+    types = tuple(typeof(io), Base.Iterators.repeated(Any, length(args))...)
     Types = Tuple{types...}
     invoke(show, Types, io, args...)
 end

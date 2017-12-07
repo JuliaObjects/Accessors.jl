@@ -70,9 +70,11 @@ end
             @lens _.a
             @lens _[1]
             @lens _.a.b[2]
+            @lens _
             @focus obj[1]
             @focus obj.a
             @focus obj[1].a[i].b
+            @focus obj
         ]
         buf = IOBuffer()
         show(buf, item)
@@ -112,6 +114,7 @@ end
             @lens _.b
             @lens _.b.a
             @lens _.b.a.b[2]
+            @lens _
         ]
         val1, val2 = randn(2)
         f(x) = (x,x)
