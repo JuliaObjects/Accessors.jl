@@ -45,22 +45,27 @@ end
 
 end
 
-struct SpaceShip
+struct Person
     name::Symbol
+    birthyear::Int
+end
+
+struct SpaceShip
+    captain::Person
     velocity::SVector{3, Float64}
     position::SVector{3, Float64}
 end
 
 @testset "SpaceShip" begin
     s = SpaceShip(
-                  "julia",
+                  Person("julia", 2009),
                   [0,0,0],
                   [0,0,0]
                  )
-    @set s.name = "JULIA"
+    @set s.captain.name = "JULIA"
     @set s.velocity[1] += 10
     @set s.position[2]  = 20
-    @test s === SpaceShip("JULIA", [10.0, 0.0, 0.0], [0.0, 20.0, 0.0])
+    @test s === SpaceShip(Person("JULIA", 2009), [10.0, 0.0, 0.0], [0.0, 20.0, 0.0])
 end
 
 @testset "show it like you build it " begin

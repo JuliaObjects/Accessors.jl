@@ -1,12 +1,70 @@
-abstract type Lens end
-
 export Lens, set, get, update
+
 import Base: get, setindex
 
+"""
+    Lens
+
+A `Lens` allows to access or replace deeply nested parts of complicated objects.
+
+# Example
+```jldoctest
+julia> struct T;a;b; end
+
+julia> t = T("AA", "BB")
+T("AA", "BB")
+
+julia> l = @lens _.a
+(@lens _.a)
+
+julia> get(l, t)
+"AA"
+
+julia> set(l, t, 2)
+T(2, "BB")
+
+julia> t
+T("AA", "BB")
+
+julia> update(lowercase, l, t)
+T("aa", "BB")
+```
+
+# Interface
+Concrete subtypes of `Lens` have to implement
+* `set(lens, obj, val)`
+* `get(lens, obj)`
+
+These must be pure functions, that satisfy the three lens laws:
+* `get(lens, set(lens, obj, val)) == val` (You get what you set.)
+* `set(lens, obj, get(lens, obj)) == obj` (Setting what was already there changes nothing.)
+* `set(lens, set(lens, obj, val1), val2) == set(lens, obj, val2)` (The last set wins.)
+
+See also [`@lens`](@ref), [`set`](@ref), [`get`](@ref)`, [`update`](@ref).
+"""
+abstract type Lens end
+
 struct IdentityLens <: Lens end
-set(::IdentityLens, obj, val) = val
+
+"""
+    get(l::Lens, obj)
+
+Access a deeply nested part of `obj`. See also [`Lens`](@ref).
+"""
 get(::IdentityLens, obj) = obj
 
+"""
+    set(l::Lens, obj, val)
+
+Replace a deeply nested part of `obj` by `val`. See also [`Lens`](@ref).
+"""
+set(::IdentityLens, obj, val) = val
+
+"""
+    update(f, l::Lens, obj)
+
+Replace a deeply nested part `x` of `obj` by `f(x)`. See also [`Lens`](@ref).
+"""
 @inline function update(f, l::Lens, obj)
     old_val = get(l, obj)
     new_val = f(old_val)
@@ -83,13 +141,6 @@ IndexLens(indices...) = IndexLens(indices)
 
 get(l::IndexLens, obj) = getindex(obj, l.indices...)
 set(l::IndexLens, obj, val) = Base.setindex(obj, val, l.indices...)
-
-# hack to support static arrays
-if Pkg.installed("StaticArrays") != nothing
-    import StaticArrays
-    Base.setindex(arr::StaticArrays.StaticArray, args...) = StaticArrays.setindex(arr,args...)
-end
-
 
 struct Focused{O, L <: Lens}
     object::O

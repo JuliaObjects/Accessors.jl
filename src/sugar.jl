@@ -2,7 +2,9 @@ export @set, @lens, @focus
 """
     @set assignment
 
-Update deeply nested fields of an immutable object.
+Update deeply nested parts of an immutable object.
+
+# Example
 ```jldoctest
 julia> using Setfield
 
@@ -79,6 +81,36 @@ function atset_impl(ex::Expr)
     ret
 end
 
+"""
+    @lens
+
+Construct a lens from a field access.
+
+# Example
+
+```jldoctest
+julia> struct T;a;b;end
+
+julia> t = T("A1", T(T("A3", "B3"), "B2"))
+T("A1", T(T("A3", "B3"), "B2"))
+
+julia> l = @lens _.b.a.b
+(@lens _.b.a.b)
+
+julia> get(l, t)
+"B3"
+
+julia> set(l, t, 100)
+T("A1", T(T("A3", 100), "B2"))
+
+julia> t = ("one", "two")
+("one", "two")
+
+julia> set((@lens _[1]), t, "1")
+("1", "two")
+```
+
+"""
 macro lens(ex)
     obj, lens = parse_obj_lens(ex)
     lens
