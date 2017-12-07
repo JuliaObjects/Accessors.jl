@@ -25,32 +25,6 @@ macro set(ex)
     atset_impl(ex)
 end
 
-function unquote(ex::QuoteNode)
-    ex.value
-end
-function unquote(ex::Expr)
-    @assert Meta.isexpr(ex, :quote)
-    @assert length(ex.args) == 1
-    first(ex.args)
-end
-
-function destruct_fieldref(ex)
-    @assert Meta.isexpr(ex, Symbol("."))
-    @assert length(ex.args) == 2
-    a, qb = ex.args
-    a, unquote(qb)
-end
-
-function destruct_deepfieldref(s::Symbol)
-    s, ()
-end
-    
-function destruct_deepfieldref(ex)
-    front, last = destruct_fieldref(ex)
-    a, middle = destruct_deepfieldref(front)
-    a, tuple(middle..., last)
-end
-
 parse_obj_lenses(obj::Symbol) = esc(obj), ()
 
 function parse_obj_lenses(ex::Expr)
