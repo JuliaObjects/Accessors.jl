@@ -6,20 +6,49 @@
 Update deeply nested immutable structs.
 
 ## Usage
-```juliarepl
+
+Say we have a deeply nested struct:
+```julia
+julia> using StaticArrays
+
+julia> struct Person
+           name::Symbol
+           birthyear::Int
+       end
+
+julia> struct SpaceShip
+           captain::Person
+           velocity::SVector{3, Float64}
+           position::SVector{3, Float64}
+       end
+
+julia> s = SpaceShip(Person(:julia, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+SpaceShip(Person(:julia, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+```
+Lets update the captains name:
+```julia
+julia> s.captain.name = "JULIA"
+ERROR: type Person is immutable
+```
+Oh right, the struct is immutable, so we have to do:
+```julia
+julia> SpaceShipt(Person("JULIA", s.captain.age), s.velocity, s.position)
+SpaceShip(Person(:JULIA, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+```
+This is messy and things get worse, if the structs are deeper. `Setfields` to the rescue!
+
+```julia
 julia> using Setfield
 
-julia> struct T;a;b end
+julia> @set s.captain.name = "JULIA"
+SpaceShip(Person(:JULIA, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 
-julia> t = T(1,2)
-T(1, 2)
+julia> @set s.velocity[1] += 999999
+SpaceShip(Person(:JULIA, 2009), [999999.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 
-julia> @set t.a = 5
-T(5, 2)
+julia> @set s.velocity[1] += 999999
+SpaceShip(Person(:JULIA, 2009), [2.0e6, 0.0, 0.0], [0.0, 0.0, 0.0])
 
-julia> @set t.a = T(2,2)
-T(T(2, 2), 2)
-
-julia> @set t.a.b = 3
-T(T(2, 3), 2)
+julia> @set s.position[2] = 20
+SpaceShip(Person(:JULIA, 2009), [2.0e6, 0.0, 0.0], [0.0, 20.0, 0.0])
 ```
