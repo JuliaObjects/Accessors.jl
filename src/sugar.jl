@@ -1,4 +1,4 @@
-export @set, @lens, @focus
+export @set, @lens
 """
     @set assignment
 

@@ -1,4 +1,5 @@
 using Setfield
+import Setfield: @focus
 using Base.Test
 using StaticArrays
 
