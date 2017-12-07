@@ -1,5 +1,7 @@
 abstract type Lens end
 
+export Lens, set, get, update
+
 @inline function update(f, l::Lens, obj)
     old_val = get(l, obj)
     new_val = f(old_val)
@@ -65,10 +67,6 @@ if Pkg.installed("StaticArrays") != nothing
     Base.setindex(arr::StaticArrays.StaticArray, args...) = StaticArrays.setindex(arr,args...)
 end
 
-import Base: ∘
-function ∘(l1::Lens, l2::Lens)
-    compose(l1,l2)
-end
 
 function get(l::ComposedLens, obj)
     inner_obj = get(l.lens2, obj)
@@ -80,3 +78,12 @@ function set(l::ComposedLens, obj, val)
     inner_val = set(l.lens1, inner_obj, val)
     set(l.lens2, obj, inner_val)
 end
+
+struct Focused{O, L <: Lens}
+    object::O
+    lens::L
+end
+
+update(f, foc::Focused) = update(f, foc.lens, foc.object)
+set(foc::Focused, val) = set(foc.lens, foc.object, val)
+get(foc::Focused) = get(foc.lens, foc.object)

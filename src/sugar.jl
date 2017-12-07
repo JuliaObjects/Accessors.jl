@@ -1,4 +1,4 @@
-export @set
+export @set, @lens, @focus
 """
     @set assignment
 
@@ -29,11 +29,11 @@ parse_obj_lenses(obj::Symbol) = esc(obj), ()
 
 function parse_obj_lenses(ex::Expr)
     @assert ex.head isa Symbol
-    @assert length(ex.args) == 2
     if Meta.isexpr(ex, :ref)
-        index = esc(ex.args[2])
-        lens = :(IndexLens($index))
+        index = map(esc, ex.args[2:end])
+        lens = Expr(:call, :IndexLens, index...)
     elseif Meta.isexpr(ex, :(.))
+        @assert length(ex.args) == 2
         field = ex.args[2]
         lens = :(FieldLens{$field}())
     end
@@ -78,3 +78,37 @@ function atset_impl(ex::Expr)
     end
     ret
 end
+
+macro lens(ex)
+    obj, lens = parse_obj_lens(ex)
+    lens
+end
+
+macro focus(ex)
+    obj, lens = parse_obj_lens(ex)
+    quote
+        object = $obj
+        lens = $lens
+        Focused(object, lens)
+    end
+end
+
+print_application(io::IO, l::FieldLens{field}) where {field} = print(io, ".", field)
+print_application(io::IO, l::IndexLens) = print(io, "[", join(l.indices, ", "), "]")
+function print_application(io::IO, l::ComposedLens)
+    print_application(io, l.lens2)
+    print_application(io, l.lens1)
+end
+
+function Base.show(io::IO, l::Lens)
+    print(io, "(@lens _")
+    print_application(io, l)
+    print(io, ')')
+end
+
+function show_generic(io::IO, args...)
+    types = map(typeof, tuple(io, args...))
+    Types = Tuple{types...}
+    invoke(show, Types, io, args...)
+end
+show_generic(args...) = show_generic(STDOUT, args...)
