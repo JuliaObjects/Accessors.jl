@@ -38,6 +38,11 @@ end
     @set t.a *= 10
     @test t === T(100, 20)
 
+    t = T((1,2),(3,4))
+    @set t.a[1] = 10
+    @test t === T((10,2),(3,4))
+    @set t.a[3] = 10
+
 end
 
 struct SpaceShip

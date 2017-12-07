@@ -57,10 +57,13 @@ end
 IndexLens(indices...) = IndexLens(indices)
 
 get(l::IndexLens, obj) = getindex(obj, l.indices...)
-set(l::IndexLens, obj, val) = setindex(obj, val, l.indices...)
-# hack
-# setindex(obj, val, inds...) = (setindex!(obj, val, inds...); obj)
-# TODO setindex for tuple?
+set(l::IndexLens, obj, val) = Base.setindex(obj, val, l.indices...)
+
+# hack to support static arrays
+if Pkg.installed("StaticArrays") != nothing
+    import StaticArrays
+    Base.setindex(arr::StaticArrays.StaticArray, args...) = StaticArrays.setindex(arr,args...)
+end
 
 import Base: ∘
 function ∘(l1::Lens, l2::Lens)
