@@ -151,3 +151,30 @@ end
     @test_broken set(l, obj, 5) == @SMatrix [1 2; 5 4]
     @test_broken setindex(obj, 5, 2, 1) == @SMatrix [1 2; 5 4]
 end
+
+mutable struct M
+    a
+    b
+end
+
+@testset "Mutability" begin
+    v_init = [1,2,3]
+    v = v_init
+    @set v[1] = 2
+    @test v_init[1] == 2
+    @test v === v_init
+    m_init = M(1,2)
+    m = m_init
+    @set m.a = 10
+    @test m_init.a == 10
+    @test m === m_init
+
+    # composition only mutates the innermost
+    m_inner_init = M(1,2)
+    m_init = M(m_inner_init, 2)
+    m = m_init
+    @set m.a.a = 2
+    @test m.a.a == 2
+    @test m === m_init
+    @test m.a === m_inner_init
+end
