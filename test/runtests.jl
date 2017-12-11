@@ -105,12 +105,12 @@ function test_getset_laws(lens, obj, val1, val2)
     @test obj12 == obj2
 end
 
-function test_update_law(f, lens, obj)
-    obj_update = update(f, lens, obj)
+function test_modify_law(f, lens, obj)
+    obj_modify = modify(f, lens, obj)
     old_val = get(lens, obj)
     val = f(old_val)
     obj_setfget = set(lens, obj, val)
-    @test obj_update == obj_setfget
+    @test obj_modify == obj_setfget
 end
 
 @testset "lens laws" begin
@@ -125,7 +125,7 @@ end
         val1, val2 = randn(2)
         f(x) = (x,x)
         test_getset_laws(lens, obj, val1, val2)
-        test_update_law(f, lens, obj)
+        test_modify_law(f, lens, obj)
     end
 end
 

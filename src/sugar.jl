@@ -72,12 +72,12 @@ function atset_impl(ex::Expr)
     ret = if ex.head == :(=)
         quote
             lens = $lens
-            $obj = set(lens, $obj, $val)
+            $obj = set(lens, $obj, $val, EncourageMutation())
         end
     else
         op = UPDATE_OPERATOR_TABLE[ex.head]
         f = :(_UpdateOp($op,$val))
-        :($obj = update($f, $lens, $obj))
+        :($obj = modify($f, $lens, $obj, EncourageMutation()))
     end
     ret
 end
