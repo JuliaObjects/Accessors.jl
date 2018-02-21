@@ -52,3 +52,50 @@ SpaceShip(Person(:JULIA, 2009), [2.0e6, 0.0, 0.0], [0.0, 0.0, 0.0])
 julia> @set s.position[2] = 20
 SpaceShip(Person(:JULIA, 2009), [2.0e6, 0.0, 0.0], [0.0, 20.0, 0.0])
 ```
+
+## Under the hood
+
+Under the hood this package implements a simple [lens](https://hackage.haskell.org/package/lens) api.
+This api may be useful in its own rite and works as follows:
+
+```julia
+julia> using Setfield
+julia> l = @lens _.a.b
+(@lens _.a.b)
+
+julia> struct AB;a;b;end
+
+julia> obj = AB(AB(1,2),3)
+AB(AB(1, 2), 3)
+
+julia> set(l, obj, 42)
+AB(AB(1, 42), 3)
+
+julia> obj
+AB(AB(1, 2), 3)
+
+julia> get(l, obj)
+2
+
+julia> modify(x->10x,l, obj)
+AB(AB(1, 20), 3)
+```
+
+Now the `@set` macro simply provides sugar for creating a `lens` and applying it.
+For instance
+```julia
+@set obj.a.b = 42
+```
+expands roughly to
+```julia
+l = @lens _.a.b
+set(l, obj, 42)
+```
+
+## Alternatives
+
+### [Recostructables.jl](https://github.com/tkf/Reconstructables.jl)
+
+[Reconstructables.jl](https://github.com/tkf/Reconstructables.jl) requires
+keyword only constructors, while this package does not. 
+Also there are no type stability issues and good performance with this package.
