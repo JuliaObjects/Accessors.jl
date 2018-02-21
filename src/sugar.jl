@@ -33,16 +33,25 @@ parse_obj_lenses(obj::Symbol) = esc(obj), ()
 function parse_obj_lenses(ex::Expr)
     @assert ex.head isa Symbol
     if Meta.isexpr(ex, :ref)
-        index = map(esc, ex.args[2:end])
-        lens = Expr(:call, :IndexLens, index...)
+        lens = parse_indexlens(ex)
     elseif Meta.isexpr(ex, :(.))
-        @assert length(ex.args) == 2
-        field = ex.args[2]
-        lens = :(FieldLens{$field}())
+        lens = parse_fieldlens(ex)
     end
     obj, lenses_tail = parse_obj_lenses(ex.args[1])
     lenses = tuple(lens, lenses_tail...)
     obj, lenses
+end
+
+function parse_indexlens(ex)
+    index = map(esc, ex.args[2:end])
+    Expr(:call, :IndexLens,
+        Expr(:tuple, index...))
+end
+
+function parse_fieldlens(ex)
+    @assert length(ex.args) == 2
+    field = ex.args[2]
+    :(FieldLens{$field}())
 end
 
 function parse_obj_lens(ex)
@@ -55,6 +64,7 @@ const UPDATE_OPERATOR_TABLE = Dict(
 :(+=) => +,
 :(-=) => -,
 :(*=) => *,
+:(/=) => /,
 )
 
 struct _UpdateOp{OP,V}

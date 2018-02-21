@@ -39,10 +39,20 @@ end
     @set t.a *= 10
     @test t === T(100, 20)
 
+    t = T(2,1)
+    @set t.a /= 2
+    @test t === T(1.0,1)
+
     t = T((1,2),(3,4))
     @set t.a[1] = 10
     @test t === T((10,2),(3,4))
     @set t.a[3] = 10
+
+    v = randn(3)
+    @set v[:] = 1
+    @test v == [1,1,1.]
+    @set v[2:3] = 4
+    @test v == [1,4,4]
 
 end
 
@@ -150,6 +160,9 @@ end
     @test get(l, obj) == 3
     @test_broken set(l, obj, 5) == @SMatrix [1 2; 5 4]
     @test_broken setindex(obj, 5, 2, 1) == @SMatrix [1 2; 5 4]
+
+    l = @lens _[1:3]
+    @test get(l, [4,5,6,7]) == [4,5,6]
 end
 
 mutable struct M

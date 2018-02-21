@@ -147,10 +147,9 @@ function set(l::ComposedLens, obj, val, m::MutationPolicy)
     set(l.lens2, obj, inner_val, m)
 end
 
-struct IndexLens{I} <: Lens
+struct IndexLens{I <: Tuple} <: Lens
     indices::I
 end
-IndexLens(indices...) = IndexLens(indices)
 
 get(l::IndexLens, obj) = getindex(obj, l.indices...)
 set(l::IndexLens, obj, val, ::ForbidMutation) = Base.setindex(obj, val, l.indices...)
