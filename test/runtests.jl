@@ -194,6 +194,20 @@ end
     @test m.a === m_inner_init
 end
 
+# https://github.com/tkf/Reconstructables.jl#how-to-use-type-parameters
+struct B{T, X, Y}
+    x::X
+    y::Y
+    B{T}(x::X, y::Y = 2) where {T, X, Y} = new{T, X, Y}(x, y)
+end
+Setfield.constructor_of(::Type{<: B{T}}) where T = B{T}
+
+@testset "type change during @set" begin
+    obj = B{1}(2,3)
+    obj2 = @set obj.y = :three
+    @test obj2 === B{1}(2, :three)
+end
+
 @static if Pkg.installed("StaticArrays") != nothing
     using StaticArrays
     obj = StaticArrays.@SMatrix [1 2; 3 4]
