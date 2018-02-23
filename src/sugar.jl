@@ -17,7 +17,10 @@ T(1, 2)
 julia> @set t.a = 5
 T(5, 2)
 
-julia> @set t.a = T(2,2)
+julia> t
+T(1, 2)
+
+julia> t = @set t.a = T(2,2)
 T(T(2, 2), 2)
 
 julia> @set t.a.b = 3
@@ -36,6 +39,10 @@ function parse_obj_lenses(ex::Expr)
         lens = parse_indexlens(ex)
     elseif Meta.isexpr(ex, :(.))
         lens = parse_fieldlens(ex)
+    else
+        obj = esc(ex)
+        lenses = ()
+        return obj, lenses
     end
     obj, lenses_tail = parse_obj_lenses(ex.args[1])
     lenses = tuple(lens, lenses_tail...)
@@ -82,12 +89,12 @@ function atset_impl(ex::Expr)
     ret = if ex.head == :(=)
         quote
             lens = $lens
-            $obj = set(lens, $obj, $val, EncourageMutation())
+            set(lens, $obj, $val, EncourageMutation())
         end
     else
         op = UPDATE_OPERATOR_TABLE[ex.head]
         f = :(_UpdateOp($op,$val))
-        :($obj = modify($f, $lens, $obj, EncourageMutation()))
+        :(modify($f, $lens, $obj, EncourageMutation()))
     end
     ret
 end
@@ -126,6 +133,10 @@ julia> set((@lens _[1]), t, "1")
 """
 macro lens(ex)
     obj, lens = parse_obj_lens(ex)
+    if obj != esc(:_)
+        msg = """Cannot parse lens $ex. Lens expressions must start with @lens _"""
+        throw(ArgumentError(msg))
+    end
     lens
 end
 

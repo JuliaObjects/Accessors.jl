@@ -11,8 +11,9 @@ end
 @testset "@set" begin
 
     t = T(1, T(2, T(T(4,4),3)))
-    @set t.b.b.a.a = 5
-    @test t === T(1, T(2, T(T(5, 4), 3)))
+    s = @set t.b.b.a.a = 5
+    @test t === T(1, T(2, T(T(4,4),3)))
+    @test s === T(1, T(2, T(T(5, 4), 3)))
     @test_throws ArgumentError @set t.b.b.a.a.a = 3
 
     t = T(1,2)
@@ -20,40 +21,42 @@ end
     @test_throws ArgumentError @set t.c = 3
 
     t = T(T(2,2), 1)
-    @set t.a.a = 3
-    @test t === T(T(3, 2), 1)
+    s = @set t.a.a = 3
+    @test s === T(T(3, 2), 1)
 
     t = T(1, T(2, T(T(4,4),3)))
-    @set t.b.b = 4
-    @test t === T(1, T(2, 4))
+    s = @set t.b.b = 4
+    @test s === T(1, T(2, 4))
 
     t = T(1,2)
-    @set t.a += 1
-    @test t === T(2,2)
+    s = @set t.a += 1
+    @test s === T(2,2)
 
     t = T(1,2)
-    @set t.b -= 2
-    @test t === T(1,0)
+    s = @set t.b -= 2
+    @test s === T(1,0)
 
     t = T(10, 20)
-    @set t.a *= 10
-    @test t === T(100, 20)
+    s = @set t.a *= 10
+    @test s === T(100, 20)
 
     t = T(2,1)
-    @set t.a /= 2
-    @test t === T(1.0,1)
+    s = @set t.a /= 2
+    @test s === T(1.0,1)
 
     t = T((1,2),(3,4))
-    @set t.a[1] = 10
-    @test t === T((10,2),(3,4))
+    s = @set t.a[1] = 10
+    @test s === T((10,2),(3,4))
     @set t.a[3] = 10
 
     v = randn(3)
-    @set v[:] = 1
-    @test v == [1,1,1.]
-    @set v[2:3] = 4
-    @test v == [1,4,4]
+    s = @set v[:] = 1
+    @test s == [1,1,1.]
+    s = @set s[2:3] = 4
+    @test s == [1,4,4]
 
+    t = @set T(1,2).a = 2
+    @test t === T(2,2)
 end
 
 struct Person
@@ -73,9 +76,9 @@ end
                   [0,0,0],
                   [0,0,0]
                  )
-    @set s.captain.name = "JULIA"
-    @set s.velocity[1] += 10
-    @set s.position[2]  = 20
+    s = @set s.captain.name = "JULIA"
+    s = @set s.velocity[1] += 10
+    s = @set s.position[2]  = 20
     @test s === SpaceShip(Person("JULIA", 2009), [10.0, 0.0, 0.0], [0.0, 20.0, 0.0])
 end
 

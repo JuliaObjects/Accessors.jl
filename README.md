@@ -40,13 +40,13 @@ This is messy and things get worse, if the structs are bigger. `Setfields` to th
 ```julia
 julia> using Setfield
 
-julia> @set s.captain.name = "JULIA"
+julia> s = @set s.captain.name = "JULIA"
 SpaceShip(Person(:JULIA, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 
-julia> @set s.velocity[1] += 999999
+julia> s = @set s.velocity[1] += 999999
 SpaceShip(Person(:JULIA, 2009), [999999.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 
-julia> @set s.velocity[1] += 999999
+julia> s = @set s.velocity[1] += 999999
 SpaceShip(Person(:JULIA, 2009), [2.0e6, 0.0, 0.0], [0.0, 0.0, 0.0])
 
 julia> @set s.position[2] = 20
