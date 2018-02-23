@@ -84,21 +84,11 @@ struct IdentityLens <: Lens end
 get(::IdentityLens, obj) = obj
 set(::IdentityLens, obj, val,::MutationPolicy) = val
 
-struct FieldLens{fieldname} <: Lens end
-FieldLens(s::Symbol) = FieldLens{s}()
+struct PropertyLens{fieldname} <: Lens end
+PropertyLens(s::Symbol) = PropertyLens{s}()
 
-function get(l::FieldLens{field}, obj) where {field}
-    getfield(obj,field)
-end
-
-function set_field_lens_impl(T, field)
-    args = map(fieldnames(T)) do fn
-        fn == field ? :val : :(obj.$fn)
-    end
-    Expr(:block,
-        Expr(:meta, :inline),
-        Expr(:call, T, args...)
-    )
+function get(l::PropertyLens{field}, obj) where {field}
+    getproperty(obj,field)
 end
 
 function assert_hasfield(T, field)
@@ -108,14 +98,37 @@ function assert_hasfield(T, field)
     end
 end
 
-@generated function set(l::FieldLens{field}, obj, val, m::MutationPolicy) where {field}
-    @assert field isa Symbol
-    assert_hasfield(obj, field)
-    if obj.mutable && (m == EncourageMutation)
-        :(obj.$field=val; obj)
+
+@generated function set(l::PropertyLens{field}, obj, val, m::MutationPolicy) where {field}
+    T = obj
+    M = m
+    if T.mutable && (M == EncourageMutation)
+        :(setproperty!(obj, field, val); obj)
     else
-        set_field_lens_impl(obj, field)
+        :(setproperty(obj, Val{field}(), val))
     end
+end
+
+# function setproperty(obj, name, val)
+#     props_new = properties_patched(obj, name, val)
+#     @show name
+#     ret = constructor_of(typeof(obj))(props_new...)
+#     @show ret
+#     ret
+# end
+
+constructor_of(::Type{T}) where {T} = T
+
+@generated function setproperty(obj, ::Val{name}, val) where {name}
+    T = obj
+    assert_hasfield(T, name)
+    args = map(fieldnames(T)) do fn
+        fn == name ? :val : Expr(:call, :getproperty, :obj, QuoteNode(fn))
+    end
+    Expr(:block,
+        Expr(:meta, :inline),
+        Expr(:call, :(constructor_of($T)), args...)
+    )
 end
 
 struct ComposedLens{L1, L2} <: Lens

@@ -58,7 +58,7 @@ end
 function parse_fieldlens(ex)
     @assert length(ex.args) == 2
     field = ex.args[2]
-    :(FieldLens{$field}())
+    :(PropertyLens{$field}())
 end
 
 function parse_obj_lens(ex)
@@ -149,7 +149,7 @@ macro focus(ex)
     end
 end
 
-print_application(io::IO, l::FieldLens{field}) where {field} = print(io, ".", field)
+print_application(io::IO, l::PropertyLens{field}) where {field} = print(io, ".", field)
 print_application(io::IO, l::IndexLens) = print(io, "[", join(l.indices, ", "), "]")
 print_application(io::IO, l::IdentityLens) = print(io, "")
 
