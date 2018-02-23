@@ -1,7 +1,6 @@
 using Setfield
 import Setfield: @focus
 using Base.Test
-using StaticArrays
 
 struct T
     a
@@ -64,28 +63,6 @@ end
     @test t === T(2,2)
 end
 
-struct Person
-    name::Symbol
-    birthyear::Int
-end
-
-struct SpaceShip
-    captain::Person
-    velocity::SVector{3, Float64}
-    position::SVector{3, Float64}
-end
-
-@testset "SpaceShip" begin
-    s = SpaceShip(
-                  Person("julia", 2009),
-                  [0,0,0],
-                  [0,0,0]
-                 )
-    s = @set s.captain.name = "JULIA"
-    s = @set s.velocity[1] += 10
-    s = @set s.position[2]  = 20
-    @test s === SpaceShip(Person("JULIA", 2009), [10.0, 0.0, 0.0], [0.0, 20.0, 0.0])
-end
 
 @testset "show it like you build it " begin
     obj = T(1,2)
@@ -148,17 +125,25 @@ end
 end
 
 @testset "type stability" begin
-    obj = TT(2, TT(TT(3,(4,4)), 2))
-    for lens ∈ [
-            @lens _.a
-            @lens _.b
-            @lens _.b.a
-            @lens _.b.a.b[2]
-            @lens _
+    o1 = 2
+    o22 = 2
+    o212 = (4,4)
+    o211 = 3
+    o21 = TT(o211, o212)
+    o2 = TT(o21, o22)
+    obj = TT(o1, o2)
+    @assert obj === TT(2, TT(TT(3,(4,4)), 2))
+    for (lens, val) ∈ [
+          ((@lens _.a           ),   o1 ),
+          ((@lens _.b           ),   o2 ),
+          ((@lens _.b.a         ),   o21),
+          ((@lens _.b.a.b[2]    ),   4  ),
+          ((@lens _             ),   obj),
         ]
         @inferred get(lens, obj)
+        @inferred set(lens, obj, val)
+        @inferred modify(identity, lens, obj)
     end
-
 end
 
 @testset "IndexLens" begin
@@ -177,11 +162,6 @@ end
     @test get(l, obj) == 1
     @test set(l, obj, 6) == (6,2,3)
 
-    obj = @SMatrix [1 2; 3 4]
-    l = @lens _[2,1]
-    @test get(l, obj) == 3
-    @test_broken set(l, obj, 5) == @SMatrix [1 2; 5 4]
-    @test_broken setindex(obj, 5, 2, 1) == @SMatrix [1 2; 5 4]
 
     l = @lens _[1:3]
     @test get(l, [4,5,6,7]) == [4,5,6]
@@ -212,4 +192,14 @@ end
     @test m.a.a == 2
     @test m === m_init
     @test m.a === m_inner_init
+end
+
+@static if Pkg.installed("StaticArrays") != nothing
+    using StaticArrays
+    obj = StaticArrays.@SMatrix [1 2; 3 4]
+    l = @lens _[2,1]
+    @test get(l, obj) == 3
+    @test_broken set(l, obj, 5) == StaticArrays.@SMatrix [1 2; 5 4]
+    @test_broken setindex(obj, 5, 2, 1) == StaticArrays.@SMatrix [1 2; 5 4]
+    include("spaceship.jl")
 end

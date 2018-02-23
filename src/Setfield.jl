@@ -9,14 +9,14 @@ if Pkg.installed("StaticArrays") != nothing
 end
 
 if isdefined(Base, :getproperty)
-    nothing
+    using Base: getproperty
 else
     const getproperty = getfield
     # the following breaks type stability:
     # @inline getproperty(obj, name) = getfield(obj, name)
 end
 if isdefined(Base, :setproperty!)
-    nothing
+    using Base: setproperty!
 else
     const setproperty! = setfield!
     # @inline setproperty!(obj, name, val) = setfield!(obj, name, val)
