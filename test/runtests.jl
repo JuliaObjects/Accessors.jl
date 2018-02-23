@@ -8,6 +8,11 @@ struct T
     b
 end
 
+struct TT{A,B}
+    a::A
+    b::B
+end
+
 @testset "@set" begin
 
     t = T(1, T(2, T(T(4,4),3)))
@@ -140,6 +145,20 @@ end
         test_getset_laws(lens, obj, val1, val2)
         test_modify_law(f, lens, obj)
     end
+end
+
+@testset "type stability" begin
+    obj = TT(2, TT(TT(3,(4,4)), 2))
+    for lens ∈ [
+            @lens _.a
+            @lens _.b
+            @lens _.b.a
+            @lens _.b.a.b[2]
+            @lens _
+        ]
+        @inferred get(lens, obj)
+    end
+
 end
 
 @testset "IndexLens" begin

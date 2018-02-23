@@ -50,14 +50,30 @@ See also [`@lens`](@ref), [`set`](@ref), [`get`](@ref), [`modify`](@ref).
 """
 abstract type Lens end
 
-set(l::Lens, obj, val) = set(l,obj,val,ForbidMutation())
-modify(f,l::Lens, obj) = modify(f, l,obj,ForbidMutation())
-
 """
     modify(f, l::Lens, obj)
 
 Replace a deeply nested part `x` of `obj` by `f(x)`. See also [`Lens`](@ref).
 """
+function modify end
+
+
+"""
+    get(l::Lens, obj)
+
+Access a deeply nested part of `obj`. See also [`Lens`](@ref).
+"""
+function get end
+
+"""
+    set(l::Lens, obj, val)
+
+Replace a deeply nested part of `obj` by `val`. See also [`Lens`](@ref).
+"""
+function set end
+
+set(l::Lens, obj, val) = set(l,obj,val,ForbidMutation())
+modify(f,l::Lens, obj) = modify(f, l,obj,ForbidMutation())
 @inline function modify(f, l::Lens, obj, m::MutationPolicy)
     old_val = get(l, obj)
     new_val = f(old_val)
@@ -65,31 +81,14 @@ Replace a deeply nested part `x` of `obj` by `f(x)`. See also [`Lens`](@ref).
 end
 
 struct IdentityLens <: Lens end
-
-"""
-    get(l::Lens, obj)
-
-Access a deeply nested part of `obj`. See also [`Lens`](@ref).
-"""
 get(::IdentityLens, obj) = obj
-
-"""
-    set(l::Lens, obj, val)
-
-Replace a deeply nested part of `obj` by `val`. See also [`Lens`](@ref).
-"""
 set(::IdentityLens, obj, val,::MutationPolicy) = val
 
 struct FieldLens{fieldname} <: Lens end
 FieldLens(s::Symbol) = FieldLens{s}()
 
-@generated function get(l::FieldLens{field}, obj) where {field}
-    @assert field isa Symbol
-    assert_hasfield(obj, field)
-    Expr(:block,
-        Expr(:meta, :inline),
-        :(obj.$field)
-    )
+function get(l::FieldLens{field}, obj) where {field}
+    getfield(obj,field)
 end
 
 function set_field_lens_impl(T, field)
