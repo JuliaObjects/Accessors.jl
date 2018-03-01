@@ -24,4 +24,6 @@ end
 
 include("lens.jl")
 include("sugar.jl")
+include("macrotools.jl")
+include("settable.jl")
 end
