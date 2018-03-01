@@ -2,6 +2,9 @@ using Setfield
 import Setfield: @focus
 using Base.Test
 
+include("test_macrotools.jl")
+include("test_settable.jl")
+
 struct T
     a
     b
@@ -146,6 +149,7 @@ end
           ((@lens _.b.a.b[2]    ),   4  ),
           ((@lens _.b.a.b[i+1]  ),   4  ),
           ((@lens _             ),   obj),
+          ((@lens _             ),   :xy),
         ]
         @inferred get(lens, obj)
         @inferred set(lens, obj, val)
