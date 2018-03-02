@@ -1,4 +1,7 @@
 using MacroTools
+
+const STRUCTSYMBOL = VERSION < v"0.7-" ? :type : :struct
+
 function parse_error(ex)
     throw(ArgumentError("Cannot parse typedefinition from $ex."))
 end
@@ -45,6 +48,7 @@ function splittypedef(ex)
     d
 end
 
+
 function combinetypedef(d)
     name = d[:name]
     parameters = d[:params]
@@ -58,7 +62,8 @@ function combinetypedef(d)
         $(fields...)
         $(d[:constructors]...)
     end
-    Expr(:type, d[:mutable], header, body)
+
+    Expr(STRUCTSYMBOL, d[:mutable], header, body)
 end
 
 function combinefield(x)
