@@ -4,6 +4,7 @@
 @settable struct NoConstructor{A,B}
     b::B
 end
+Setfield.constructor_of(::Type{T}) where {T <: NoConstructor} = T
 
 @testset "NoConstructor" begin
     s1 = NoConstructor{:a,Int}(1)
@@ -17,6 +18,7 @@ end
     b::B
     ExplicitConstructor{A,B}(b::B) where {A,B} = new{A,B}(b)
 end
+Setfield.constructor_of(::Type{T}) where {T <: ExplicitConstructor} = T
 
 @testset "ExplicitConstructor" begin
     s1 = ExplicitConstructor{:a,Int}(1)
@@ -36,6 +38,7 @@ end
         return new{A,B}(a, b)
     end
 end
+Setfield.constructor_of(::Type{T}) where {T <: TypedConstructor} = T
 
 @testset "TypedConstructor" begin
     s1 = TypedConstructor{Int,Int}(1)
@@ -54,7 +57,6 @@ end
         return new{A,B}(a, b)
     end
 end
-Setfield.constructor_of(::Type{<: UntypedConstructor}) = UntypedConstructor
 
 @testset "UntypedConstructor" begin
     s1 = UntypedConstructor(1, 0)
