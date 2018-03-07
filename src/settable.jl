@@ -16,6 +16,25 @@ function argsymbol(ex::Expr)::Symbol
     end
 end
 
+"""
+    strip_default_value(s::Symbol)
+    strip_default_value(ex::Expr)
+
+Strip-off the value part when `ex` is a key-value expression.
+It is an identity function for `Symbol`.
+"""
+strip_default_value(s::Symbol) = s
+
+function strip_default_value(ex::Expr)
+    arg = if isexpr(ex, :kw)
+        ex.args[1]
+    else
+        ex
+    end
+    @assert arg isa Symbol || isexpr(arg, :(::))
+    return arg
+end
+
 function has_posonly_constructor(dtype::Dict)
     fields = map(first, dtype[:fields])
     for constructor in dtype[:constructors]
@@ -35,11 +54,11 @@ function posonly_constructor_dict(dtype::Dict)
         kwargs = map(argsymbol, def[:kwargs])
         if fields[1:length(args)] == args &&
                 Set(fields[length(args)+1:end]) <= Set(kwargs)
-            newargs = copy(def[:args])
+            newargs = map(strip_default_value, def[:args])
             newkwargs = []
             for a in def[:kwargs]
                 if argsymbol(a) in fields
-                    push!(newargs, a)
+                    push!(newargs, strip_default_value(a))
                 else
                     push!(newkwargs, a)
                 end
