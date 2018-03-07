@@ -62,3 +62,23 @@ Setfield.constructor_of(::Type{<: UntypedConstructor}) = UntypedConstructor
     @test s2 === UntypedConstructor(1, b=-2)
     @test_throws AssertionError @set s1.b = 2
 end
+
+# @settable must (1) choose a correct constructor for generating
+# positional-only constructor and (2) do so without overriding
+# existing constructor.
+# https://github.com/jw3126/Setfield.jl/pull/18#discussion_r172649307
+@settable struct ManyConstructors
+    a
+    b
+    ManyConstructors(a; b=2) = new(a, b)
+    ManyConstructors(a) = new(a, 1)  # must not be overridden
+end
+
+@testset "ManyConstructors" begin
+    # The single-argument constructor must be the one defined by user.
+    @test ManyConstructors(0) === ManyConstructors(0, b=1)
+
+    s1 = ManyConstructors(0)
+    s2 = @set s1.b = -2
+    @test s2 === ManyConstructors(0, b=-2)
+end
