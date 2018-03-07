@@ -82,3 +82,21 @@ end
     s2 = @set s1.b = -2
     @test s2 === ManyConstructors(0, b=-2)
 end
+
+# Mimic @add_kwonly from Reconstructables.jl and DiffEqBase.jl.
+@settable struct WithKwOnly
+    a
+    b
+    WithKwOnly(a; b=2) = new(a, b)
+    WithKwOnly(; a=error("`a` is mandatory"), b=2) = new(a, b)
+end
+
+@testset "WithKwOnly" begin
+    # Keyword-only constructor works:
+    @test WithKwOnly(0) === WithKwOnly(a=0)
+    @test_throws ErrorException WithKwOnly()
+
+    s1 = WithKwOnly(0)
+    s2 = @set s1.b = -2
+    @test s2 === WithKwOnly(0, b=-2)
+end
