@@ -198,6 +198,17 @@ end
     @test m.a === m_inner_init
 end
 
+struct A{X, Y}
+    x::X
+    y::Y
+end
+
+@testset "type change during @set (default constructor_of)" begin
+    obj = A(2,3)
+    obj2 = @set obj.y = :three
+    @test obj2 === A(2, :three)
+end
+
 # https://github.com/tkf/Reconstructables.jl#how-to-use-type-parameters
 struct B{T, X, Y}
     x::X
@@ -206,7 +217,7 @@ struct B{T, X, Y}
 end
 Setfield.constructor_of(::Type{<: B{T}}) where T = B{T}
 
-@testset "type change during @set" begin
+@testset "type change during @set (custom constructor_of)" begin
     obj = B{1}(2,3)
     obj2 = @set obj.y = :three
     @test obj2 === B{1}(2, :three)
