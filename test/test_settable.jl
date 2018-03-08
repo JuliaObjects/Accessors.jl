@@ -86,11 +86,17 @@ end
 end
 
 # Mimic @add_kwonly from Reconstructables.jl and DiffEqBase.jl.
+macro kwonly()
+    esc(quote
+        WithKwOnly(a; b=2) = new(a, b)
+        WithKwOnly(; a=error("`a` is mandatory"), b=2) = new(a, b)
+        end)
+end
+
 @settable struct WithKwOnly
     a
     b
-    WithKwOnly(a; b=2) = new(a, b)
-    WithKwOnly(; a=error("`a` is mandatory"), b=2) = new(a, b)
+    @kwonly
 end
 
 @testset "WithKwOnly" begin
