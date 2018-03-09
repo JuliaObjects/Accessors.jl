@@ -1,4 +1,5 @@
 export @set, @lens
+using MacroTools
 
 """
     @set assignment
@@ -31,39 +32,24 @@ macro set(ex)
     atset_impl(ex)
 end
 
-parse_obj_lenses(obj::Symbol) = esc(obj), ()
-
-function parse_obj_lenses(ex::Expr)
-    @assert ex.head isa Symbol
-    if Meta.isexpr(ex, :ref)
-        lens = parse_indexlens(ex)
-    elseif Meta.isexpr(ex, :(.))
-        lens = parse_fieldlens(ex)
+function parse_obj_lenses(ex)
+    if @capture(ex, front_[indices__])
+        obj, frontlens = parse_obj_lenses(front)
+        index = esc(Expr(:tuple, indices...))
+        lens = :(IndexLens($index))
+    elseif @capture(ex, front_.property_)
+        obj, frontlens = parse_obj_lenses(front)
+        lens = :(PropertyLens{$(QuoteNode(property))}())
     else
         obj = esc(ex)
-        lenses = ()
-        return obj, lenses
+        return obj, ()
     end
-    obj, lenses_tail = parse_obj_lenses(ex.args[1])
-    lenses = tuple(lens, lenses_tail...)
-    obj, lenses
-end
-
-function parse_indexlens(ex)
-    index = map(esc, ex.args[2:end])
-    Expr(:call, :IndexLens,
-        Expr(:tuple, index...))
-end
-
-function parse_fieldlens(ex)
-    @assert length(ex.args) == 2
-    field = ex.args[2]
-    :(PropertyLens{$field}())
+    obj, tuple(frontlens..., lens)
 end
 
 function parse_obj_lens(ex)
     obj, lenses = parse_obj_lenses(ex)
-    lens = Expr(:call, :compose, lenses...)
+    lens = Expr(:call, :compose, reverse(lenses)...)
     obj, lens
 end
 

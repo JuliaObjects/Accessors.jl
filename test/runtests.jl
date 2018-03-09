@@ -49,9 +49,12 @@ end
     @test s === T(1.0,1)
 
     t = T((1,2),(3,4))
-    s = @set t.a[1] = 10
-    @test s === T((10,2),(3,4))
-    @set t.a[3] = 10
+    @set t.a[1] = 10
+    s1 = @set t.a[1] = 10
+    @test s1 === T((10,2),(3,4))
+    i = 1
+    si = @set t.a[i] = 10
+    @test s1 === si
 
     v = randn(3)
     s = @set v[:] = 1
@@ -110,11 +113,13 @@ end
 
 @testset "lens laws" begin
     obj = T(2, T(T(3,(4,4)), 2))
+    i = 2
     for lens ∈ [
             @lens _.a
             @lens _.b
             @lens _.b.a
             @lens _.b.a.b[2]
+            @lens _.b.a.b[i]
             @lens _
         ]
         val1, val2 = randn(2)
@@ -133,11 +138,13 @@ end
     o2 = TT(o21, o22)
     obj = TT(o1, o2)
     @assert obj === TT(2, TT(TT(3,(4,4)), 2))
+    i = 1
     for (lens, val) ∈ [
           ((@lens _.a           ),   o1 ),
           ((@lens _.b           ),   o2 ),
           ((@lens _.b.a         ),   o21),
           ((@lens _.b.a.b[2]    ),   4  ),
+          ((@lens _.b.a.b[i+1]  ),   4  ),
           ((@lens _             ),   obj),
         ]
         @inferred get(lens, obj)
