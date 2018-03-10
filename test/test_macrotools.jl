@@ -34,11 +34,13 @@ using Setfield: splittypedef, combinetypedef
         ex |> Base.remove_linenums!
 
     ex = :(struct S{A} <: Foo; S(a::A) where {A} = new{A}() end)
-    @test ex |> splittypedef |> combinetypedef |> Base.remove_linenums! == 
-        ex |> Base.remove_linenums!
+    @test ex |> splittypedef |> combinetypedef |>
+        Base.remove_linenums! |> MacroTools.flatten ==
+        ex |> Base.remove_linenums! |> MacroTools.flatten
 
     constructors = splittypedef(ex)[:constructors]
     @test length(constructors) == 1
-    @test first(constructors) == :((S(a::A) where A) = new{A}())
+    @test first(constructors) ==
+        :((S(a::A) where A) = new{A}()) |> MacroTools.flatten
 
 end

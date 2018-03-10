@@ -6,18 +6,9 @@ function parse_error(ex)
     throw(ArgumentError("Cannot parse typedefinition from $ex."))
 end
 
-function statements(ex)
-    exprs = []
-    if isexpr(ex, :block)
-        append!(exprs, vcat(map(statements, ex.args)...))
-    else
-        push!(exprs, ex)
-    end
-    return exprs
-end
-
 function splittypedef(ex)
     ex = MacroTools.striplines(ex)
+    ex = MacroTools.flatten(ex)
     d = Dict{Symbol, Any}()
     if @capture(ex, struct header_ body__ end)
         d[:mutable] = false
@@ -52,7 +43,7 @@ function splittypedef(ex)
         elseif item isa Symbol
             push!(d[:fields], (item, Any))
         else
-            append!(d[:constructors], statements(item))
+            push!(d[:constructors], item)
         end
     end
     d
