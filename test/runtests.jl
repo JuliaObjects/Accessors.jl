@@ -223,12 +223,7 @@ Setfield.constructor_of(::Type{<: B{T}}) where T = B{T}
     @test obj2 === B{1}(2, :three)
 end
 
-@static if Pkg.installed("StaticArrays") != nothing
-    using StaticArrays
-    obj = StaticArrays.@SMatrix [1 2; 3 4]
-    l = @lens _[2,1]
-    @test get(l, obj) == 3
-    @test_broken set(l, obj, 5) == StaticArrays.@SMatrix [1 2; 5 4]
-    @test_broken setindex(obj, 5, 2, 1) == StaticArrays.@SMatrix [1 2; 5 4]
+if Pkg.installed("StaticArrays") != nothing
+    include("test_staticarrays.jl")
     include("spaceship.jl")
 end
