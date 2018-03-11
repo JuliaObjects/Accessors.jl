@@ -1,3 +1,5 @@
+module TestSetfield
+
 using Setfield
 import Setfield: @focus
 using Base.Test
@@ -227,3 +229,5 @@ if Pkg.installed("StaticArrays") != nothing
     include("test_staticarrays.jl")
     include("spaceship.jl")
 end
+
+end  # module
