@@ -234,4 +234,8 @@ if Pkg.installed("QuickTypes") != nothing
     @testset "QuickTypes" begin include("test_quicktypes.jl") end
 end
 
+if Pkg.installed("Reconstructables") != nothing
+    @testset "KwOnly" begin include("test_kwonly.jl") end
+end
+
 end  # module
