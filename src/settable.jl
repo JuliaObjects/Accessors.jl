@@ -80,10 +80,16 @@ function posonly_constructor(dtype::Dict)
 end
 
 function settable(ex)
-    dtype = splittypedef(ex)
-    isempty(dtype[:constructors]) && return ex
+    is_trivial_struct(ex) && return ex
     M = current_module()
     ex = macroexpand(M, ex)
+    return _settable(ex)
+end
+
+_settable(ex::Expr) = _settable(Val{ex.head}, ex)
+_settable(x) = x
+
+function _settable(::Type{Val{STRUCTSYMBOL}}, ex)
     dtype = splittypedef(ex)
     if has_posonly_constructor(dtype)
         return ex
@@ -92,3 +98,10 @@ function settable(ex)
         return combinetypedef(dtype)
     end
 end
+
+_settable(::Union{Type{Val{:toplevel}},
+                  Type{Val{:block}}},
+          ex) =
+    Expr(ex.head, _settable.(ex.args)...)
+
+_settable(::Type{<: Val}, ex) = ex

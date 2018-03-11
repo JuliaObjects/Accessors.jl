@@ -2,8 +2,13 @@ using MacroTools
 
 const STRUCTSYMBOL = VERSION < v"0.7-" ? :type : :struct
 
+struct ParseError <: Exception
+    msg::String
+end
+Base.showerror(io::IO, ex::ParseError) = print(io, "ParseError: $(ex.msg)")
+
 function parse_error(ex)
-    throw(ArgumentError("Cannot parse typedefinition from $ex."))
+    throw(ParseError("Cannot parse typedefinition from $ex."))
 end
 
 function splittypedef(ex)
@@ -47,6 +52,18 @@ function splittypedef(ex)
         end
     end
     d
+end
+
+
+function is_trivial_struct(ex)
+    try
+        return isempty(splittypedef(ex)[:constructors])
+    catch err
+        if err isa ParseError
+            return false
+        end
+        throw()
+    end
 end
 
 

@@ -230,4 +230,8 @@ if Pkg.installed("StaticArrays") != nothing
     include("spaceship.jl")
 end
 
+if Pkg.installed("QuickTypes") != nothing
+    @testset "QuickTypes" begin include("test_quicktypes.jl") end
+end
+
 end  # module
