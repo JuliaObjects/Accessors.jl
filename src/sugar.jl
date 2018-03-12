@@ -126,15 +126,6 @@ macro lens(ex)
     lens
 end
 
-macro focus(ex)
-    obj, lens = parse_obj_lens(ex)
-    quote
-        object = $obj
-        lens = $lens
-        Focused(object, lens)
-    end
-end
-
 print_application(io::IO, l::PropertyLens{field}) where {field} = print(io, ".", field)
 print_application(io::IO, l::IndexLens) = print(io, "[", join(l.indices, ", "), "]")
 print_application(io::IO, l::IdentityLens) = print(io, "")

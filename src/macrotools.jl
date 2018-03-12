@@ -49,7 +49,6 @@ function splittypedef(ex)
     d
 end
 
-
 function combinetypedef(d)
     name = d[:name]
     parameters = d[:params]

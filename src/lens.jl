@@ -109,14 +109,6 @@ end
     end
 end
 
-# function setproperty(obj, name, val)
-#     props_new = properties_patched(obj, name, val)
-#     @show name
-#     ret = constructor_of(typeof(obj))(props_new...)
-#     @show ret
-#     ret
-# end
-
 @generated constructor_of(::Type{T}) where T =
     getfield(T.name.module, Symbol(T.name.name))
 constructor_of(T::UnionAll) = constructor_of(T.body)
@@ -178,12 +170,3 @@ end
 hassetindex!(obj::AbstractArray) = true
 hassetindex!(obj::Associative) = true
 hassetindex!(obj::Tuple) = false
-
-struct Focused{O, L <: Lens}
-    object::O
-    lens::L
-end
-
-modify(f, foc::Focused) = modify(f, foc.lens, foc.object)
-set(foc::Focused, val) = set(foc.lens, foc.object, val)
-get(foc::Focused) = get(foc.lens, foc.object)

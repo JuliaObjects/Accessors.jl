@@ -4,35 +4,10 @@ macro settable(ex)
     esc(settable(ex))
 end
 
-argsymbol(s::Symbol) = s
-
-function argsymbol(ex::Expr)::Symbol
-    if isexpr(ex, :(::))
-        return argsymbol(ex.args[1])
-    elseif isexpr(ex, :kw)
-        return argsymbol(ex.args[1])
-    else
-        error("Unsupported expression: $(ex)")
-    end
-end
-
-"""
-    strip_default_value(s::Symbol)
-    strip_default_value(ex::Expr)
-
-Strip-off the value part when `ex` is a key-value expression.
-It is an identity function for `Symbol`.
-"""
-strip_default_value(s::Symbol) = s
-
-function strip_default_value(ex::Expr)
-    arg = if isexpr(ex, :kw)
-        ex.args[1]
-    else
-        ex
-    end
-    @assert arg isa Symbol || isexpr(arg, :(::))
-    return arg
+argsymbol(arg) = first(MacroTools.splitarg(arg))
+function argsymbol_typed(arg)
+    name, T, = MacroTools.splitarg(arg)
+    MacroTools.combinearg(name,T,false,nothing)
 end
 
 function has_posonly_constructor(dtype::Dict)
@@ -54,11 +29,11 @@ function posonly_constructor_dict(dtype::Dict)
         kwargs = map(argsymbol, def[:kwargs])
         if fields[1:length(args)] == args &&
                 Set(fields[length(args)+1:end]) <= Set(kwargs)
-            newargs = map(strip_default_value, def[:args])
+            newargs = map(argsymbol_typed, def[:args])
             newkwargs = []
             for a in def[:kwargs]
                 if argsymbol(a) in fields
-                    push!(newargs, strip_default_value(a))
+                    push!(newargs, argsymbol_typed(a))
                 else
                     push!(newkwargs, a)
                 end
