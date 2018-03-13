@@ -85,7 +85,6 @@ get(::IdentityLens, obj) = obj
 set(::IdentityLens, obj, val,::MutationPolicy) = val
 
 struct PropertyLens{fieldname} <: Lens end
-PropertyLens(s::Symbol) = PropertyLens{s}()
 
 function get(l::PropertyLens{field}, obj) where {field}
     getproperty(obj,field)
@@ -97,7 +96,6 @@ function assert_hasfield(T, field)
         throw(ArgumentError(msg))
     end
 end
-
 
 @generated function set(l::PropertyLens{field}, obj, val, m::MutationPolicy) where {field}
     T = obj
@@ -159,13 +157,9 @@ end
 get(l::IndexLens, obj) = getindex(obj, l.indices...)
 set(l::IndexLens, obj, val, ::ForbidMutation) = Base.setindex(obj, val, l.indices...)
 function set(l::IndexLens, obj, val, ::EncourageMutation)
-    if hassetindex!(obj)
+    if applicable(setindex!, obj, val, l.indices)
         setindex!(obj, val, l.indices...)
     else
         set(l, obj, val, ForbidMutation())
     end
 end
-
-hassetindex!(obj::AbstractArray) = true
-hassetindex!(obj::Associative) = true
-hassetindex!(obj::Tuple) = false

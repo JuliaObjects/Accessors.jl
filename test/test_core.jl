@@ -1,3 +1,4 @@
+using Setfield: compose
 struct T
     a
     b
@@ -51,12 +52,6 @@ end
     i = 1
     si = @set t.a[i] = 10
     @test s1 === si
-
-    v = randn(3)
-    @set! v[:] = 1
-    @test v == [1,1,1.]
-    @set! v[2:3] = 4
-    @test v == [1,4,4]
 
     t = @set T(1,2).a = 2
     @test t === T(2,2)
@@ -172,6 +167,17 @@ mutable struct M
     b
 end
 
+@testset "IdentityLens" begin
+    id = @lens _
+    @test compose(id, id) === id
+    obj1 = M(1,1)
+    obj2 = M(2,2)
+    @test obj2 === set(id, obj1, obj2)
+    la = @lens _.a
+    @test compose(id, la) === la
+    @test compose(la, id) === la
+end
+
 @testset "Mutability" begin
 
     @testset "array" begin
@@ -180,6 +186,12 @@ end
         @set! v[1] = 2
         @test v_init[1] == 2
         @test v === v_init
+
+        v = randn(3)
+        @set! v[:] = 1
+        @test v == [1,1,1.]
+        @set! v[2:3] = 4
+        @test v == [1,4,4]
     end
 
     @testset "@set vs @set!" begin
@@ -207,6 +219,10 @@ end
         @test m === m_init
         @test m.a === m_inner_init
     end
+
+    obj = (1,)
+    @set! obj[1] = 2
+    @test obj === (2,)
 end
 
 struct A{X, Y}

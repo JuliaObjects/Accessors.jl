@@ -5,7 +5,6 @@ module Setfield
 if Pkg.installed("StaticArrays") != nothing
     import StaticArrays
     Base.setindex(arr::StaticArrays.StaticArray, args...) = StaticArrays.setindex(arr,args...)
-    hassetindex!(::StaticArrays.StaticArray) = false
 end
 
 if isdefined(Base, :getproperty)

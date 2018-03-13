@@ -37,7 +37,7 @@ end
     @set! assignment
 
 Update deeply nested parts of an object. In contrast to `@set`, `@set!`
-overwrites variable the variable binding an mutates the original object
+overwrites the variable binding and mutates the original object
 if possible. 
 ```jldoctest
 julia> using Setfield
@@ -61,7 +61,7 @@ T(5, 2)
 ```
 ### Warning
 Since `@set!` rebinds the variable, it will cause type instabilites
-for updates that change the type. 
+for updates that change the type.
 
 See also [`@set`](@ref).
 """
