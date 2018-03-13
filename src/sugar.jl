@@ -1,10 +1,10 @@
-export @set, @lens
+export @set, @set!, @lens
 using MacroTools
 
 """
     @set assignment
 
-Update deeply nested parts of an immutable object.
+Return a modified copy of deeply nested objects.
 
 # Example
 ```jldoctest
@@ -27,9 +27,42 @@ T(T(2, 2), 2)
 julia> @set t.a.b = 3
 T(T(2, 3), 2)
 ```
+See also [`@set!`](@ref).
 """
 macro set(ex)
     atset_impl(ex)
+end
+
+"""
+    @set! assignment
+
+Update deeply nested parts of an object. In contrast to `@set`, `@set!`
+overwrites variable the variable binding an mutates the original object
+if possible.
+```jldoctest
+julia> using Setfield
+
+julia> struct T;a;b end
+
+julia> t = T(1,2)
+T(1, 2)
+
+julia> @set! t.a = 5
+T(5, 2)
+
+julia> t
+T(5, 2)
+
+julia> @set t.a = 10
+T(10, 2)
+
+julia> t
+T(5, 2)
+```
+See also [`@set`](@ref).
+"""
+macro set!(ex)
+    atset_impl(ex, :(EncourageMutation()), true)
 end
 
 function parse_obj_lenses(ex)
@@ -66,7 +99,7 @@ struct _UpdateOp{OP,V}
 end
 (u::_UpdateOp)(x) = u.op(x, u.val)
 
-function atset_impl(ex::Expr)
+function atset_impl(ex::Expr, mut=:(ForbidMutation()), rebind=false)
     @assert ex.head isa Symbol
     @assert length(ex.args) == 2
     ref, val = ex.args
@@ -75,12 +108,17 @@ function atset_impl(ex::Expr)
     ret = if ex.head == :(=)
         quote
             lens = $lens
-            set(lens, $obj, $val, EncourageMutation())
+            set(lens, $obj, $val, $mut)
         end
     else
         op = UPDATE_OPERATOR_TABLE[ex.head]
         f = :(_UpdateOp($op,$val))
-        :(modify($f, $lens, $obj, EncourageMutation()))
+        quote
+            modify($f, $lens, $obj, $mut)
+        end
+    end
+    if rebind
+        ret = :($obj = $ret)
     end
     ret
 end

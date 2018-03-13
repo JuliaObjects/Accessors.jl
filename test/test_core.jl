@@ -53,10 +53,10 @@ end
     @test s1 === si
 
     v = randn(3)
-    s = @set v[:] = 1
-    @test s == [1,1,1.]
-    s = @set s[2:3] = 4
-    @test s == [1,4,4]
+    @set! v[:] = 1
+    @test v == [1,1,1.]
+    @set! v[2:3] = 4
+    @test v == [1,4,4]
 
     t = @set T(1,2).a = 2
     @test t === T(2,2)
@@ -173,25 +173,40 @@ mutable struct M
 end
 
 @testset "Mutability" begin
-    v_init = [1,2,3]
-    v = v_init
-    @set v[1] = 2
-    @test v_init[1] == 2
-    @test v === v_init
-    m_init = M(1,2)
-    m = m_init
-    @set m.a = 10
-    @test m_init.a == 10
-    @test m === m_init
 
-    # composition only mutates the innermost
-    m_inner_init = M(1,2)
-    m_init = M(m_inner_init, 2)
-    m = m_init
-    @set m.a.a = 2
-    @test m.a.a == 2
-    @test m === m_init
-    @test m.a === m_inner_init
+    @testset "array" begin
+        v_init = [1,2,3]
+        v = v_init
+        @set! v[1] = 2
+        @test v_init[1] == 2
+        @test v === v_init
+    end
+
+    @testset "@set vs @set!" begin
+        m1 = M(1,2)
+        m2 = @set m1.a = 10
+        @test !(m2 === m1)
+        @test m1.a === 1
+        @test m2.a === 10
+        m3 = @set! m1.a = 100
+        @test m3 === m1
+        @test m1.a === 100
+    end
+
+    @testset "composition only mutates the innermost" begin
+        m_init = M(1,2)
+        m = m_init
+        @set! m.a = 10
+        @test m_init.a == 10
+        @test m === m_init
+        m_inner_init = M(1,2)
+        m_init = M(m_inner_init, 2)
+        m = m_init
+        @set! m.a.a = 2
+        @test m.a.a == 2
+        @test m === m_init
+        @test m.a === m_inner_init
+    end
 end
 
 struct A{X, Y}
