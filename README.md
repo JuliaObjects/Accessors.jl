@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/jw3126/Setfield.jl.svg?branch=master)](https://travis-ci.org/jw3126/Setfield.jl)
 [![codecov.io](https://codecov.io/github/jw3126/Setfield.jl/coverage.svg?branch=master)](http://codecov.io/github/jw3126/Setfield.jl?branch=master)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://jw3126.github.io/Setfield.jl/stable)
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://jw3126.github.io/Setfield.jl/latest)
 
 Update deeply nested immutable structs.
 
