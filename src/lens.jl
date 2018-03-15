@@ -111,7 +111,6 @@ end
 
 @generated constructor_of(::Type{T}) where T =
     getfield(T.name.module, Symbol(T.name.name))
-constructor_of(T::UnionAll) = constructor_of(T.body)
 
 @generated function setproperty(obj, ::Val{name}, val) where {name}
     T = obj
