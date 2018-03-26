@@ -1,17 +1,27 @@
+module TestSetfield
+
 using Setfield
 using Base.Test
+
+if Pkg.installed("QuickTypes") != nothing
+    @testset "QuickTypes" begin include("test_quicktypes.jl") end
+end
 
 include("test_core.jl")
 include("test_macrotools.jl")
 include("test_settable.jl")
 
-
-@static if Pkg.installed("StaticArrays") != nothing
-    using StaticArrays
-    obj = StaticArrays.@SMatrix [1 2; 3 4]
-    l = @lens _[2,1]
-    @test get(l, obj) == 3
-    @test_broken set(l, obj, 5) == StaticArrays.@SMatrix [1 2; 5 4]
-    @test_broken setindex(obj, 5, 2, 1) == StaticArrays.@SMatrix [1 2; 5 4]
+if Pkg.installed("StaticArrays") != nothing
+    include("test_staticarrays.jl")
     include("spaceship.jl")
 end
+
+try
+    using Reconstructables
+    include("test_kwonly.jl")
+catch e
+    @assert e isa ArgumentError
+    @assert contains(e.msg, "Reconstructables")
+end
+
+end  # module

@@ -1,10 +1,7 @@
 using MacroTools
 
 const STRUCTSYMBOL = VERSION < v"0.7-" ? :type : :struct
-
-function parse_error(ex)
-    throw(ArgumentError("Cannot parse typedefinition from $ex."))
-end
+isstructdef(ex) = Meta.isexpr(ex, STRUCTSYMBOL)
 
 function splittypedef(ex)
     ex = MacroTools.striplines(ex)
@@ -49,7 +46,7 @@ function splittypedef(ex)
     d
 end
 
-function combinetypedef(d)
+function combinetypedef(d)::Expr
     name = d[:name]
     parameters = d[:params]
     nameparam = isempty(parameters) ? name : :($name{$(parameters...)})

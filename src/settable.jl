@@ -1,12 +1,31 @@
 export @settable
 using MacroTools: prewalk, splitdef, combinedef
+
 macro settable(ex)
     esc(settable(ex))
 end
 
-argsymbol(arg) = first(MacroTools.splitarg(arg))
+function splitarg_no_default(arg_expr)
+    # this is a limitation in `MacroTools.splitarg`. If it is fixed
+    # it throws if the default value is a literal nothing in the ast
+    # e.g. Expr(:(=), :x, nothing))
+    splitvar(arg) =
+        @match arg begin
+            ::T_ => (nothing, T)
+            name_::T_ => (name, T)
+            x_ => (x, :Any)
+        end
+    (is_splat = @capture(arg_expr, arg_expr2_...)) || (arg_expr2 = arg_expr)
+    if @capture(arg_expr2, arg_ = default_)
+        return (splitvar(arg)..., is_splat)
+    else
+        return (splitvar(arg_expr2)..., is_splat)
+    end
+end
+
+argsymbol(arg) = first(splitarg_no_default(arg))
 function argsymbol_typed(arg)
-    name, T, = MacroTools.splitarg(arg)
+    name, T, = splitarg_no_default(arg)
     MacroTools.combinearg(name,T,false,nothing)
 end
 
@@ -54,16 +73,21 @@ function posonly_constructor(dtype::Dict)
     combinedef(posonly_constructor_dict(dtype))
 end
 
-function settable(ex)
+function add_posonly_constructor(ex::Expr)
     dtype = splittypedef(ex)
     isempty(dtype[:constructors]) && return ex
+    push!(dtype[:constructors], posonly_constructor(dtype))
+    combinetypedef(dtype)
+end
+
+function settable(code)
     M = current_module()
-    ex = macroexpand(M, ex)
-    dtype = splittypedef(ex)
-    if has_posonly_constructor(dtype)
-        return ex
-    else
-        push!(dtype[:constructors], posonly_constructor(dtype))
-        return combinetypedef(dtype)
+    code = macroexpand(M, code)
+    MacroTools.postwalk(code) do ex
+        ret = if isstructdef(ex)
+            add_posonly_constructor(ex)
+        else
+            ex
+        end
     end
 end
