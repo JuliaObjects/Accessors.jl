@@ -28,11 +28,27 @@ end
     @test x1 === Wall(300, 600)
 end
 
+abstract type Vehicle end
 
+@settable @qstruct Car{T<:Number, U}(size::T, nwheels::Int=4; manufacturer::U=nothing,
+                           brand::String="off-brand") <: Vehicle
+
+@testset "Car" begin
+    c = Car(10; manufacturer=("Danone", "Hershey"))
+    @test c isa Car
+    @test Car <: Vehicle
+    c2 = @set c.size = 10
+    @test c2.size === 10
+    c3 = @set c.manufacturer = 100
+    @test c3 === Car(10;manufacturer =100)
+end
+
+@settable @qstruct Empty()
 @settable @qstruct Cat(name, age::Int, nlegs=4; species=:Siamese)
 
 @testset "Cat" begin
     x0 = Cat(:Tama, 1)
+
 
     x1 = @set x0.nlegs = 8
     @test x1 === Cat(:Tama, 1, 8)
@@ -77,8 +93,6 @@ end
 end
 
 
-# Change the example to use keyword arguments, to make it non-trivial
-# for @settable:
 @settable @qstruct Human(; name=:Alice, height::Float64=170) do
     @assert height > 0    # arbitrary code, executed in the constructor
 end
@@ -121,6 +135,7 @@ Setfield.constructor_of(::Type{<: Plane2}) =
     x0 = Plane2(3, 100)
 
     x1 = @set x0.brand = 31
+    @test typeof(x1) != typeof(x0)
     @test x1 == Plane2(3, 100, brand=31)
 end
 

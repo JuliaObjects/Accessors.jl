@@ -72,17 +72,14 @@ end
 @settable struct ManyConstructors
     a
     b
-    ManyConstructors(a; b=2) = new(a, b)
-    ManyConstructors(a) = new(a, 1)  # must not be overridden
+    ManyConstructors(a) = new(a,1)
+    ManyConstructors(;a=1,b=2) = new(a,b)
 end
 
 @testset "ManyConstructors" begin
-    # The single-argument constructor must be the one defined by user.
-    @test ManyConstructors(0) === ManyConstructors(0, b=1)
-
-    s1 = ManyConstructors(0)
+    s1 = ManyConstructors(a=0)
     s2 = @set s1.b = -2
-    @test s2 === ManyConstructors(0, b=-2)
+    @test s2 === ManyConstructors(a=0, b=-2)
 end
 
 # Mimic @add_kwonly from Reconstructables.jl and DiffEqBase.jl.
