@@ -71,8 +71,9 @@ end
     x1 = @set x0.width = 3.0
     @test isequal(x1, Window(1, 3))
     @test x1 == Window(1, 3)
-
-    @test_broken @set x0.width = 3
+    x2 = @set x0.width = 3
+    @test x1 == x2
+    @test !(x1 === x2)
 end
 
 
@@ -101,22 +102,13 @@ end
     @test x.members == [0, 111]
 end
 
-
-# QuickTypes generates inner constructor with type parameters
-# (something like "Plane{T1,T2,T3}(nwheels::T1, weight::T2;
-# brand::T3)").  So, constructor_of needs to get a constructor with
-# all type parameters.
 @settable @qstruct_fp Plane1(nwheels, weight::Number; brand=:zoomba)
-Setfield.constructor_of(::Type{T}) where {T <: Plane1} = T
 
 @testset "Plane1" begin
     x0 = Plane1(3, 100)
-
     x1 = @set x0.nwheels = 5
     @test x1 == Plane1(5, 100)
-
-    # Changing type parameter is not possible:
-    @test_throws MethodError @set x0.brand = 31
+    @test (@set x0.brand = 31).brand === 31
 end
 
 # Another way to "support" QuickTypes with type parameters is to use
