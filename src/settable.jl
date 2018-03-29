@@ -5,27 +5,18 @@ macro settable(ex)
     esc(settable(ex))
 end
 
-function splitarg_no_default(arg_expr)
-    # this is a limitation in `MacroTools.splitarg`. If it is fixed
-    # it throws if the default value is a literal nothing in the ast
-    # e.g. Expr(:(=), :x, nothing))
-    splitvar(arg) =
-        @match arg begin
-            ::T_ => (nothing, T)
-            name_::T_ => (name, T)
-            x_ => (x, :Any)
-        end
-    (is_splat = @capture(arg_expr, arg_expr2_...)) || (arg_expr2 = arg_expr)
-    if @capture(arg_expr2, arg_ = default_)
-        return (splitvar(arg)..., is_splat)
-    else
-        return (splitvar(arg_expr2)..., is_splat)
+function arg_type(ex)::Tuple
+    @match ex begin
+        (name_::T_ = default_) => (name, T  )
+        (name_ = default_    ) => (name, Any)
+        (name_::T_           ) => (name, T  )
+        (name_               ) => (name, Any)
     end
 end
 
-argsymbol(arg) = first(splitarg_no_default(arg))
-function argsymbol_typed(arg)
-    name, T, = splitarg_no_default(arg)
+argsymbol(arg)::Symbol = first(arg_type(arg))
+function argsymbol_typed(arg)::Expr
+    name, T, = arg_type(arg)
     MacroTools.combinearg(name,T,false,nothing)
 end
 
@@ -40,16 +31,16 @@ function has_posonly_constructor(dtype::Dict)
     return false
 end
 
-function constructor_has_desired_fields(fields, d::Dict)
-    args = d[:args]
+function constructor_has_desired_fields(fields, dconstr::Dict)
+    args = dconstr[:args]
     nargs = length(args)
     map(argsymbol, args) == fields[1:nargs] || return false
-    Set(map(argsymbol, d[:kwargs])) == Set(fields[nargs+1:end])
+    Set(map(argsymbol, dconstr[:kwargs])) == Set(fields[nargs+1:end])
 end
 
-function best_constructor_template(d)
-    fields = map(first, d[:fields])
-    constructors = map(splitdef, d[:constructors])
+function best_constructor_template(dtype::Dict)::Dict
+    fields = map(first, dtype[:fields])
+    constructors = map(splitdef, dtype[:constructors])
     constructors = filter(d -> constructor_has_desired_fields(fields, d), constructors)
     if isempty(constructors)
         error("""
@@ -67,11 +58,11 @@ function best_constructor_template(d)
     first(constructors)
 end
 
-function posonly_constructor_dict(dtype::Dict)
+function posonly_constructor_dict(dtype::Dict)::Dict
     def = best_constructor_template(dtype)::Dict
     fields = map(first, dtype[:fields])
-    arg_dict = Dict(first(splitarg(arg)) => arg for arg in def[:args])
-    kwarg_dict = Dict(first(splitarg(arg)) => arg for arg in def[:kwargs])
+    arg_dict = Dict(argsymbol(arg) => arg for arg in def[:args])
+    kwarg_dict = Dict(argsymbol(arg) => arg for arg in def[:kwargs])
     newargs = []
     for field in fields
         if haskey(arg_dict, field)
@@ -88,20 +79,24 @@ function posonly_constructor_dict(dtype::Dict)
     def
 end
 
-function posonly_constructor(dtype::Dict)
+function posonly_constructor(dtype::Dict)::Expr
     combinedef(posonly_constructor_dict(dtype))
 end
 
-function add_posonly_constructor(ex::Expr)
+function add_posonly_constructor(ex::Expr)::Expr
     dtype = splittypedef(ex)
-    isempty(dtype[:constructors]) && return ex
-    has_posonly_constructor(dtype) && return ex
-    push!(dtype[:constructors], posonly_constructor(dtype))
-    @assert has_posonly_constructor(dtype)
-    combinetypedef(dtype)
+    if isempty(dtype[:constructors])
+        ex
+    elseif has_posonly_constructor(dtype)
+        ex
+    else
+        push!(dtype[:constructors], posonly_constructor(dtype))
+        @assert has_posonly_constructor(dtype)
+        combinetypedef(dtype)
+    end
 end
 
-function settable(code)
+function settable(code)::Expr
     M = current_module()
     code = macroexpand(M, code)
     MacroTools.postwalk(code) do ex

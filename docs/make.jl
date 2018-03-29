@@ -5,7 +5,8 @@ makedocs(
          modules = [Setfield],
          sitename = "Setfield.jl",
          pages = [
-            "Home" => "index.md",
+            "Introduction" => "intro.md",
+            "Docstrings" => "index.md",
             ],
         )
 

@@ -1,4 +1,6 @@
 export Lens, set, get, modify
+export @lens
+export set, get, modify
 
 import Base: get, setindex
 
