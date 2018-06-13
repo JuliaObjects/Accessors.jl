@@ -187,11 +187,26 @@ end
         @test v_init[1] == 2
         @test v === v_init
 
+        # Julia 0.7 with --depwarn=error:
+        is_deperror07 = VERSION >= v"0.7-" && Base.JLOptions().depwarn == 2
+
         v = randn(3)
-        @set! v[:] = 1
+        # @set! v[:] .= 0  # dot-call not supported
+        @test_broken v == [0,0,0.]
+        if is_deperror07
+            v[:] .= 1
+        else
+            v = @test_deprecated07 (@set! v[:] = 1; v)
+        end
         @test v == [1,1,1.]
-        @set! v[2:3] = 4
+        if is_deperror07
+            v[2:3] .= 4
+        else
+            v = @test_deprecated07 (@set! v[2:3] = 4; v)
+        end
         @test v == [1,4,4]
+        # @set! v[1:2] .= 5  # dot-call not supported
+        @test_broken v == [5,5,4]
     end
 
     @testset "@set vs @set!" begin
@@ -253,6 +268,6 @@ end
 @testset "show_generic" begin
     l = @lens _[1]
     s = sprint(Setfield.show_generic,l)
-    l2 = eval(parse(s))
+    l2 = eval(Meta.parse(s))
     @test l == l2
 end
