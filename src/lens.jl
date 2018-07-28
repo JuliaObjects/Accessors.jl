@@ -2,11 +2,8 @@ export Lens, set, get, modify
 export @lens
 export set, get, modify
 
-import Base: get, setindex
-
-abstract type MutationPolicy end
-struct EncourageMutation <: MutationPolicy end
-struct ForbidMutation <: MutationPolicy end
+import Base: get
+using Base: setindex, getproperty
 
 """
     Lens
@@ -74,17 +71,15 @@ Replace a deeply nested part of `obj` by `val`. See also [`Lens`](@ref).
 """
 function set end
 
-set(l::Lens, obj, val) = set(l,obj,val,ForbidMutation())
-modify(f,l::Lens, obj) = modify(f, l,obj,ForbidMutation())
-@inline function modify(f, l::Lens, obj, m::MutationPolicy)
+@inline function modify(f, l::Lens, obj)
     old_val = get(l, obj)
     new_val = f(old_val)
-    set(l, obj, new_val, m)
+    set(l, obj, new_val)
 end
 
 struct IdentityLens <: Lens end
 get(::IdentityLens, obj) = obj
-set(::IdentityLens, obj, val,::MutationPolicy) = val
+set(::IdentityLens, obj, val) = val
 
 struct PropertyLens{fieldname} <: Lens end
 
@@ -99,14 +94,8 @@ function assert_hasfield(T, field)
     end
 end
 
-@generated function set(l::PropertyLens{field}, obj, val, m::MutationPolicy) where {field}
-    T = obj
-    M = m
-    if T.mutable && (M == EncourageMutation)
-        :(setproperty!(obj, field, val); obj)
-    else
-        :(setproperty(obj, Val{field}(), val))
-    end
+@generated function set(l::PropertyLens{field}, obj, val) where {field}
+    :(setproperty(obj, Val{field}(), val))
 end
 
 @generated constructor_of(::Type{T}) where T =
@@ -146,10 +135,10 @@ function get(l::ComposedLens, obj)
     get(l.lens1, inner_obj)
 end
 
-function set(l::ComposedLens, obj, val, m::MutationPolicy)
+function set(l::ComposedLens, obj, val)
     inner_obj = get(l.lens2, obj)
-    inner_val = set(l.lens1, inner_obj, val, m)
-    set(l.lens2, obj, inner_val, m)
+    inner_val = set(l.lens1, inner_obj, val)
+    set(l.lens2, obj, inner_val)
 end
 
 struct IndexLens{I <: Tuple} <: Lens
@@ -157,11 +146,4 @@ struct IndexLens{I <: Tuple} <: Lens
 end
 
 get(l::IndexLens, obj) = getindex(obj, l.indices...)
-set(l::IndexLens, obj, val, ::ForbidMutation) = Base.setindex(obj, val, l.indices...)
-function set(l::IndexLens, obj, val, ::EncourageMutation)
-    if applicable(setindex!, obj, val, l.indices)
-        setindex!(obj, val, l.indices...)
-    else
-        set(l, obj, val, ForbidMutation())
-    end
-end
+set(l::IndexLens, obj, val) = setindex(obj, val, l.indices...)

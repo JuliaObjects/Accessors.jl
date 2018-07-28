@@ -178,67 +178,67 @@ end
     @test compose(la, id) === la
 end
 
-@testset "Mutability" begin
-
-    @testset "array" begin
-        v_init = [1,2,3]
-        v = v_init
-        @set! v[1] = 2
-        @test v_init[1] == 2
-        @test v === v_init
-
-        # Julia 0.7 with --depwarn=error:
-        is_deperror07 = VERSION >= v"0.7-" && Base.JLOptions().depwarn == 2
-
-        v = randn(3)
-        # @set! v[:] .= 0  # dot-call not supported
-        @test_broken v == [0,0,0.]
-        if is_deperror07
-            v[:] .= 1
-        else
-            v = @test_deprecated07 (@set! v[:] = 1; v)
-        end
-        @test v == [1,1,1.]
-        if is_deperror07
-            v[2:3] .= 4
-        else
-            v = @test_deprecated07 (@set! v[2:3] = 4; v)
-        end
-        @test v == [1,4,4]
-        # @set! v[1:2] .= 5  # dot-call not supported
-        @test_broken v == [5,5,4]
-    end
-
-    @testset "@set vs @set!" begin
-        m1 = M(1,2)
-        m2 = @set m1.a = 10
-        @test !(m2 === m1)
-        @test m1.a === 1
-        @test m2.a === 10
-        m3 = @set! m1.a = 100
-        @test m3 === m1
-        @test m1.a === 100
-    end
-
-    @testset "composition only mutates the innermost" begin
-        m_init = M(1,2)
-        m = m_init
-        @set! m.a = 10
-        @test m_init.a == 10
-        @test m === m_init
-        m_inner_init = M(1,2)
-        m_init = M(m_inner_init, 2)
-        m = m_init
-        @set! m.a.a = 2
-        @test m.a.a == 2
-        @test m === m_init
-        @test m.a === m_inner_init
-    end
-
-    obj = (1,)
-    @set! obj[1] = 2
-    @test obj === (2,)
-end
+# @testset "Mutability" begin
+# 
+#     @testset "array" begin
+#         v_init = [1,2,3]
+#         v = v_init
+#         @set! v[1] = 2
+#         @test v_init[1] == 2
+#         @test v === v_init
+# 
+#         # Julia 0.7 with --depwarn=error:
+#         is_deperror07 = VERSION >= v"0.7-" && Base.JLOptions().depwarn == 2
+# 
+#         v = randn(3)
+#         # @set! v[:] .= 0  # dot-call not supported
+#         @test_broken v == [0,0,0.]
+#         if is_deperror07
+#             v[:] .= 1
+#         else
+#             v = @test_deprecated07 (@set! v[:] = 1; v)
+#         end
+#         @test v == [1,1,1.]
+#         if is_deperror07
+#             v[2:3] .= 4
+#         else
+#             v = @test_deprecated07 (@set! v[2:3] = 4; v)
+#         end
+#         @test v == [1,4,4]
+#         # @set! v[1:2] .= 5  # dot-call not supported
+#         @test_broken v == [5,5,4]
+#     end
+# 
+#     @testset "@set vs @set!" begin
+#         m1 = M(1,2)
+#         m2 = @set m1.a = 10
+#         @test !(m2 === m1)
+#         @test m1.a === 1
+#         @test m2.a === 10
+#         m3 = @set! m1.a = 100
+#         @test m3 === m1
+#         @test m1.a === 100
+#     end
+# 
+#     @testset "composition only mutates the innermost" begin
+#         m_init = M(1,2)
+#         m = m_init
+#         @set! m.a = 10
+#         @test m_init.a == 10
+#         @test m === m_init
+#         m_inner_init = M(1,2)
+#         m_init = M(m_inner_init, 2)
+#         m = m_init
+#         @set! m.a.a = 2
+#         @test m.a.a == 2
+#         @test m === m_init
+#         @test m.a === m_inner_init
+#     end
+# 
+#     obj = (1,)
+#     @set! obj[1] = 2
+#     @test obj === (2,)
+# end
 
 struct A{X, Y}
     x::X

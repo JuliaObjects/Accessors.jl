@@ -1,4 +1,4 @@
-export @set, @set!, @lens
+export @set, @lens
 using MacroTools
 
 """
@@ -27,46 +27,9 @@ T(T(2, 2), 2)
 julia> @set t.a.b = 3
 T(T(2, 3), 2)
 ```
-See also [`@set!`](@ref).
 """
 macro set(ex)
     atset_impl(ex)
-end
-
-"""
-    @set! assignment
-
-Update deeply nested parts of an object. In contrast to `@set`, `@set!`
-overwrites the variable binding and mutates the original object
-if possible. 
-```jldoctest
-julia> using Setfield
-
-julia> struct T;a;b end
-
-julia> t = T(1,2)
-T(1, 2)
-
-julia> @set! t.a = 5
-T(5, 2)
-
-julia> t
-T(5, 2)
-
-julia> @set t.a = 10
-T(10, 2)
-
-julia> t
-T(5, 2)
-```
-### Warning
-Since `@set!` rebinds the variable, it will cause type instabilites
-for updates that change the type.
-
-See also [`@set`](@ref).
-"""
-macro set!(ex)
-    atset_impl(ex, :(EncourageMutation()), true)
 end
 
 function parse_obj_lenses(ex)
@@ -103,7 +66,7 @@ struct _UpdateOp{OP,V}
 end
 (u::_UpdateOp)(x) = u.op(x, u.val)
 
-function atset_impl(ex::Expr, mut=:(ForbidMutation()), rebind=false)
+function atset_impl(ex::Expr)
     @assert ex.head isa Symbol
     @assert length(ex.args) == 2
     ref, val = ex.args
@@ -112,17 +75,14 @@ function atset_impl(ex::Expr, mut=:(ForbidMutation()), rebind=false)
     ret = if ex.head == :(=)
         quote
             lens = $lens
-            set(lens, $obj, $val, $mut)
+            set(lens, $obj, $val)
         end
     else
         op = UPDATE_OPERATOR_TABLE[ex.head]
         f = :(_UpdateOp($op,$val))
         quote
-            modify($f, $lens, $obj, $mut)
+            modify($f, $lens, $obj)
         end
-    end
-    if rebind
-        ret = :($obj = $ret)
     end
     ret
 end
