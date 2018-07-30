@@ -1,4 +1,6 @@
 using Setfield: compose
+using Setfield.Experimental
+
 struct T
     a
     b
@@ -114,6 +116,12 @@ end
         test_getset_laws(lens, obj, val1, val2)
         test_modify_law(f, lens, obj)
     end
+    for (lens, val1, val2) in [
+        ((MultiPropertyLens((a=@lens(_),))), (a=10,), (a=20,))
+        ]
+        test_getset_laws(lens, obj, val1, val2)
+        test_modify_law(identity, lens, obj)
+    end
 end
 
 @testset "type stability" begin
@@ -134,6 +142,7 @@ end
           ((@lens _.b.a.b[i+1]  ),   4  ),
           ((@lens _             ),   obj),
           ((@lens _             ),   :xy),
+          (MultiPropertyLens((a=(@lens _), b=(@lens _))), (a=1, b=2)),
         ]
         @inferred get(lens, obj)
         @inferred set(lens, obj, val)
@@ -178,15 +187,36 @@ end
     @test compose(la, id) === la
 end
 
-struct A{X, Y}
-    x::X
-    y::Y
+struct ABC{A,B,C}
+    a::A
+    b::B
+    c::C 
+end
+
+@testset "MultiPropertyLens" begin
+    x = ABC(1,2,3)
+    l = MultiPropertyLens((a=@lens(_), c=@lens(_)))
+    @test get(l, x) == (a=1, c=3)
+    @inferred get(l, x)
+    
+    @test set(l,x, (a=10, c=30)) == ABC{Int64,Int64,Int64}(10, 2, 30)
+    @inferred set(l,x, (a=10, c=30))
+
+    y = 5
+    obj = TT(x, y)
+    l_nested = MultiPropertyLens((a=l,b=@lens(_)))
+    @test get(l_nested, obj) == (a = (a = 1, c = 3), b = 5)
+    @inferred get(l_nested, obj)
+
+    @test set(l_nested, obj, (a=(a=10.0, c="twenty"), b=:thirty)) == 
+        TT(ABC(10.0, 2, "twenty"), :thirty)
+    @inferred set(l_nested, obj, (a=(a=10.0, c="twenty"), b=:thirty))
 end
 
 @testset "type change during @set (default constructor_of)" begin
-    obj = A(2,3)
-    obj2 = @set obj.y = :three
-    @test obj2 === A(2, :three)
+    obj = TT(2,3)
+    obj2 = @set obj.b = :three
+    @test obj2 === TT(2, :three)
 end
 
 # https://github.com/tkf/Reconstructables.jl#how-to-use-type-parameters
