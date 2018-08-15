@@ -5,6 +5,7 @@ os:
   - osx
 julia:
   - 0.7
+  - 1.0
   - nightly
 notifications:
   email: false
@@ -25,13 +26,10 @@ git:
 #before_script: # homebrew for mac
 #  - if [ $TRAVIS_OS_NAME = osx ]; then brew install gcc; fi
 
-# uncomment the following lines to override the default test script
-script:
-  - julia -e 'Pkg.clone(pwd()); Pkg.build("Setfield"); VERSION < v"0.7-" && Pkg.add("StaticArrays"); Pkg.test("Setfield"; coverage=true)'
 after_success:
   # push coverage results to Coveralls
-  - julia -e 'cd(Pkg.dir("Setfield")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'using Pkg; cd(Pkg.dir("Setfield")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
   # push coverage results to Codecov
-  - julia -e 'cd(Pkg.dir("Setfield")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
-  - julia -e 'Pkg.add("Documenter")'
-  - julia -e 'cd(Pkg.dir("Setfield")); include(joinpath("docs", "make.jl"))'
+  - julia -e 'using Pkg; cd(Pkg.dir("Setfield")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'using Pkg; Pkg.add("Documenter")'
+  - julia -e 'using Pkg; cd(Pkg.dir("Setfield")); include(joinpath("docs", "make.jl"))'

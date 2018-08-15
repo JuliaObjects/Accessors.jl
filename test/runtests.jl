@@ -23,10 +23,8 @@ end
     include("test_kwonly.jl")
 end
 
-@static if VERSION < v"0.7-"
 @testset "QuickTypes.jl" begin
     include("test_quicktypes.jl")
-end
 end
 
 end  # module

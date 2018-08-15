@@ -64,13 +64,13 @@ end
 end
 
 
-@qstruct Pack{T}(animals::Vector{T})
+@qstruct Pack{T, N}(animals::NTuple{N, T})
 
 @testset "Pack" begin
-    x = Pack([Cat(:Tama, 1), Cat(:Pochi, 2)])
+    x = Pack((Cat(:Tama, 1), Cat(:Pochi, 2)))
 
     x = @set x.animals[2].nlegs = 5
-    @test x.animals == [Cat(:Tama, 1), Cat(:Pochi, 2, 5)]
+    @test x.animals == (Cat(:Tama, 1), Cat(:Pochi, 2, 5))
 end
 
 
@@ -116,9 +116,9 @@ end
 @qstruct Group{x}(members::x; _concise_show=true)
 
 @testset "Group" begin
-    x = Group([0, 1])
+    x = Group((0, 1))
     x = @set x.members[2] = 111
-    @test x.members == [0, 111]
+    @test x.members == (0, 111)
 end
 
 @settable @qstruct_fp Plane1(nwheels, weight::Number; brand=:zoomba)
