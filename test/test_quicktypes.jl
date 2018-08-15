@@ -1,10 +1,5 @@
 module TestQuicktypes
-
-@static if VERSION < v"0.7-"
-    using Base.Test
-else
-    using Test
-end
+using Test
 
 import Base: ==
 import MacroTools

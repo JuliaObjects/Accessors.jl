@@ -8,9 +8,6 @@ const P = Setfield
     include("test_core.jl")
 end
 
-@testset "macrotools" begin
-    include("test_macrotools.jl")
-end
 @testset "settable" begin
     include("test_settable.jl")
 end

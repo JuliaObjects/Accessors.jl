@@ -1,10 +1,9 @@
 export @settable
-using MacroTools: prewalk, splitdef, combinedef
+using MacroTools: prewalk
+using MacroTools: splitdef, combinedef
+using MacroTools: splitstructdef, isstructdef, combinestructdef
 
 macro settable(ex)
-    if VERSION < v"0.7-"
-        __module__ = current_module()
-    end
     esc(settable(__module__, ex))
 end
 
@@ -87,7 +86,7 @@ function posonly_constructor(dtype::Dict)::Expr
 end
 
 function add_posonly_constructor(ex::Expr)::Expr
-    dtype = splittypedef(ex)
+    dtype = splitstructdef(ex)
     if isempty(dtype[:constructors])
         ex
     elseif has_posonly_constructor(dtype)
@@ -95,7 +94,7 @@ function add_posonly_constructor(ex::Expr)::Expr
     else
         push!(dtype[:constructors], posonly_constructor(dtype))
         @assert has_posonly_constructor(dtype)
-        combinetypedef(dtype)
+        combinestructdef(dtype)
     end
 end
 
