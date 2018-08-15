@@ -1,8 +1,20 @@
 module TestSetfield
 
-using Test
+@static if VERSION < v"0.7-"
+    using Base.Test
+else
+    using Test
+end
+
+macro test_deprecated07(ex)
+    if VERSION < v"0.7-"
+        return esc(ex)
+    else
+        return esc(:(Test.@test_deprecated $ex))
+    end
+end
+
 using Setfield
-const P = Setfield
 
 @testset "core" begin
     include("test_core.jl")

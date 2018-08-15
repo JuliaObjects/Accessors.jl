@@ -114,12 +114,6 @@ end
         test_getset_laws(lens, obj, val1, val2)
         test_modify_law(f, lens, obj)
     end
-    for (lens, val1, val2) in [
-        ((P.MultiPropertyLens((a=@lens(_),))), (a=10,), (a=20,))
-        ]
-        test_getset_laws(lens, obj, val1, val2)
-        test_modify_law(identity, lens, obj)
-    end
 end
 
 @testset "type stability" begin
@@ -140,7 +134,6 @@ end
           ((@lens _.b.a.b[i+1]  ),   4  ),
           ((@lens _             ),   obj),
           ((@lens _             ),   :xy),
-          (P.MultiPropertyLens((a=(@lens _), b=(@lens _))), (a=1, b=2)),
         ]
         @inferred get(lens, obj)
         @inferred set(lens, obj, val)
@@ -185,36 +178,77 @@ end
     @test compose(la, id) === la
 end
 
-struct ABC{A,B,C}
-    a::A
-    b::B
-    c::C 
-end
+# @testset "Mutability" begin
+# 
+#     @testset "array" begin
+#         v_init = [1,2,3]
+#         v = v_init
+#         @set! v[1] = 2
+#         @test v_init[1] == 2
+#         @test v === v_init
+# 
+#         # Julia 0.7 with --depwarn=error:
+#         is_deperror07 = VERSION >= v"0.7-" && Base.JLOptions().depwarn == 2
+# 
+#         v = randn(3)
+#         # @set! v[:] .= 0  # dot-call not supported
+#         @test_broken v == [0,0,0.]
+#         if is_deperror07
+#             v[:] .= 1
+#         else
+#             v = @test_deprecated07 (@set! v[:] = 1; v)
+#         end
+#         @test v == [1,1,1.]
+#         if is_deperror07
+#             v[2:3] .= 4
+#         else
+#             v = @test_deprecated07 (@set! v[2:3] = 4; v)
+#         end
+#         @test v == [1,4,4]
+#         # @set! v[1:2] .= 5  # dot-call not supported
+#         @test_broken v == [5,5,4]
+#     end
+# 
+#     @testset "@set vs @set!" begin
+#         m1 = M(1,2)
+#         m2 = @set m1.a = 10
+#         @test !(m2 === m1)
+#         @test m1.a === 1
+#         @test m2.a === 10
+#         m3 = @set! m1.a = 100
+#         @test m3 === m1
+#         @test m1.a === 100
+#     end
+# 
+#     @testset "composition only mutates the innermost" begin
+#         m_init = M(1,2)
+#         m = m_init
+#         @set! m.a = 10
+#         @test m_init.a == 10
+#         @test m === m_init
+#         m_inner_init = M(1,2)
+#         m_init = M(m_inner_init, 2)
+#         m = m_init
+#         @set! m.a.a = 2
+#         @test m.a.a == 2
+#         @test m === m_init
+#         @test m.a === m_inner_init
+#     end
+# 
+#     obj = (1,)
+#     @set! obj[1] = 2
+#     @test obj === (2,)
+# end
 
-@testset "MultiPropertyLens" begin
-    x = ABC(1,2,3)
-    l = P.MultiPropertyLens((a=@lens(_), c=@lens(_)))
-    @test get(l, x) == (a=1, c=3)
-    @inferred get(l, x)
-    
-    @test set(l,x, (a=10, c=30)) == ABC{Int64,Int64,Int64}(10, 2, 30)
-    @inferred set(l,x, (a=10, c=30))
-
-    y = 5
-    obj = TT(x, y)
-    l_nested = P.MultiPropertyLens((a=l,b=@lens(_)))
-    @test get(l_nested, obj) == (a = (a = 1, c = 3), b = 5)
-    @inferred get(l_nested, obj)
-
-    @test set(l_nested, obj, (a=(a=10.0, c="twenty"), b=:thirty)) == 
-        TT(ABC(10.0, 2, "twenty"), :thirty)
-    @inferred set(l_nested, obj, (a=(a=10.0, c="twenty"), b=:thirty))
+struct A{X, Y}
+    x::X
+    y::Y
 end
 
 @testset "type change during @set (default constructor_of)" begin
-    obj = TT(2,3)
-    obj2 = @set obj.b = :three
-    @test obj2 === TT(2, :three)
+    obj = A(2,3)
+    obj2 = @set obj.y = :three
+    @test obj2 === A(2, :three)
 end
 
 # https://github.com/tkf/Reconstructables.jl#how-to-use-type-parameters

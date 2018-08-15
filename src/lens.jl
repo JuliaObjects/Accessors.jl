@@ -147,36 +147,3 @@ end
 
 get(l::IndexLens, obj) = getindex(obj, l.indices...)
 set(l::IndexLens, obj, val) = setindex(obj, val, l.indices...)
-
-
-const NNamedTupleLens{N,s} = NamedTuple{s, T} where {T <: NTuple{N, Lens}}
-struct MultiPropertyLens{L <: NNamedTupleLens} <: Lens
-    lenses::L
-end
-
-_keys(::Type{MultiPropertyLens{NamedTuple{s,T}}}) where {s,T} = s
-@generated function get(l::MultiPropertyLens, obj)
-    get_arg(fieldname) = :($fieldname = get(l.lenses.$fieldname, obj.$fieldname))
-    args = map(get_arg, _keys(l))
-    Expr(:tuple, args...)
-end
-
-@generated function set(l::MultiPropertyLens, obj, val)
-    T = obj
-    args = map(fieldnames(T)) do fn
-        if fn in _keys(l)
-            quote
-                obj_inner = obj.$fn
-                lens_inner = l.lenses.$fn
-                val_inner = val.$fn
-                set(lens_inner, obj_inner, val_inner)
-            end
-        else
-            :(obj.$fn)
-        end
-    end
-    Expr(:block,
-        Expr(:meta, :inline),
-        Expr(:call, :(constructor_of($T)), args...)
-    )
-end
