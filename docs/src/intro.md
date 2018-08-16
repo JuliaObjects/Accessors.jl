@@ -21,12 +21,12 @@ SpaceShip(Person(:julia, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 ```
 Lets update the captains name:
 ```jldoctest spaceship
-julia> s.captain.name = "JULIA"
+julia> s.captain.name = :JULIA
 ERROR: type Person is immutable
 ```
-Oh right, the struct is immutable, so we have to do:
+It's a bit cryptic but what it means that Julia tried very hard to set the field but gave it up since the struct is immutable.  So we have to do:
 ```jldoctest spaceship
-julia> SpaceShip(Person("JULIA", s.captain.age), s.velocity, s.position)
+julia> SpaceShip(Person(:JULIA, s.captain.age), s.velocity, s.position)
 SpaceShip(Person(:JULIA, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 ```
 This is messy and things get worse, if the structs are bigger. `Setfields` to the rescue!
@@ -34,7 +34,7 @@ This is messy and things get worse, if the structs are bigger. `Setfields` to th
 ```jldoctest spaceship
 julia> using Setfield
 
-julia> s = @set s.captain.name = "JULIA"
+julia> s = @set s.captain.name = :JULIA
 SpaceShip(Person(:JULIA, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 
 julia> s = @set s.velocity[1] += 999999
@@ -54,6 +54,7 @@ This api may be useful in its own rite and works as follows:
 
 ```jldoctest
 julia> using Setfield
+
 julia> l = @lens _.a.b
 (@lens _.a.b)
 
