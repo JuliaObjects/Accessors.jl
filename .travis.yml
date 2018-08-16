@@ -30,7 +30,7 @@ git:
 
 before_script:
   - julia --color=yes -e "using Pkg; Pkg.clone(pwd()); Pkg.build(\"Setfield\")"
-  - julia --color=yes -e 'using Pkg; Pkg.add("Documenter")'
+  - julia --color=yes -e 'using Pkg; Pkg.add(["Documenter", "StaticArrays"])'
 
 script:
   - julia --color=yes -e "using Pkg; Pkg.test(\"Setfield\", coverage=true)"
