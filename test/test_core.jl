@@ -198,7 +198,7 @@ end
     l = MultiPropertyLens((a=@lens(_), c=@lens(_)))
     @test get(l, x) == (a=1, c=3)
     @inferred get(l, x)
-    
+
     @test set(l,x, (a=10, c=30)) == ABC{Int64,Int64,Int64}(10, 2, 30)
     @inferred set(l,x, (a=10, c=30))
 
@@ -208,7 +208,7 @@ end
     @test get(l_nested, obj) == (a = (a = 1, c = 3), b = 5)
     @inferred get(l_nested, obj)
 
-    @test set(l_nested, obj, (a=(a=10.0, c="twenty"), b=:thirty)) == 
+    @test set(l_nested, obj, (a=(a=10.0, c="twenty"), b=:thirty)) ==
         TT(ABC(10.0, 2, "twenty"), :thirty)
     @inferred set(l_nested, obj, (a=(a=10.0, c="twenty"), b=:thirty))
 end
