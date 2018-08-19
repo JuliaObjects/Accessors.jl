@@ -248,5 +248,6 @@ end
     l = @lens _.x
     @test get(l,t) === 1
 
+    # do we want this to throw an error?
     @test_throws ArgumentError (@set t.z = 3)
 end

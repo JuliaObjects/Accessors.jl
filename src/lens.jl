@@ -87,44 +87,47 @@ function get(l::PropertyLens{field}, obj) where {field}
     getproperty(obj,field)
 end
 
-function assert_hasfield(T, field)
-    if !(field ∈ fieldnames(T))
-        msg = "$T has no field $field"
-        throw(ArgumentError(msg))
-    end
-end
-
 @generated function set(l::PropertyLens{field}, obj, val) where {field}
-    :(setproperty(obj, Val{field}(), val))
+    Expr(:block,
+         Expr(:meta, :inline),
+        :(setproperties(obj, ($field=val,)))
+       )
 end
 
 @generated constructor_of(::Type{T}) where T =
     getfield(T.name.module, Symbol(T.name.name))
 
-@generated function setproperty(obj, ::Val{name}, val) where {name}
-    T = obj
-    assert_hasfield(T, name)
-    args = map(fieldnames(T)) do fn
-        fn == name ? :val : Expr(:call, :getproperty, :obj, QuoteNode(fn))
+function assert_hasfields(T, fnames)
+    for fname in fnames
+        if !(fname in fieldnames(T))
+            msg = "$T has no field $fname"
+            throw(ArgumentError(msg))
+        end
     end
-    Expr(:block,
-        Expr(:meta, :inline),
-        Expr(:call, :(constructor_of($T)), args...)
-    )
 end
 
-@generated function setproperty(nt::NamedTuple, ::Val{name}, val) where {name}
-    assert_hasfield(nt, name)
-    args = map(fieldnames(nt)) do fn
-        if fn == name
-            :($fn = val)
+@generated function setproperties(obj, patch)
+    assert_hasfields(obj, fieldnames(patch))
+    args = map(fieldnames(obj)) do fn
+        if fn in fieldnames(patch)
+            :(patch.$fn)
         else
-            :($fn = nt.$fn)
+            :(obj.$fn)
         end
     end
     Expr(:block,
         Expr(:meta, :inline),
-        Expr(:tuple, args...)
+        Expr(:call,:(constructor_of($obj)), args...)
+    )
+end
+
+@generated function setproperties(obj::NamedTuple, patch)
+    # this function is only generated to force the following check 
+    # at compile time
+    assert_hasfields(obj, fieldnames(patch))
+    Expr(:block,
+        Expr(:meta, :inline),
+        :(merge(obj, patch))
     )
 end
 
