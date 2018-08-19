@@ -113,6 +113,21 @@ end
     )
 end
 
+@generated function setproperty(nt::NamedTuple, ::Val{name}, val) where {name}
+    assert_hasfield(nt, name)
+    args = map(fieldnames(nt)) do fn
+        if fn == name
+            :($fn = val)
+        else
+            :($fn = nt.$fn)
+        end
+    end
+    Expr(:block,
+        Expr(:meta, :inline),
+        Expr(:tuple, args...)
+    )
+end
+
 struct ComposedLens{L1, L2} <: Lens
     lens1::L1
     lens2::L2

@@ -209,3 +209,14 @@ end
     l2 = eval(Meta.parse(s))
     @test l == l2
 end
+
+@testset "Named Tuples" begin
+    t = (x=1, y=2)
+    @test (@set t.x =2) === (x=2, y=2)
+    @test (@set t.x += 2) === (x=3, y=2)
+    @test (@set t.x =:hello) === (x=:hello, y=2)
+    l = @lens _.x
+    @test get(l,t) === 1
+
+    @test_throws ArgumentError (@set t.z = 3)
+end
