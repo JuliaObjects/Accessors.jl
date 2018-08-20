@@ -23,4 +23,8 @@ end
     include("test_quicktypes.jl")
 end
 
+@testset "Performance" begin
+    include("perf.jl")
+end
+
 end  # module
