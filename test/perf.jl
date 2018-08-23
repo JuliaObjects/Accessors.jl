@@ -34,6 +34,14 @@ function hand_set_a_and_b(obj, val)
     AB(val, val)
 end
 
+function uniquecounts(iter)
+    ret = Dict{eltype(iter), Int}()
+    for x in iter
+        ret[x] = get!(ret, x, 0) + 1
+    end
+    ret
+end
+
 function test_ir_lens_vs_hand(info_lens::Core.CodeInfo,
                               info_hand::Core.CodeInfo)
 
@@ -41,13 +49,21 @@ function test_ir_lens_vs_hand(info_lens::Core.CodeInfo,
     code_hand = info_hand.code
 
     # test no needless kinds of operations
-    heads_lens = Set(map(ex -> ex.head, code_lens))
-    heads_hand = Set(map(ex -> ex.head, code_hand))
-    @test heads_lens == heads_hand
+    heads_lens = map(ex -> ex.head, code_lens)
+    heads_hand = map(ex -> ex.head, code_hand)
+    @test Set(heads_lens) == Set(heads_hand)
 
     # test no intermediate objects or lenses
     isnew(ex) = ex.head == :new
+    isinvoke(ex) = ex.head == :invoke
     @test count(isnew, code_lens) == count(isnew, code_hand)
+
+    # test inlining
+    @assert count(isinvoke, code_hand) == 0
+    @test count(isinvoke, code_lens) == 0
+
+    # this test might be too strict
+    @test uniquecounts(heads_lens) == uniquecounts(heads_hand)
 end
 
 @testset "benchmark" begin
@@ -58,6 +74,9 @@ end
                              (lens_set_ab, hand_set_ab),
                              (lens_set_a_and_b, hand_set_a_and_b)
                             ]
+
+        @assert f_lens(obj, val) == f_hand(obj, val)
+
         b_lens = @benchmark $f_lens($obj, $val)
         b_hand = @benchmark $f_hand($obj, $val)
 
