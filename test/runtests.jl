@@ -2,7 +2,6 @@ module TestSetfield
 
 using Test
 using Setfield
-const P = Setfield
 
 @testset "core" begin
     include("test_core.jl")
