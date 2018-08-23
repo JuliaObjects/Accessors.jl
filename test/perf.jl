@@ -1,4 +1,5 @@
 using BenchmarkTools
+using BenchmarkTools: Benchmark, TrialEstimate
 using Setfield
 using Test
 using InteractiveUtils
@@ -32,6 +33,49 @@ end
 
 function hand_set_a_and_b(obj, val)
     AB(val, val)
+end
+
+
+function iswin(te_cont::TrialEstimate, te_ref::TrialEstimate)
+    # te1 is winner, te2 is looser
+    !isloose(te_cont, te_ref)
+end
+function isloose(te_cont, te_ref)
+    jt = judge(te_cont, te_ref)
+    jt.time   == :regression ||
+    jt.memory == :regression
+end
+
+# test that best contender TrialEstimate beats worst reference TrialEstimate
+function minimax_bench(contender::Benchmark, reference::Benchmark;
+        max_runs=5,
+        estimator=minimum,
+        kw_judge...)
+    tune!(contender)
+    tune!(reference)
+    best_te_cont = estimator(run(contender))
+    worst_te_ref = estimator(run(reference))
+    for i in 2:max_runs
+        if iswin(best_te_cont, worst_te_ref)
+            break
+        end
+        te_cont = estimator(run(contender))
+        te_ref  = estimator(run(reference))
+        if iswin(te_cont, best_te_cont)
+            best_te_cont = te_cont
+        end
+        if isloose(te_ref, worst_te_ref)
+            worst_te_ref = te_ref
+        end
+    end
+    best_te_cont, worst_te_ref
+end
+
+function benchmark_lens_vs_hand(b_lens::Benchmark, b_hand::Benchmark)
+    te_lens, te_hand = minimax_bench(b_lens, b_hand)
+    @show te_lens
+    @show te_hand
+    @test iswin(te_lens, te_hand)
 end
 
 function uniquecounts(iter)
@@ -77,15 +121,10 @@ end
 
         @assert f_lens(obj, val) == f_hand(obj, val)
 
-        b_lens = @benchmark $f_lens($obj, $val)
-        b_hand = @benchmark $f_hand($obj, $val)
+        b_lens = @benchmarkable $f_lens($obj, $val)
+        b_hand = @benchmarkable $f_hand($obj, $val)
+        benchmark_lens_vs_hand(b_lens, b_hand)
 
-        # actually they should be equal
-        # but there is too much noise
-        @test minimum(b_lens).time < 2*minimum(b_hand).time
-
-        println("$f_lens: $b_lens")
-        println("$f_hand: $b_hand")
 
         info_lens, _ = @code_typed f_lens(obj, val)
         info_hand, _ = @code_typed f_hand(obj, val)
