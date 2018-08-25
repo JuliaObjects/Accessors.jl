@@ -3,10 +3,6 @@ module TestSetfield
 using Test
 using Setfield
 
-@testset "Performance" begin
-    include("perf.jl")
-end
-
 @testset "core" begin
     include("test_core.jl")
 end
@@ -27,5 +23,7 @@ end
     include("test_quicktypes.jl")
 end
 
-
+@testset "Performance" begin
+    include("perf.jl")
+end
 end  # module

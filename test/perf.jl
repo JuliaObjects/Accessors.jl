@@ -57,34 +57,34 @@ end
 
 # test that best contender TrialEstimate beats worst reference TrialEstimate
 function minimax_bench(contender::Benchmark, reference::Benchmark;
-        max_runs=5,
+        max_runs=10,
         estimator=minimum,
         kw_judge...)
     tune!(contender)
     tune!(reference)
-    best_te_cont = estimator(run(contender))
-    worst_te_ref = estimator(run(reference))
-    for i in 2:max_runs
+    tes_contender = TrialEstimate[]
+    tes_reference = TrialEstimate[]
+    for _ in 1:max_runs
+        te_cont = estimator(run(contender))
+        te_ref  = estimator(run(reference))
+        push!(tes_contender, te_cont)
+        push!(tes_reference, te_ref )
+        sort!(tes_contender, lt=iswin)
+        sort!(tes_reference, lt=isloose)
+        best_te_cont = first(tes_contender)
+        worst_te_ref = first(tes_reference)
         if iswin(best_te_cont, worst_te_ref)
             break
         end
-        te_cont = estimator(run(contender))
-        te_ref  = estimator(run(reference))
-        if iswin(te_cont, best_te_cont)
-            best_te_cont = te_cont
-        end
-        if isloose(te_ref, worst_te_ref)
-            worst_te_ref = te_ref
-        end
     end
-    best_te_cont, worst_te_ref
+    tes_contender, tes_reference
 end
 
 function benchmark_lens_vs_hand(b_lens::Benchmark, b_hand::Benchmark)
-    te_lens, te_hand = minimax_bench(b_lens, b_hand)
-    @show te_lens
-    @show te_hand
-    @test iswin(te_lens, te_hand)
+    trials_lens, trials_hand = minimax_bench(b_lens, b_hand)
+    @show trials_lens
+    @show trials_hand
+    @test iswin(first(trials_lens), first(trials_hand))
 end
 
 function uniquecounts(iter)
@@ -129,16 +129,16 @@ let
 
         @assert f_hand(args) == f_lens(args)
 
-        @testset "benchmark" begin
-            b_lens = @benchmarkable $f_lens($args)
-            b_hand = @benchmarkable $f_hand($args)
-            benchmark_lens_vs_hand(b_lens, b_hand)
-        end
-
         @testset "IR" begin
             info_lens, _ = @code_typed f_lens(args)
             info_hand, _ = @code_typed f_hand(args)
             test_ir_lens_vs_hand(info_lens, info_hand)
+        end
+
+        @testset "benchmark" begin
+            b_lens = @benchmarkable $f_lens($args)
+            b_hand = @benchmarkable $f_hand($args)
+            benchmark_lens_vs_hand(b_lens, b_hand)
         end
     end
 end
