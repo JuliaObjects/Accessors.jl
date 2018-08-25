@@ -163,5 +163,9 @@ struct IndexLens{I <: Tuple} <: Lens
     indices::I
 end
 
-get(l::IndexLens, obj) = getindex(obj, l.indices...)
-set(l::IndexLens, obj, val) = setindex(obj, val, l.indices...)
+Base.@propagate_inbounds function get(l::IndexLens, obj)
+    getindex(obj, l.indices...)
+end
+Base.@propagate_inbounds function set(l::IndexLens, obj, val)
+    setindex(obj, val, l.indices...)
+end
