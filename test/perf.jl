@@ -112,10 +112,10 @@ function test_ir_lens_vs_hand(info_lens::Core.CodeInfo,
     @test uniquecounts(heads_lens) == uniquecounts(heads_hand)
 end
 
-@testset "benchmark" begin
+let
     obj = AB(AB(1,2), :b)
     val = (1,2)
-    for setup in [
+    @testset "$(setup.lens)" for setup in [
             (lens=lens_set_a,           hand=hand_set_a,       args=(obj, val)),
             (lens=lens_set_a,           hand=hand_set_a,       args=(obj, val)),
             (lens=lens_set_ab,          hand=hand_set_ab,      args=(obj, val)),
@@ -129,13 +129,16 @@ end
 
         @assert f_hand(args) == f_lens(args)
 
-        b_lens = @benchmarkable $f_lens($args)
-        b_hand = @benchmarkable $f_hand($args)
-        benchmark_lens_vs_hand(b_lens, b_hand)
+        @testset "benchmark" begin
+            b_lens = @benchmarkable $f_lens($args)
+            b_hand = @benchmarkable $f_hand($args)
+            benchmark_lens_vs_hand(b_lens, b_hand)
+        end
 
-
-        info_lens, _ = @code_typed f_lens(args)
-        info_hand, _ = @code_typed f_hand(args)
-        test_ir_lens_vs_hand(info_lens, info_hand)
+        @testset "IR" begin
+            info_lens, _ = @code_typed f_lens(args)
+            info_hand, _ = @code_typed f_hand(args)
+            test_ir_lens_vs_hand(info_lens, info_hand)
+        end
     end
 end
