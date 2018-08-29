@@ -44,47 +44,15 @@ function hand_set_i((obj, val, i))
     @inbounds setindex(obj, val, i)
 end
 
-
-function iswin(te_cont::TrialEstimate, te_ref::TrialEstimate)
-    # te1 is winner, te2 is looser
-    !isloose(te_cont, te_ref)
-end
-function isloose(te_cont, te_ref)
-    jt = judge(te_cont, te_ref)
-    jt.time   == :regression ||
-    jt.memory == :regression
-end
-
-# test that best contender TrialEstimate beats worst reference TrialEstimate
-function minimax_bench(contender::Benchmark, reference::Benchmark;
-        max_runs=10,
-        estimator=minimum,
-        kw_judge...)
-    tune!(contender)
-    tune!(reference)
-    tes_contender = TrialEstimate[]
-    tes_reference = TrialEstimate[]
-    for _ in 1:max_runs
-        te_cont = estimator(run(contender))
-        te_ref  = estimator(run(reference))
-        push!(tes_contender, te_cont)
-        push!(tes_reference, te_ref )
-        sort!(tes_contender, lt=iswin)
-        sort!(tes_reference, lt=isloose)
-        best_te_cont = first(tes_contender)
-        worst_te_ref = first(tes_reference)
-        if iswin(best_te_cont, worst_te_ref)
-            break
-        end
-    end
-    tes_contender, tes_reference
-end
-
 function benchmark_lens_vs_hand(b_lens::Benchmark, b_hand::Benchmark)
-    trials_lens, trials_hand = minimax_bench(b_lens, b_hand)
-    @show trials_lens
-    @show trials_hand
-    @test iswin(first(trials_lens), first(trials_hand))
+    
+    te_hand = minimum(run(b_lens))
+    te_lens = minimum(run(b_hand))
+    @show te_lens
+    @show te_hand
+    @test te_lens.memory == te_hand.memory
+    @test te_lens.allocs == te_hand.allocs
+    @test te_lens.time <= 2*te_hand.time
 end
 
 function uniquecounts(iter)
