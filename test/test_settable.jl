@@ -1,3 +1,6 @@
+module TestSettable
+using Test
+using Setfield
 # If no constructor is defined explicitly, don't generate any
 # inner-consturctor; let Julia generate the default constructor; i.e.,
 # @settable should be a no-op.
@@ -104,4 +107,5 @@ end
     s1 = WithKwOnly(0)
     s2 = @set s1.b = -2
     @test s2 === WithKwOnly(0, b=-2)
+end
 end

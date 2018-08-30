@@ -1,5 +1,7 @@
+module TestKwonly
 using Kwonly
 using Setfield
+using Test
 
 @settable struct AKW
     x
@@ -15,4 +17,5 @@ end
     @test x2.x.x.x == 10
     @test x2.x.y.y == 20
     @test x2.x.y.x == x0.x.y.x == 6
+end
 end

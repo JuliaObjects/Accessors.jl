@@ -1,3 +1,6 @@
+module TestCore
+using Test
+using Setfield
 using Setfield: compose
 using Setfield.Experimental
 
@@ -250,4 +253,5 @@ end
 
     # do we want this to throw an error?
     @test_throws ArgumentError (@set t.z = 3)
+end
 end

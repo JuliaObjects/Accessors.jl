@@ -1,3 +1,4 @@
+module Perf
 using BenchmarkTools
 using BenchmarkTools: Benchmark, TrialEstimate
 using Setfield
@@ -109,4 +110,5 @@ let
             benchmark_lens_vs_hand(b_lens, b_hand)
         end
     end
+end
 end

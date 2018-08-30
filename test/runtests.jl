@@ -1,29 +1,8 @@
 module TestSetfield
-
-using Test
-using Setfield
-
-@testset "core" begin
-    include("test_core.jl")
-end
-
-@testset "settable" begin
-    include("test_settable.jl")
-end
-
-@testset "StaticArrays.jl" begin
-    include("test_staticarrays.jl")
-end
-
-@testset "Kwonly.jl" begin
-    include("test_kwonly.jl")
-end
-
-@testset "QuickTypes.jl" begin
-    include("test_quicktypes.jl")
-end
-
-@testset "Performance" begin
-    include("perf.jl")
-end
+include("test_core.jl")
+include("test_settable.jl")
+include("test_staticarrays.jl")
+include("test_kwonly.jl")
+include("test_quicktypes.jl")
+include("perf.jl")
 end  # module

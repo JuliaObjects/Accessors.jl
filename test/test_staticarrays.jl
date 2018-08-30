@@ -1,6 +1,9 @@
+module TestStaticArrays
+using Test
+using Setfield
 using StaticArrays
 
-let
+@testset "StaticArrays" begin
     obj = StaticArrays.@SMatrix [1 2; 3 4]
     l = @lens _[2,1]
     @test get(l, obj) == 3
@@ -10,4 +13,5 @@ let
     v = @SVector [1,2,3]
     @test (@set v[1] = 10) === @SVector [10,2,3]
     @test_broken (@set v[1] = π) === @SVector [π,2,3]
+end
 end
