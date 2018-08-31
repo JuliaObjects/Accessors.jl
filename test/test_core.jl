@@ -82,24 +82,24 @@ end
 function test_getset_laws(lens, obj, val1, val2)
 
     # set ∘ get
-    val = get(lens, obj)
-    @test set(lens, obj, val) == obj
+    val = get(obj, lens)
+    @test set(obj, lens, val) == obj
 
     # get ∘ set
-    obj1 = set(lens, obj, val1)
-    @test get(lens, obj1) == val1
+    obj1 = set(obj, lens, val1)
+    @test get(obj1, lens) == val1
 
     # set idempotent
-    obj12 = set(lens, obj1, val2)
-    obj2 = set(lens, obj, val2)
+    obj12 = set(obj1, lens, val2)
+    obj2 = set(obj, lens, val2)
     @test obj12 == obj2
 end
 
 function test_modify_law(f, lens, obj)
-    obj_modify = modify(f, lens, obj)
-    old_val = get(lens, obj)
+    obj_modify = modify(f, obj, lens)
+    old_val = get(obj, lens)
     val = f(old_val)
-    obj_setfget = set(lens, obj, val)
+    obj_setfget = set(obj, lens, val)
     @test obj_modify == obj_setfget
 end
 
@@ -147,9 +147,9 @@ end
           ((@lens _             ),   :xy),
           (MultiPropertyLens((a=(@lens _), b=(@lens _))), (a=1, b=2)),
         ]
-        @inferred get(lens, obj)
-        @inferred set(lens, obj, val)
-        @inferred modify(identity, lens, obj)
+        @inferred get(obj, lens)
+        @inferred set(obj, lens, val)
+        @inferred modify(identity, obj, lens)
     end
 end
 
@@ -157,21 +157,21 @@ end
     l = @lens _[]
     x = randn()
     obj = Ref(x)
-    @test get(l, obj) == x
+    @test get(obj, l) == x
 
     l = @lens _[][]
     inner = Ref(x)
     obj = Base.RefValue{typeof(inner)}(inner)
-    @test get(l, obj) == x
+    @test get(obj, l) == x
 
     obj = (1,2,3)
     l = @lens _[1]
-    @test get(l, obj) == 1
-    @test set(l, obj, 6) == (6,2,3)
+    @test get(obj, l) == 1
+    @test set(obj, l, 6) == (6,2,3)
 
 
     l = @lens _[1:3]
-    @test get(l, [4,5,6,7]) == [4,5,6]
+    @test get([4,5,6,7], l) == [4,5,6]
 end
 
 mutable struct M
@@ -184,7 +184,7 @@ end
     @test compose(id, id) === id
     obj1 = M(1,1)
     obj2 = M(2,2)
-    @test obj2 === set(id, obj1, obj2)
+    @test obj2 === set(obj1, id, obj2)
     la = @lens _.a
     @test compose(id, la) === la
     @test compose(la, id) === la
@@ -199,21 +199,21 @@ end
 @testset "MultiPropertyLens" begin
     x = ABC(1,2,3)
     l = MultiPropertyLens((a=@lens(_), c=@lens(_)))
-    @test get(l, x) == (a=1, c=3)
-    @inferred get(l, x)
+    @test get(x, l) == (a=1, c=3)
+    @inferred get(x, l)
 
-    @test set(l,x, (a=10, c=30)) == ABC{Int64,Int64,Int64}(10, 2, 30)
-    @inferred set(l,x, (a=10, c=30))
+    @test set(x, l, (a=10, c=30)) == ABC{Int64,Int64,Int64}(10, 2, 30)
+    @inferred set(x, l, (a=10, c=30))
 
     y = 5
     obj = TT(x, y)
     l_nested = MultiPropertyLens((a=l,b=@lens(_)))
-    @test get(l_nested, obj) == (a = (a = 1, c = 3), b = 5)
-    @inferred get(l_nested, obj)
+    @test get(obj, l_nested) == (a = (a = 1, c = 3), b = 5)
+    @inferred get(obj, l_nested)
 
-    @test set(l_nested, obj, (a=(a=10.0, c="twenty"), b=:thirty)) ==
+    @test set(obj, l_nested, (a=(a=10.0, c="twenty"), b=:thirty)) ==
         TT(ABC(10.0, 2, "twenty"), :thirty)
-    @inferred set(l_nested, obj, (a=(a=10.0, c="twenty"), b=:thirty))
+    @inferred set(obj, l_nested, (a=(a=10.0, c="twenty"), b=:thirty))
 end
 
 @testset "type change during @set (default constructor_of)" begin
@@ -249,7 +249,7 @@ end
     @test (@set t.x += 2) === (x=3, y=2)
     @test (@set t.x =:hello) === (x=:hello, y=2)
     l = @lens _.x
-    @test get(l,t) === 1
+    @test get(t, l) === 1
 
     # do we want this to throw an error?
     @test_throws ArgumentError (@set t.z = 3)
