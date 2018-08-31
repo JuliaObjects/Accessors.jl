@@ -150,12 +150,14 @@ compose(l::Lens) = l
 compose(::IdentityLens, ::IdentityLens) = IdentityLens()
 compose(::IdentityLens, l::Lens) = l
 compose(l::Lens, ::IdentityLens) = l
-compose(l1::Lens, l2 ::Lens) = ComposedLens(l1, l2)
-function compose(ls::Lens...)
+compose(l1::Lens, l2 ::Lens) = ComposedLens(l2, l1)
+function compose(l1::Lens, ls::Lens...)
     # We can build _.a.b.c as (_.a.b).c or _.a.(b.c)
     # The compiler prefers (_.a.b).c
-    compose(compose(Base.front(ls)...), last(ls))
+    compose(l1, compose(ls...))
 end
+
+Base.:∘(l1::Lens, l2::Lens) = compose(l1, l2)
 
 function get(obj, l::ComposedLens)
     inner_obj = get(obj, l.lens2)
