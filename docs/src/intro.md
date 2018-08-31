@@ -63,16 +63,16 @@ julia> struct AB;a;b;end
 julia> obj = AB(AB(1,2),3)
 AB(AB(1, 2), 3)
 
-julia> set(l, obj, 42)
+julia> set(obj, l, 42)
 AB(AB(1, 42), 3)
 
 julia> obj
 AB(AB(1, 2), 3)
 
-julia> get(l, obj)
+julia> get(obj, l)
 2
 
-julia> modify(x->10x,l, obj)
+julia> modify(x->10x, obj, l)
 AB(AB(1, 20), 3)
 ```
 
@@ -84,5 +84,5 @@ For instance
 expands roughly to
 ```julia
 l = @lens _.a.b
-set(l, obj, 42)
+set(obj, l, 42)
 ```
