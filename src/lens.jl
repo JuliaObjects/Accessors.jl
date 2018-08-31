@@ -157,6 +157,28 @@ function compose(l1::Lens, ls::Lens...)
     compose(l1, compose(ls...))
 end
 
+"""
+    lens₁ ∘ lens₂
+    compose([lens₁, [lens₂, [lens₃, ...]]])
+
+Compose lenses `lens₁`, `lens₂`, ..., `lensₙ` to access nested objects.
+
+# Example
+```jldoctest
+julia> using Setfield
+
+julia> obj = (a = (b = (c = 1,),),);
+
+julia> la = @lens _.a
+       lb = @lens _.b
+       lc = @lens _.c
+       lens = la ∘ lb ∘ lc
+(@lens _.a.b.c)
+
+julia> get(obj, lens)
+1
+```
+"""
 Base.:∘(l1::Lens, l2::Lens) = compose(l1, l2)
 
 function get(obj, l::ComposedLens)
