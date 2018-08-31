@@ -35,4 +35,10 @@ end
         Expr(:call, :(constructor_of($T)), args...)
     )
 end
+
+function Base.show(io::IO, l::MultiPropertyLens)
+    print(io, "MultiPropertyLens(")
+    print(io, l.lenses)
+    print(io, ')')
+end
 end

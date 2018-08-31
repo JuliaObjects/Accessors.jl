@@ -128,6 +128,11 @@ macro lens(ex)
     lens
 end
 
+has_atlens_support(::Any) = false
+has_atlens_support(::Union{PropertyLens, IndexLens, IdentityLens}) = true
+has_atlens_support(l::ComposedLens) =
+    has_atlens_support(l.outer) && has_atlens_support(l.inner)
+
 print_application(io::IO, l::PropertyLens{field}) where {field} = print(io, ".", field)
 print_application(io::IO, l::IndexLens) = print(io, "[", join(l.indices, ", "), "]")
 print_application(io::IO, l::IdentityLens) = print(io, "")
@@ -138,6 +143,24 @@ function print_application(io::IO, l::ComposedLens)
 end
 
 function Base.show(io::IO, l::Lens)
+    if has_atlens_support(l)
+        print_in_atlens(io, l)
+    else
+        show_generic(io, l)
+    end
+end
+
+function Base.show(io::IO, l::ComposedLens)
+    if has_atlens_support(l)
+        print_in_atlens(io, l)
+    else
+        show(io, l.outer)
+        print(io, " ∘ ")
+        show(io, l.inner)
+    end
+end
+
+function print_in_atlens(io, l)
     print(io, "(@lens _")
     print_application(io, l)
     print(io, ')')
@@ -148,4 +171,4 @@ function show_generic(io::IO, args...)
     Types = Tuple{types...}
     invoke(show, Types, io, args...)
 end
-show_generic(args...) = show_generic(STDOUT, args...)
+show_generic(args...) = show_generic(stdout, args...)

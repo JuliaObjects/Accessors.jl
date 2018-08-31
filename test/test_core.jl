@@ -71,6 +71,8 @@ end
             @lens _[1]
             @lens _.a.b[2]
             @lens _
+            MultiPropertyLens((a=@lens(_),))
+            (@lens _.a[1]) ∘ MultiPropertyLens((b = (@lens _[1]),))
         ]
         buf = IOBuffer()
         show(buf, item)
