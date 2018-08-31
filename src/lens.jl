@@ -16,41 +16,50 @@ julia> using Setfield
 
 julia> struct T;a;b; end
 
-julia> t = T("AA", "BB")
+julia> obj = T("AA", "BB")
 T("AA", "BB")
 
-julia> l = @lens _.a
+julia> lens = @lens _.a
 (@lens _.a)
 
-julia> get(l, t)
+julia> get(obj, lens)
 "AA"
 
-julia> set(l, t, 2)
+julia> set(obj, lens, 2)
 T(2, "BB")
 
-julia> t
+julia> obj
 T("AA", "BB")
 
-julia> modify(lowercase, l, t)
+julia> modify(lowercase, obj, lens)
 T("aa", "BB")
 ```
 
 # Interface
 Concrete subtypes of `Lens` have to implement
-* `set(lens, obj, val)`
-* `get(lens, obj)`
+* `set(obj, lens, val)`
+* `get(obj, lens)`
 
 These must be pure functions, that satisfy the three lens laws:
-* `get(lens, set(lens, obj, val)) == val` (You get what you set.)
-* `set(lens, obj, get(lens, obj)) == obj` (Setting what was already there changes nothing.)
-* `set(lens, set(lens, obj, val1), val2) == set(lens, obj, val2)` (The last set wins.)
+
+```jldoctest; output = false, setup = :(using Setfield; obj = (a="A", b="B"); lens = @lens _.a; val = 2; val1 = 10; val2 = 20)
+@assert get(set(obj, lens, val), lens) == val
+        # You get what you set.
+@assert set(obj, lens, get(obj, lens)) == obj
+        # Setting what was already there changes nothing.
+@assert set(set(obj, lens, val1), lens, val2) == set(obj, lens, val2)
+        # The last set wins.
+
+# output
+
+```
 
 See also [`@lens`](@ref), [`set`](@ref), [`get`](@ref), [`modify`](@ref).
 """
 abstract type Lens end
 
 """
-    modify(f, l::Lens, obj)
+    modify(f, obj, l::Lens)
 
 Replace a deeply nested part `x` of `obj` by `f(x)`. See also [`Lens`](@ref).
 """
@@ -58,36 +67,36 @@ function modify end
 
 
 """
-    get(l::Lens, obj)
+    get(obj, l::Lens)
 
 Access a deeply nested part of `obj`. See also [`Lens`](@ref).
 """
 function get end
 
 """
-    set(l::Lens, obj, val)
+    set(obj, l::Lens, val)
 
 Replace a deeply nested part of `obj` by `val`. See also [`Lens`](@ref).
 """
 function set end
 
-@inline function modify(f, l::Lens, obj)
-    old_val = get(l, obj)
+@inline function modify(f, obj, l::Lens)
+    old_val = get(obj, l)
     new_val = f(old_val)
-    set(l, obj, new_val)
+    set(obj, l, new_val)
 end
 
 struct IdentityLens <: Lens end
-get(::IdentityLens, obj) = obj
-set(::IdentityLens, obj, val) = val
+get(obj, ::IdentityLens) = obj
+set(obj, ::IdentityLens, val) = val
 
 struct PropertyLens{fieldname} <: Lens end
 
-function get(l::PropertyLens{field}, obj) where {field}
-    getproperty(obj,field)
+function get(obj, l::PropertyLens{field}) where {field}
+    getproperty(obj, field)
 end
 
-@generated function set(l::PropertyLens{field}, obj, val) where {field}
+@generated function set(obj, l::PropertyLens{field}, val) where {field}
     Expr(:block,
          Expr(:meta, :inline),
         :(setproperties(obj, ($field=val,)))
@@ -148,24 +157,28 @@ function compose(ls::Lens...)
     compose(compose(Base.front(ls)...), last(ls))
 end
 
-function get(l::ComposedLens, obj)
-    inner_obj = get(l.lens2, obj)
-    get(l.lens1, inner_obj)
+function get(obj, l::ComposedLens)
+    inner_obj = get(obj, l.lens2)
+    get(inner_obj, l.lens1)
 end
 
-function set(l::ComposedLens, obj, val)
-    inner_obj = get(l.lens2, obj)
-    inner_val = set(l.lens1, inner_obj, val)
-    set(l.lens2, obj, inner_val)
+function set(obj,l::ComposedLens, val)
+    inner_obj = get(obj, l.lens2)
+    inner_val = set(inner_obj, l.lens1, val)
+    set(obj, l.lens2, inner_val)
 end
 
 struct IndexLens{I <: Tuple} <: Lens
     indices::I
 end
 
-Base.@propagate_inbounds function get(l::IndexLens, obj)
+Base.@propagate_inbounds function get(obj, l::IndexLens)
     getindex(obj, l.indices...)
 end
-Base.@propagate_inbounds function set(l::IndexLens, obj, val)
+Base.@propagate_inbounds function set(obj, l::IndexLens, val)
     setindex(obj, val, l.indices...)
 end
+
+Base.@deprecate get(lens::Lens, obj)       get(obj, lens)
+Base.@deprecate set(lens::Lens, obj, val)  set(obj, lens, val)
+Base.@deprecate modify(f, lens::Lens, obj) modify(f, obj, lens)

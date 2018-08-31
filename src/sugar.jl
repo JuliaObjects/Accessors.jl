@@ -75,13 +75,13 @@ function atset_impl(ex::Expr)
     ret = if ex.head == :(=)
         quote
             lens = $lens
-            set(lens, $obj, $val)
+            set($obj, lens, $val)
         end
     else
         op = UPDATE_OPERATOR_TABLE[ex.head]
         f = :(_UpdateOp($op,$val))
         quote
-            modify($f, $lens, $obj)
+            modify($f, $obj, $lens)
         end
     end
     ret
@@ -105,16 +105,16 @@ T("A1", T(T("A3", "B3"), "B2"))
 julia> l = @lens _.b.a.b
 (@lens _.b.a.b)
 
-julia> get(l, t)
+julia> get(t, l)
 "B3"
 
-julia> set(l, t, 100)
+julia> set(t, l, 100)
 T("A1", T(T("A3", 100), "B2"))
 
 julia> t = ("one", "two")
 ("one", "two")
 
-julia> set((@lens _[1]), t, "1")
+julia> set(t, (@lens _[1]), "1")
 ("1", "two")
 ```
 

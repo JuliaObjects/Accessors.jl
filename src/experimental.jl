@@ -10,13 +10,13 @@ struct MultiPropertyLens{L <: NNamedTupleLens} <: Lens
 end
 
 _keys(::Type{MultiPropertyLens{NamedTuple{s,T}}}) where {s,T} = s
-@generated function get(l::MultiPropertyLens, obj)
-    get_arg(fieldname) = :($fieldname = get(l.lenses.$fieldname, obj.$fieldname))
+@generated function get(obj, l::MultiPropertyLens)
+    get_arg(fieldname) = :($fieldname = get(obj.$fieldname, l.lenses.$fieldname))
     args = map(get_arg, _keys(l))
     Expr(:tuple, args...)
 end
 
-@generated function set(l::MultiPropertyLens, obj, val)
+@generated function set(obj, l::MultiPropertyLens, val)
     T = obj
     args = map(fieldnames(T)) do fn
         if fn in _keys(l)
@@ -24,7 +24,7 @@ end
                 obj_inner = obj.$fn
                 lens_inner = l.lenses.$fn
                 val_inner = val.$fn
-                set(lens_inner, obj_inner, val_inner)
+                set(obj_inner, lens_inner, val_inner)
             end
         else
             :(obj.$fn)
