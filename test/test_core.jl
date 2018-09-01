@@ -63,6 +63,9 @@ end
 end
 
 
+struct UserDefinedLens <: Lens end
+
+
 @testset "show it like you build it " begin
     obj = T(1,2)
     i = 3
@@ -73,6 +76,10 @@ end
             @lens _
             MultiPropertyLens((a=@lens(_),))
             (@lens _.a[1]) ∘ MultiPropertyLens((b = (@lens _[1]),))
+            UserDefinedLens()
+            (@lens _.a) ∘ UserDefinedLens()
+            UserDefinedLens() ∘ (@lens _.b)
+            (@lens _.a) ∘ UserDefinedLens() ∘ (@lens _.b)
         ]
         buf = IOBuffer()
         show(buf, item)
