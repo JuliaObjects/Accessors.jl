@@ -133,8 +133,8 @@ print_application(io::IO, l::IndexLens) = print(io, "[", join(l.indices, ", "), 
 print_application(io::IO, l::IdentityLens) = print(io, "")
 
 function print_application(io::IO, l::ComposedLens)
-    print_application(io, l.lens2)
-    print_application(io, l.lens1)
+    print_application(io, l.outer)
+    print_application(io, l.inner)
 end
 
 function Base.show(io::IO, l::Lens)

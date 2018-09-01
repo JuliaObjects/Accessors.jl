@@ -140,9 +140,9 @@ end
     )
 end
 
-struct ComposedLens{L1, L2} <: Lens
-    lens1::L1
-    lens2::L2
+struct ComposedLens{LO, LI} <: Lens
+    outer::LO
+    inner::LI
 end
 
 compose() = IdentityLens()
@@ -150,7 +150,7 @@ compose(l::Lens) = l
 compose(::IdentityLens, ::IdentityLens) = IdentityLens()
 compose(::IdentityLens, l::Lens) = l
 compose(l::Lens, ::IdentityLens) = l
-compose(l1::Lens, l2 ::Lens) = ComposedLens(l2, l1)
+compose(outer::Lens, inner::Lens) = ComposedLens(outer, inner)
 function compose(l1::Lens, ls::Lens...)
     # We can build _.a.b.c as (_.a.b).c or _.a.(b.c)
     # The compiler prefers (_.a.b).c
@@ -182,14 +182,14 @@ julia> get(obj, lens)
 Base.:∘(l1::Lens, l2::Lens) = compose(l1, l2)
 
 function get(obj, l::ComposedLens)
-    inner_obj = get(obj, l.lens2)
-    get(inner_obj, l.lens1)
+    inner_obj = get(obj, l.outer)
+    get(inner_obj, l.inner)
 end
 
 function set(obj,l::ComposedLens, val)
-    inner_obj = get(obj, l.lens2)
-    inner_val = set(inner_obj, l.lens1, val)
-    set(obj, l.lens2, inner_val)
+    inner_obj = get(obj, l.outer)
+    inner_val = set(inner_obj, l.inner, val)
+    set(obj, l.outer, inner_val)
 end
 
 struct IndexLens{I <: Tuple} <: Lens
