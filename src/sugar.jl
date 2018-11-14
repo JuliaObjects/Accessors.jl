@@ -53,12 +53,16 @@ function parse_obj_lens(ex)
     obj, lens
 end
 
-const UPDATE_OPERATOR_TABLE = Dict(
-:(+=) => +,
-:(-=) => -,
-:(*=) => *,
-:(/=) => /,
-)
+function get_update_op(sym::Symbol)
+    s = String(sym)
+    if !endswith(s, '=') || isdefined(Base, sym)
+        # 'x +=' etc. is actually 'x = x +', and so '+=' isn't defined in Base.
+        # '>=' however is a function, and not an assignment operator.
+        msg = "Operation $sym doesn't look like an assignment"
+        throw(ArgumentError(msg))
+    end
+    Symbol(s[1:end-1])
+end
 
 struct _UpdateOp{OP,V}
     op::OP
@@ -78,7 +82,7 @@ function atset_impl(ex::Expr)
             set($obj, lens, $val)
         end
     else
-        op = UPDATE_OPERATOR_TABLE[ex.head]
+        op = get_update_op(ex.head)
         f = :(_UpdateOp($op,$val))
         quote
             modify($f, $obj, $lens)

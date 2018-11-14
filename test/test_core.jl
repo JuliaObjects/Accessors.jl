@@ -1,7 +1,7 @@
 module TestCore
 using Test
 using Setfield
-using Setfield: compose
+using Setfield: compose, get_update_op
 using Setfield.Experimental
 
 struct T
@@ -12,6 +12,15 @@ end
 struct TT{A,B}
     a::A
     b::B
+end
+
+@testset "get_update_op" begin
+    @test get_update_op(:(&=)) === :(&)
+    @test get_update_op(:(^=)) === :(^)
+    @test get_update_op(:(-=)) === :(-)
+    @test get_update_op(:(%=)) === :(%)
+    @test_throws ArgumentError get_update_op(:(++))
+    @test_throws ArgumentError get_update_op(:(<=))
 end
 
 @testset "@set" begin
@@ -49,6 +58,22 @@ end
     t = T(2,1)
     s = @set t.a /= 2
     @test s === T(1.0,1)
+
+    t = T(1, 2)
+    s = @set t.a <<= 2
+    @test s === T(4, 2)
+
+    t = T(8, 2)
+    s = @set t.a >>= 2
+    @test s === T(2, 2)
+
+    t = T(1, 2)
+    s = @set t.a &= 0
+    @test s === T(0, 2)
+
+    t = T(1, 2)
+    s = @set t.a |= 2
+    @test s === T(3, 2)
 
     t = T((1,2),(3,4))
     @set t.a[1] = 10
@@ -202,7 +227,7 @@ end
 struct ABC{A,B,C}
     a::A
     b::B
-    c::C 
+    c::C
 end
 
 @testset "MultiPropertyLens" begin

@@ -8,7 +8,7 @@
 Update deeply nested immutable structs.
 
 # Usage
-Updateing deeply nested immutable structs was never easier:
+Updating deeply nested immutable structs was never easier:
 ```julia
 using Setfield
 @set obj.a.b.c = d

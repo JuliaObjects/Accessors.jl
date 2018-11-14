@@ -46,7 +46,7 @@ function hand_set_i((obj, val, i))
 end
 
 function benchmark_lens_vs_hand(b_lens::Benchmark, b_hand::Benchmark)
-    
+
     te_hand = minimum(run(b_lens))
     te_lens = minimum(run(b_hand))
     @show te_lens

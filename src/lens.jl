@@ -131,7 +131,7 @@ end
 end
 
 @generated function setproperties(obj::NamedTuple, patch)
-    # this function is only generated to force the following check 
+    # this function is only generated to force the following check
     # at compile time
     assert_hasfields(obj, fieldnames(patch))
     Expr(:block,
