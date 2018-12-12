@@ -23,6 +23,28 @@ end
     @test_throws ArgumentError get_update_op(:(<=))
 end
 
+@testset "@set!" begin
+    a = 1
+    @set a = 2
+    @test a === 1
+    @set! a = 2
+    @test a === 2
+
+    t = T(1, T(2,3))
+    @set t.b.a = 20
+    @test t === T(1, T(2,3))
+
+    @set! t.b.a = 20
+    @test t === T(1,T(20,3))
+
+    a = 1
+    @set! a += 10
+    @test a === 11
+    nt = (a=1,)
+    @set! nt.a = 5
+    @test nt === (a=5,)
+end
+
 @testset "@set" begin
 
     t = T(1, T(2, T(T(4,4),3)))

@@ -1,4 +1,4 @@
-export @set, @lens
+export @set, @lens, @set!
 using MacroTools
 
 """
@@ -29,7 +29,25 @@ T(T(2, 3), 2)
 ```
 """
 macro set(ex)
-    atset_impl(ex)
+    atset_impl(ex, overwrite=false)
+end
+
+"""
+    @set! assignment
+
+Shortcut for `obj = @set obj...`.
+
+julia> t = (a=1,)
+(a = 1,)
+
+julia> @set! t.a=2
+(a = 2,)
+
+julia> t
+(a = 2,)
+"""
+macro set!(ex)
+    atset_impl(ex, overwrite=true)
 end
 
 function parse_obj_lenses(ex)
@@ -70,22 +88,23 @@ struct _UpdateOp{OP,V}
 end
 (u::_UpdateOp)(x) = u.op(x, u.val)
 
-function atset_impl(ex::Expr)
+function atset_impl(ex::Expr; overwrite::Bool)
     @assert ex.head isa Symbol
     @assert length(ex.args) == 2
     ref, val = ex.args
     obj, lens = parse_obj_lens(ref)
+    dst = overwrite ? obj : gensym("_")
     val = esc(val)
     ret = if ex.head == :(=)
         quote
             lens = $lens
-            set($obj, lens, $val)
+            $dst = set($obj, lens, $val)
         end
     else
         op = get_update_op(ex.head)
         f = :(_UpdateOp($op,$val))
         quote
-            modify($f, $obj, $lens)
+            $dst = modify($f, $obj, $lens)
         end
     end
     ret
