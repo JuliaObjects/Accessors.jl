@@ -310,4 +310,30 @@ end
     # do we want this to throw an error?
     @test_throws ArgumentError (@set t.z = 3)
 end
+
+@testset "setproperties" begin
+    o = T(1,2)
+    @test Setfield.setproperties(o, (a=2, b=3)) === T(2,3)
+    @test Setfield.setproperties(o, (a=2, b=3.0)) === T(2,3.0)
+    @test_throws ArgumentError Setfield.setproperties(o, (a=2, c=3.0))
+end
+
+struct CustomProperties
+    _a
+    _b
+end
+function Setfield.setproperties(o::CustomProperties, patch)
+    CustomProperties(get(patch, :a, getfield(o, :_a)),
+                     get(patch, :b, getfield(o, :_b)))
+
+end
+
+@testset "setproperties overloading" begin
+    o = CustomProperties("A", "B")
+    o2 = @set o.a = :A
+    @test o2 == CustomProperties(:A, "B")
+    o3 = @set o.b = :B
+    @test o3 == CustomProperties("A", :B)
+end
+
 end
