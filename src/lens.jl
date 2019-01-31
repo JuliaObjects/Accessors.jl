@@ -203,6 +203,57 @@ Base.@propagate_inbounds function set(obj, l::IndexLens, val)
     setindex(obj, val, l.indices...)
 end
 
+"""
+    ConstIndexLens{I}
+
+Lens with index stored in type parameter.  This is useful for type-stable
+[`get`](@ref) and [`set`](@ref) operations on tuples and named tuples.
+
+This lens can be constructed by, e.g., `@lens _[\$1]`.  Complex expression
+must be wrapped with `\$(...)` like `@lens _[\$(length(xs))]`.
+
+# Examples
+```jldoctest
+julia> using Setfield
+
+julia> get((1, 2.0), @lens _[\$1])
+1
+
+julia> Base.promote_op(get, typeof.(((1, 2.0), @lens _[\$1]))...)
+Int64
+
+julia> Base.promote_op(get, typeof.(((1, 2.0), @lens _[1]))...) !== Int
+true
+```
+"""
+struct ConstIndexLens{I} <: Lens end
+
+Base.@propagate_inbounds get(obj, ::ConstIndexLens{I}) where I = obj[I...]
+
+Base.@propagate_inbounds set(obj, ::ConstIndexLens{I}, val) where I =
+    setindex(obj, val, I...)
+
+@generated function set(obj::Union{Tuple, NamedTuple},
+                        ::ConstIndexLens{I},
+                        val) where I
+    if length(I) == 1
+        n, = I
+        args = map(1:length(obj.types)) do i
+            i == n ? :val : :(obj[$i])
+        end
+        quote
+            $(Expr(:meta, :inline))
+            ($(args...),)
+        end
+    else
+        quote
+            throw(ArgumentError($(string(
+                "A `Tuple` and `NamedTuple` can only be indexed with one ",
+                "integer.  Given: $I"))))
+        end
+    end
+end
+
 Base.@deprecate get(lens::Lens, obj)       get(obj, lens)
 Base.@deprecate set(lens::Lens, obj, val)  set(obj, lens, val)
 Base.@deprecate modify(f, lens::Lens, obj) modify(f, obj, lens)

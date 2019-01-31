@@ -20,7 +20,7 @@ julia> s = SpaceShip(Person(:julia, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 SpaceShip(Person(:julia, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 ```
 Lets update the captains name:
-```jldoctest spaceship
+```jldoctest spaceship; filter = r" .*$"
 julia> s.captain.name = :JULIA
 ERROR: type Person is immutable
 ```

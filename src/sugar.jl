@@ -50,11 +50,23 @@ macro set!(ex)
     atset_impl(ex, overwrite=true)
 end
 
+is_interpolation(x) = x isa Expr && x.head == :$
+
 function parse_obj_lenses(ex)
     if @capture(ex, front_[indices__])
         obj, frontlens = parse_obj_lenses(front)
-        index = esc(Expr(:tuple, indices...))
-        lens = :(IndexLens($index))
+        if any(is_interpolation, indices)
+            if !all(is_interpolation, indices)
+                throw(ArgumentError(string(
+                    "Constant and non-constant indexing (i.e., indices",
+                    " with and without \$) cannot be mixed.")))
+            end
+            index = esc(Expr(:tuple, [x.args[1] for x in indices]...))
+            lens = :(ConstIndexLens{$index}())
+        else
+            index = esc(Expr(:tuple, indices...))
+            lens = :(IndexLens($index))
+        end
     elseif @capture(ex, front_.property_)
         obj, frontlens = parse_obj_lenses(front)
         lens = :(PropertyLens{$(QuoteNode(property))}())
@@ -152,12 +164,15 @@ macro lens(ex)
 end
 
 has_atlens_support(::Any) = false
-has_atlens_support(::Union{PropertyLens, IndexLens, IdentityLens}) = true
+has_atlens_support(::Union{PropertyLens, IndexLens, ConstIndexLens, IdentityLens}) =
+    true
 has_atlens_support(l::ComposedLens) =
     has_atlens_support(l.outer) && has_atlens_support(l.inner)
 
 print_application(io::IO, l::PropertyLens{field}) where {field} = print(io, ".", field)
 print_application(io::IO, l::IndexLens) = print(io, "[", join(l.indices, ", "), "]")
+print_application(io::IO, ::ConstIndexLens{I}) where I =
+    print(io, "[", join(string.("\$", I), ", "), "]")
 print_application(io::IO, l::IdentityLens) = print(io, "")
 
 function print_application(io::IO, l::ComposedLens)
