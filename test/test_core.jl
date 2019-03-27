@@ -364,9 +364,9 @@ end
 
 @testset "setproperties" begin
     o = T(1,2)
-    @test Setfield.setproperties(o, (a=2, b=3)) === T(2,3)
-    @test Setfield.setproperties(o, (a=2, b=3.0)) === T(2,3.0)
-    @test_throws ArgumentError Setfield.setproperties(o, (a=2, c=3.0))
+    @test setproperties(o, (a=2, b=3)) === T(2,3)
+    @test setproperties(o, (a=2, b=3.0)) === T(2,3.0)
+    @test_throws ArgumentError setproperties(o, (a=2, c=3.0))
 end
 
 struct CustomProperties

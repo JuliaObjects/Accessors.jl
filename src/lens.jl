@@ -1,6 +1,7 @@
 export Lens, set, get, modify
 export @lens
 export set, get, modify
+export setproperties
 
 import Base: get
 using Base: setindex, getproperty
@@ -114,6 +115,29 @@ function assert_hasfields(T, fnames)
         end
     end
 end
+
+"""
+    setproperties(obj, patch)
+
+Return a copy of `obj` with attributes updates accoring to `patch`.
+
+# Examples
+```jldoctest
+julia> using Setfield
+
+julia> struct S;a;b;c; end
+
+julia> s = S(1,2,3)
+S(1, 2, 3)
+
+julia> setproperties(s, (a=10,c=4))
+S(10, 2, 4)
+
+julia> setproperties((a=1,c=2,b=3), (a=10,c=4))
+(a = 10, c = 4, b = 3)
+```
+"""
+function setproperties end
 
 @generated function setproperties(obj, patch)
     assert_hasfields(obj, fieldnames(patch))
