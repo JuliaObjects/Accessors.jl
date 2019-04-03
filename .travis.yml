@@ -3,7 +3,6 @@ language: julia
 os:
   - linux
 julia:
-  - 0.7
   - 1.0
   - nightly
 notifications:
@@ -11,8 +10,6 @@ notifications:
 git:
   depth: 99999999
 
-## uncomment the following lines to allow failures on nightly julia
-## (tests will run but not make your overall status red)
 matrix:
   allow_failures:
   - julia: nightly
@@ -20,27 +17,11 @@ matrix:
       - os: osx
         julia: 1.0
 
-## uncomment and modify the following lines to manually install system packages
-#addons:
-#  apt: # apt-get for linux
-#    packages:
-#    - gfortran
-
-# We slightly deviate from the default script to run Documenter as a
-# part of the test.  To check what default script does, see:
-# https://github.com/travis-ci/travis-build/blob/master/lib/travis/build/script/julia.rb
-
-before_script:
-  - julia --color=yes -e "using Pkg; Pkg.clone(pwd()); Pkg.build(\"Setfield\")"
-  - julia --color=yes -e 'using Pkg; Pkg.add(["Documenter", "StaticArrays"])'
-
-script:
-  - julia --color=yes -e "using Pkg; Pkg.test(\"Setfield\", coverage=true)"
-  - julia --color=yes docs/build.jl
-
-after_success:
-  # push coverage results to Coveralls
-  - julia -e 'using Pkg; cd(Pkg.dir("Setfield")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
-  # push coverage results to Codecov
-  - julia -e 'using Pkg; cd(Pkg.dir("Setfield")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
-  - julia --color=yes docs/deploy.jl
+jobs:
+  include:
+    - stage: "Documentation"
+      julia: 1.1
+      os: linux
+      script:
+        - docs/make.jl
+  after_success: skip
