@@ -170,7 +170,7 @@ has_atlens_support(l::ComposedLens) =
     has_atlens_support(l.outer) && has_atlens_support(l.inner)
 
 print_application(io::IO, l::PropertyLens{field}) where {field} = print(io, ".", field)
-print_application(io::IO, l::IndexLens) = print(io, "[", join(l.indices, ", "), "]")
+print_application(io::IO, l::IndexLens) = print(io, "[", join(repr.(l.indices), ", "), "]")
 print_application(io::IO, ::ConstIndexLens{I}) where I =
     print(io, "[", join(string.("\$", I), ", "), "]")
 print_application(io::IO, l::IdentityLens) = print(io, "")

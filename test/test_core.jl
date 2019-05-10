@@ -120,14 +120,15 @@ struct UserDefinedLens <: Lens end
 
 
 @testset "show it like you build it " begin
-    obj = T(1,2)
     i = 3
-    for item in [
+    @testset for item in [
             @lens _.a
             @lens _[1]
+            @lens _[:a]
+            @lens _["a"]
             @lens _[$1]
             @lens _[$1, $(1 + 1)]
-            @lens _.a.b[2][$3]
+            @lens _.a.b[:c]["d"][2][$3]
             @lens _
             MultiPropertyLens((a=@lens(_),))
             (@lens _.a[1]) ∘ MultiPropertyLens((b = (@lens _[1]),))
