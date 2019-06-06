@@ -23,6 +23,9 @@ jobs:
     - stage: "Documentation"
       julia: 1.1
       os: linux
-      script:
-        - docs/make.jl
-  after_success: skip
+      script: julia --project=docs --color=yes -e '
+          using Pkg;
+          Pkg.develop(PackageSpec(path=pwd()));
+          Pkg.instantiate();
+          include("docs/make.jl");'
+      after_success: skip
