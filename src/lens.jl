@@ -105,7 +105,7 @@ end
 end
 
 @generated constructor_of(::Type{T}) where T =
-    getfield(T.name.module, Symbol(T.name.name))
+    getfield(parentmodule(T), nameof(T))
 
 function assert_hasfields(T, fnames)
     for fname in fnames
