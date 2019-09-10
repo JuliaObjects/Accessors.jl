@@ -130,6 +130,9 @@ struct UserDefinedLens <: Lens end
             @lens _[$1, $(1 + 1)]
             @lens _.a.b[:c]["d"][2][$3]
             @lens _
+            @lens first(_)
+            @lens last(first(_))
+            @lens last(first(_.a))[1]
             MultiPropertyLens((a=@lens(_),))
             (@lens _.a[1]) ∘ MultiPropertyLens((b = (@lens _[1]),))
             UserDefinedLens()

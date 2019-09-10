@@ -278,6 +278,38 @@ Base.@propagate_inbounds set(obj, ::ConstIndexLens{I}, val) where I =
     end
 end
 
+"""
+    FunctionLens(f)
+
+Lens with [`get`](@ref) method definition that simply calls `f`.
+[`set`](@ref) method for each function `f` must be implemented manually.
+Use `methods(set, (Any, Setfield.FunctionLens, Any))` to get a list of
+supported functions.
+
+Note that `FunctionLens` flips the order of composition; i.e.,
+`(@lens f(_)) ∘ (@lens g(_)) == @lens g(f(_))`.
+
+# Example
+```jldoctest
+julia> using Setfield
+
+julia> obj = ((1, 2), (3, 4));
+
+julia> l = (@lens first(_)) ∘ (@lens last(_))
+(@lens last(first(_)))
+
+julia> get(obj, lens)
+3
+
+julia> set(obj, lens, '3')
+((1, 2), ('3', 4))
+```
+"""
+struct FunctionLens{f} <: Lens end
+FunctionLens(f) = FunctionLens{f}()
+
+get(obj, ::FunctionLens{f}) where f = f(obj)
+
 Base.@deprecate get(lens::Lens, obj)       get(obj, lens)
 Base.@deprecate set(lens::Lens, obj, val)  set(obj, lens, val)
 Base.@deprecate modify(f, lens::Lens, obj) modify(f, obj, lens)

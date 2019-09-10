@@ -70,6 +70,9 @@ function parse_obj_lenses(ex)
     elseif @capture(ex, front_.property_)
         obj, frontlens = parse_obj_lenses(front)
         lens = :(PropertyLens{$(QuoteNode(property))}())
+    elseif @capture(ex, f_(front_))
+        obj, frontlens = parse_obj_lenses(front)
+        lens = :(FunctionLens($(esc(f))))
     else
         obj = esc(ex)
         return obj, ()
@@ -164,7 +167,7 @@ macro lens(ex)
 end
 
 has_atlens_support(::Any) = false
-has_atlens_support(::Union{PropertyLens, IndexLens, ConstIndexLens, IdentityLens}) =
+has_atlens_support(::Union{PropertyLens, IndexLens, ConstIndexLens, FunctionLens, IdentityLens}) =
     true
 has_atlens_support(l::ComposedLens) =
     has_atlens_support(l.outer) && has_atlens_support(l.inner)
@@ -178,6 +181,24 @@ print_application(io::IO, l::IdentityLens) = print(io, "")
 function print_application(io::IO, l::ComposedLens)
     print_application(io, l.outer)
     print_application(io, l.inner)
+end
+
+function print_application(printer, io, ::FunctionLens{f}) where f
+    print(io, f, '(')
+    printer(io)
+    print(io, ')')
+end
+
+function print_application(printer, io, l)
+    @assert has_atlens_support(l)
+    printer(io)
+    print_application(io, l)
+end
+
+function print_application(printer, io, l::ComposedLens)
+    print_application(io, l.inner) do io
+        print_application(printer, io, l.outer)
+    end
 end
 
 function Base.show(io::IO, l::Lens)
@@ -199,8 +220,10 @@ function Base.show(io::IO, l::ComposedLens)
 end
 
 function print_in_atlens(io, l)
-    print(io, "(@lens _")
-    print_application(io, l)
+    print(io, "(@lens ")
+    print_application(io, l) do io
+        print(io, '_')
+    end
     print(io, ')')
 end
 
