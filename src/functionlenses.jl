@@ -1,5 +1,5 @@
-set(obj, ::FunctionLens{last}, val) = @set obj[length(obj)] = val
-set(obj, ::FunctionLens{first}, val) = @set obj[1] = val
+set(obj, ::FunctionLens{last}, val) = @set obj[lastindex(obj)] = val
+set(obj, ::FunctionLens{first}, val) = @set obj[firstindex(obj)] = val
 
 set(obj::Array, ::FunctionLens{eltype}, T::Type) = collect(T, obj)
 set(::Type{<:Array{<:Any, N}}, ::FunctionLens{eltype}, ::Type{T}) where {N, T} =
