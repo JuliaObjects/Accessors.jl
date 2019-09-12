@@ -113,6 +113,10 @@ end
 
     t = @set T(1,2).a = 2
     @test t === T(2,2)
+
+    t = (1, 2, 3, 4)
+    @test (@set t[length(t)] = 40) === (1, 2, 3, 40)
+    @test (@set t[length(t) ÷ 2] = 20) === (1, 20, 3, 4)
 end
 
 
