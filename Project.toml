@@ -6,10 +6,11 @@ MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 Kwonly = "18d08c8c-0732-55ee-a446-91a51d7b4206"
 QuickTypes = "ae2dfa86-617c-530c-b392-ef20fdad97bb"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Kwonly", "QuickTypes", "StaticArrays", "BenchmarkTools"]
+test = ["Test", "Kwonly", "QuickTypes", "StaticArrays", "BenchmarkTools", "InteractiveUtils"]
