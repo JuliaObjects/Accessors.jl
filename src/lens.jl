@@ -280,6 +280,7 @@ end
 
 """
     FunctionLens(f)
+    @lens f(_)
 
 Lens with [`get`](@ref) method definition that simply calls `f`.
 [`set`](@ref) method for each function `f` must be implemented manually.
@@ -304,6 +305,19 @@ julia> get(obj, lens)
 julia> set(obj, lens, '3')
 ((1, 2), ('3', 4))
 ```
+
+# Implementation
+
+To use `myfunction` as a lens, define a `set` method with the following
+signature:
+
+```julia
+Setfield.set(obj, ::typeof(@lens myfunction(_)), val) = ...
+```
+
+`typeof` is used above instead of `FunctionLens` because how actual
+type of `@lens myfunction(_)` is implemented is not the part of stable
+API.
 """
 struct FunctionLens{f} <: Lens end
 FunctionLens(f) = FunctionLens{f}()
