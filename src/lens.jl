@@ -296,14 +296,14 @@ julia> using Setfield
 
 julia> obj = ((1, 2), (3, 4));
 
-julia> l = (@lens first(_)) ∘ (@lens last(_))
+julia> lens = (@lens first(_)) ∘ (@lens last(_))
 (@lens last(first(_)))
 
 julia> get(obj, lens)
-3
+2
 
-julia> set(obj, lens, '3')
-((1, 2), ('3', 4))
+julia> set(obj, lens, '2')
+((1, '2'), (3, 4))
 ```
 
 # Implementation
