@@ -1,5 +1,6 @@
 name = "Setfield"
 uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
+version = "0.4.0"
 
 [deps]
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
