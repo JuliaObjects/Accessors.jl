@@ -201,21 +201,29 @@ function print_application(printer, io, l::ComposedLens)
     end
 end
 
-function Base.show(io::IO, l::Lens)
+Base.show(io::IO, l::Lens) = _show(io, nothing, l)
+Base.show(io::IO, ::MIME"text/plain", l::Lens) = _show(io, MIME("text/plain"), l)
+
+function _show(io::IO, mime, l::Lens)
     if has_atlens_support(l)
         print_in_atlens(io, l)
-    else
+    elseif mime === nothing
         show_generic(io, l)
+    else
+        # Downstream packages may define specific show for text/plain.
+        # Dispatch to their method rather than our `show_generic` in this
+        # case.
+        show(io, mime, l)
     end
 end
 
-function Base.show(io::IO, l::ComposedLens)
+function _show(io::IO, mime, l::ComposedLens)
     if has_atlens_support(l)
         print_in_atlens(io, l)
     else
-        show(io, l.outer)
+        _show(io, mime, l.outer)
         print(io, " ∘ ")
-        show(io, l.inner)
+        _show(io, mime, l.inner)
     end
 end
 
