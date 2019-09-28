@@ -166,11 +166,12 @@ macro lens(ex)
     lens
 end
 
-has_atlens_support(::Any) = false
-has_atlens_support(::Union{PropertyLens, IndexLens, ConstIndexLens, FunctionLens, IdentityLens}) =
+has_atlens_support(l::Lens) = has_atlens_support(typeof(l))
+has_atlens_support(::Type{<:Lens}) = false
+has_atlens_support(::Type{<:Union{PropertyLens, IndexLens, ConstIndexLens, FunctionLens, IdentityLens}}) =
     true
-has_atlens_support(l::ComposedLens) =
-    has_atlens_support(l.outer) && has_atlens_support(l.inner)
+has_atlens_support(::Type{ComposedLens{LO, LI}}) where {LO, LI} =
+    has_atlens_support(LO) && has_atlens_support(LI)
 
 print_application(io::IO, l::PropertyLens{field}) where {field} = print(io, ".", field)
 print_application(io::IO, l::IndexLens) = print(io, "[", join(repr.(l.indices), ", "), "]")
@@ -201,8 +202,8 @@ function print_application(printer, io, l::ComposedLens)
     end
 end
 
-Base.show(io::IO, l::Lens) = _show(io, nothing, l)
-Base.show(io::IO, ::MIME"text/plain", l::Lens) = _show(io, MIME("text/plain"), l)
+Base.show(io::IO, ::MIME"text/plain", l::ComposedLens) =
+    _show(io, MIME("text/plain"), l)
 
 function _show(io::IO, mime, l::Lens)
     if has_atlens_support(l)
