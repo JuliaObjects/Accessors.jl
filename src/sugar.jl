@@ -207,13 +207,13 @@ Base.show(io::IO, ::MIME"text/plain", l::Lens) = _show(io, MIME("text/plain"), l
 function _show(io::IO, mime, l::Lens)
     if has_atlens_support(l)
         print_in_atlens(io, l)
-    elseif mime === nothing
+    elseif mime === nothing || get(io, :__Setfield_recursing, false)
         show_generic(io, l)
     else
         # Downstream packages may define specific show for text/plain.
         # Dispatch to their method rather than our `show_generic` in this
         # case.
-        show(io, mime, l)
+        show(IOContext(io, :__Setfield_recursing => true), mime, l)
     end
 end
 
