@@ -202,6 +202,10 @@ function print_application(printer, io, l::ComposedLens)
     end
 end
 
+# Since `show` of `ComposedLens` needs to call `show` of other lenses,
+# we explicitly define text/plain `show` for `ComposedLens` to propagate
+# the "context" (2-arg or 3-arg `show`) with which `show` has to be called.
+# See: https://github.com/jw3126/Setfield.jl/pull/86
 Base.show(io::IO, ::MIME"text/plain", l::ComposedLens) =
     _show(io, MIME("text/plain"), l)
 
