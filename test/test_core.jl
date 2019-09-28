@@ -372,6 +372,15 @@ end
     ]
         @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
     end
+
+    @testset for lens in [
+        UserDefinedLens()
+        (@lens _.a) ∘ UserDefinedLens()
+        UserDefinedLens() ∘ (@lens _.b)
+        (@lens _.a) ∘ UserDefinedLens() ∘ (@lens _.b)
+    ]
+        @test sprint(show, lens) == sprint(show, "text/plain", lens)
+    end
 end
 
 @testset "Named Tuples" begin
