@@ -356,13 +356,6 @@ Setfield.constructor_of(::Type{<: B{T}}) where T = B{T}
     @test obj2 === B{1}(2, :three)
 end
 
-@testset "show_generic" begin
-    l = @lens _[1]
-    s = sprint(Setfield.show_generic,l)
-    l2 = eval(Meta.parse(s))
-    @test l == l2
-end
-
 @testset "text/plain show" begin
     @testset for lens in [
         LensWithTextPlain()

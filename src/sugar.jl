@@ -209,11 +209,8 @@ function _show(io::IO, mime, l::Lens)
     if has_atlens_support(l)
         print_in_atlens(io, l)
     elseif mime === nothing
-        show_generic(io, l)
+        show(io, l)
     else
-        # Downstream packages may define specific show for text/plain.
-        # Dispatch to their method rather than our `show_generic` in this
-        # case.
         show(io, mime, l)
     end
 end
@@ -235,10 +232,3 @@ function print_in_atlens(io, l)
     end
     print(io, ')')
 end
-
-function show_generic(io::IO, args...)
-    types = tuple(typeof(io), Base.Iterators.repeated(Any, length(args))...)
-    Types = Tuple{types...}
-    invoke(show, Types, io, args...)
-end
-show_generic(args...) = show_generic(stdout, args...)
