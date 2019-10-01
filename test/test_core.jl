@@ -3,6 +3,7 @@ using Test
 using Setfield
 using Setfield: compose, get_update_op
 using Setfield.Experimental
+import ConstructionBase
 
 struct T
     a
@@ -370,7 +371,7 @@ end
     @inferred set(obj, l_nested, (a=(a=10.0, c="twenty"), b=:thirty))
 end
 
-@testset "type change during @set (default constructor_of)" begin
+@testset "type change during @set (default constructorof)" begin
     obj = TT(2,3)
     obj2 = @set obj.b = :three
     @test obj2 === TT(2, :three)
@@ -382,9 +383,9 @@ struct B{T, X, Y}
     y::Y
     B{T}(x::X, y::Y = 2) where {T, X, Y} = new{T, X, Y}(x, y)
 end
-Setfield.constructor_of(::Type{<: B{T}}) where T = B{T}
+ConstructionBase.constructorof(::Type{<: B{T}}) where T = B{T}
 
-@testset "type change during @set (custom constructor_of)" begin
+@testset "type change during @set (custom constructorof)" begin
     obj = B{1}(2,3)
     obj2 = @set obj.y = :three
     @test obj2 === B{1}(2, :three)
@@ -422,22 +423,18 @@ end
     @test_throws ArgumentError (@set t.z = 3)
 end
 
-@testset "setproperties" begin
-    o = T(1,2)
-    @test setproperties(o, (a=2, b=3)) === T(2,3)
-    @test setproperties(o, (a=2, b=3.0)) === T(2,3.0)
-    @test_throws ArgumentError setproperties(o, (a=2, c=3.0))
-end
-
 struct CustomProperties
     _a
     _b
 end
-function Setfield.setproperties(o::CustomProperties, patch)
+
+function ConstructionBase.setproperties(o::CustomProperties, patch::NamedTuple)
     CustomProperties(get(patch, :a, getfield(o, :_a)),
                      get(patch, :b, getfield(o, :_b)))
 
 end
+
+ConstructionBase.constructorof(::Type{CustomProperties}) = error()
 
 @testset "setproperties overloading" begin
     o = CustomProperties("A", "B")

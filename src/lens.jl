@@ -1,7 +1,10 @@
 export Lens, set, get, modify
 export @lens
 export set, get, modify
+using ConstructionBase
 export setproperties
+export constructorof
+
 
 import Base: get
 using Base: setindex, getproperty
@@ -102,66 +105,6 @@ end
          Expr(:meta, :inline),
         :(setproperties(obj, ($field=val,)))
        )
-end
-
-@generated constructor_of(::Type{T}) where T =
-    getfield(parentmodule(T), nameof(T))
-
-function assert_hasfields(T, fnames)
-    for fname in fnames
-        if !(fname in fieldnames(T))
-            msg = "$T has no field $fname"
-            throw(ArgumentError(msg))
-        end
-    end
-end
-
-"""
-    setproperties(obj, patch)
-
-Return a copy of `obj` with attributes updates accoring to `patch`.
-
-# Examples
-```jldoctest
-julia> using Setfield
-
-julia> struct S;a;b;c; end
-
-julia> s = S(1,2,3)
-S(1, 2, 3)
-
-julia> setproperties(s, (a=10,c=4))
-S(10, 2, 4)
-
-julia> setproperties((a=1,c=2,b=3), (a=10,c=4))
-(a = 10, c = 4, b = 3)
-```
-"""
-function setproperties end
-
-@generated function setproperties(obj, patch)
-    assert_hasfields(obj, fieldnames(patch))
-    args = map(fieldnames(obj)) do fn
-        if fn in fieldnames(patch)
-            :(patch.$fn)
-        else
-            :(obj.$fn)
-        end
-    end
-    Expr(:block,
-        Expr(:meta, :inline),
-        Expr(:call,:(constructor_of($obj)), args...)
-    )
-end
-
-@generated function setproperties(obj::NamedTuple, patch)
-    # this function is only generated to force the following check
-    # at compile time
-    assert_hasfields(obj, fieldnames(patch))
-    Expr(:block,
-        Expr(:meta, :inline),
-        :(merge(obj, patch))
-    )
 end
 
 struct ComposedLens{LO, LI} <: Lens
@@ -333,6 +276,7 @@ FunctionLens(f) = FunctionLens{f}()
 
 get(obj, ::FunctionLens{f}) where f = f(obj)
 
+Base.@deprecate constructor_of(T) constructorof(T)
 Base.@deprecate get(lens::Lens, obj)       get(obj, lens)
 Base.@deprecate set(lens::Lens, obj, val)  set(obj, lens, val)
 Base.@deprecate modify(f, lens::Lens, obj) modify(f, obj, lens)

@@ -128,7 +128,7 @@ end
 # Another way to "support" QuickTypes with type parameters is to use
 # QuickTypes.construct.
 @qstruct_fp Plane2(nwheels, weight::Number; brand=:zoomba)
-Setfield.constructor_of(::Type{<: Plane2}) =
+Setfield.constructorof(::Type{<: Plane2}) =
     (args...) -> QuickTypes.construct(Plane2, args...)
 
 @testset "Plane2" begin

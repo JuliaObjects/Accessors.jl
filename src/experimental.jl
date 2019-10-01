@@ -1,6 +1,6 @@
 module Experimental
 using Setfield
-using Setfield: constructor_of
+using ConstructionBase: constructorof
 import Setfield: get, set
 export MultiPropertyLens
 
@@ -32,7 +32,7 @@ end
     end
     Expr(:block,
         Expr(:meta, :inline),
-        Expr(:call, :(constructor_of($T)), args...)
+        Expr(:call, :(constructorof($T)), args...)
     )
 end
 
