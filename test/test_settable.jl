@@ -1,13 +1,14 @@
 module TestSettable
 using Test
 using Setfield
+import ConstructionBase
 # If no constructor is defined explicitly, don't generate any
 # inner-consturctor; let Julia generate the default constructor; i.e.,
 # @settable should be a no-op.
 @settable struct NoConstructor{A,B}
     b::B
 end
-Setfield.constructorof(::Type{T}) where {T <: NoConstructor} = T
+ConstructionBase.constructorof(::Type{T}) where {T <: NoConstructor} = T
 
 @testset "NoConstructor" begin
     s1 = NoConstructor{:a,Int}(1)
@@ -21,7 +22,7 @@ end
     b::B
     ExplicitConstructor{A,B}(b::B) where {A,B} = new{A,B}(b)
 end
-Setfield.constructorof(::Type{T}) where {T <: ExplicitConstructor} = T
+ConstructionBase.constructorof(::Type{T}) where {T <: ExplicitConstructor} = T
 
 @testset "ExplicitConstructor" begin
     s1 = ExplicitConstructor{:a,Int}(1)
@@ -41,7 +42,7 @@ end
         return new{A,B}(a, b)
     end
 end
-Setfield.constructorof(::Type{T}) where {T <: TypedConstructor} = T
+ConstructionBase.constructorof(::Type{T}) where {T <: TypedConstructor} = T
 
 @testset "TypedConstructor" begin
     s1 = TypedConstructor{Int,Int}(1)
