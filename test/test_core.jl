@@ -104,6 +104,10 @@ end
     i = 1
     si = @set t.a[i] = 10
     @test s1 === si
+    se = @set t.a[end] = 20
+    @test se === T((1,20),(3,4))
+    se1 = @set t.a[end-1] = 10
+    @test s1 === se1
 
     s1 = @set t.a[$1] = 10
     @test s1 === T((10,2),(3,4))
@@ -191,6 +195,8 @@ end
             @lens _.b.a.b[i]
             @lens _.b.a.b[$2]
             @lens _.b.a.b[$i]
+            @lens _.b.a.b[end]
+            @lens _.b.a.b[identity(end) - 1]
             @lens _
         ]
         val1, val2 = randn(2)
@@ -226,6 +232,8 @@ end
           ((@lens _.b.a.b[$(i+1)]),  4  ),
           ((@lens _.b.a.b[$2]   ),   4.0),
           ((@lens _.b.a.b[$(i+1)]),  4.0),
+          ((@lens _.b.a.b[end]),     4.0),
+          ((@lens _.b.a.b[end÷2+1]), 4.0),
           ((@lens _             ),   obj),
           ((@lens _             ),   :xy),
           (MultiPropertyLens((a=(@lens _), b=(@lens _))), (a=1, b=2)),
@@ -238,23 +246,49 @@ end
 
 @testset "IndexLens" begin
     l = @lens _[]
+    @test l isa Setfield.IndexLens
     x = randn()
     obj = Ref(x)
     @test get(obj, l) == x
 
     l = @lens _[][]
+    @test l.outer isa Setfield.IndexLens
+    @test l.inner isa Setfield.IndexLens
     inner = Ref(x)
     obj = Base.RefValue{typeof(inner)}(inner)
     @test get(obj, l) == x
 
     obj = (1,2,3)
     l = @lens _[1]
+    @test l isa Setfield.IndexLens
     @test get(obj, l) == 1
     @test set(obj, l, 6) == (6,2,3)
 
 
     l = @lens _[1:3]
+    @test l isa Setfield.IndexLens
     @test get([4,5,6,7], l) == [4,5,6]
+end
+
+@testset "DynamicIndexLens" begin
+    l = @lens _[end]
+    @test l isa Setfield.DynamicIndexLens
+    obj = (1,2,3)
+    @test get(obj, l) == 3
+    @test set(obj, l, true) == (1,2,true)
+
+    l = @lens _[end÷2]
+    @test l isa Setfield.DynamicIndexLens
+    obj = (1,2,3)
+    @test get(obj, l) == 1
+    @test set(obj, l, true) == (true,2,3)
+
+    two = 2
+    plusone(x) = x + 1
+    l = @lens _.a[plusone(end) - two].b
+    obj = (a=(1, (a=10, b=20), 3), b=4)
+    @test get(obj, l) == 20
+    @test set(obj, l, true) == (a=(1, (a=10, b=true), 3), b=4)
 end
 
 @testset "ConstIndexLens" begin

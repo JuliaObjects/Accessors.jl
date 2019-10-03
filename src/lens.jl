@@ -278,6 +278,15 @@ Base.@propagate_inbounds set(obj, ::ConstIndexLens{I}, val) where I =
     end
 end
 
+struct DynamicIndexLens{F} <: Lens
+    f::F
+end
+
+Base.@propagate_inbounds get(obj, I::DynamicIndexLens) = obj[I.f(obj)...]
+
+Base.@propagate_inbounds set(obj, I::DynamicIndexLens, val) =
+    setindex(obj, val, I.f(obj)...)
+
 """
     FunctionLens(f)
     @lens f(_)
