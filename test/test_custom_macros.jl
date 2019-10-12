@@ -48,14 +48,14 @@ set(o, l, 100)
 
 # Now we can implement the syntax macros
 
-using Setfield: atlens_impl, atset_impl
+using Setfield: setmacro, lensmacro
 
 macro myset!(ex)
-    atset_impl(ex, lenstransform=:Lens!)
+    setmacro(Lens!, ex)
 end
 
 macro mylens!(ex)
-    atlens_impl(ex, lenstransform=:Lens!)
+    lensmacro(Lens!, ex)
 end
 
 o = M(1,2)

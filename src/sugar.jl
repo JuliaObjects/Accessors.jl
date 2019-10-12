@@ -29,7 +29,7 @@ T(T(2, 3), 2)
 ```
 """
 macro set(ex)
-    atset_impl(ex, overwrite=false)
+    setmacro(identity, ex, overwrite=false)
 end
 
 """
@@ -47,7 +47,7 @@ julia> t
 (a = 2,)
 """
 macro set!(ex)
-    atset_impl(ex, overwrite=true)
+    setmacro(identity, ex, overwrite=true)
 end
 
 is_interpolation(x) = x isa Expr && x.head == :$
@@ -86,23 +86,23 @@ function parse_obj_lenses(ex)
                     " with and without \$) cannot be mixed.")))
             end
             index = esc(Expr(:tuple, [x.args[1] for x in indices]...))
-            lens = :(ConstIndexLens{$index}())
+            lens = :($ConstIndexLens{$index}())
         elseif any(need_dynamic_lens, indices)
             @gensym collection
             indices = replace_underscore.(indices, collection)
             dims = length(indices) == 1 ? nothing : 1:length(indices)
             lindices = esc.(lower_index.(collection, indices, dims))
-            lens = :(DynamicIndexLens($(esc(collection)) -> ($(lindices...),)))
+            lens = :($DynamicIndexLens($(esc(collection)) -> ($(lindices...),)))
         else
             index = esc(Expr(:tuple, indices...))
-            lens = :(IndexLens($index))
+            lens = :($IndexLens($index))
         end
     elseif @capture(ex, front_.property_)
         obj, frontlens = parse_obj_lenses(front)
-        lens = :(PropertyLens{$(QuoteNode(property))}())
+        lens = :($PropertyLens{$(QuoteNode(property))}())
     elseif @capture(ex, f_(front_))
         obj, frontlens = parse_obj_lenses(front)
-        lens = :(FunctionLens($(esc(f))))
+        lens = :($FunctionLens($(esc(f))))
     else
         obj = esc(ex)
         return obj, ()
@@ -133,7 +133,7 @@ struct _UpdateOp{OP,V}
 end
 (u::_UpdateOp)(x) = u.op(x, u.val)
 
-function atset_impl(ex::Expr; overwrite::Bool=false, lenstransform=identity)
+function setmacro(lenstransform, ex::Expr; overwrite::Bool=false)
     @assert ex.head isa Symbol
     @assert length(ex.args) == 2
     ref, val = ex.args
@@ -143,14 +143,14 @@ function atset_impl(ex::Expr; overwrite::Bool=false, lenstransform=identity)
     ret = if ex.head == :(=)
         quote
             lens = ($lenstransform)($lens)
-            $dst = set($obj, lens, $val)
+            $dst = $set($obj, lens, $val)
         end
     else
         op = get_update_op(ex.head)
         f = :($_UpdateOp($op,$val))
         quote
             lens = ($lenstransform)($lens)
-            $dst = modify($f, $obj, lens)
+            $dst = $modify($f, $obj, lens)
         end
     end
     ret
@@ -189,10 +189,10 @@ julia> set(t, (@lens _[1]), "1")
 
 """
 macro lens(ex)
-    atlens_impl(ex)
+    lensmacro(identity, ex)
 end
 
-function atlens_impl(ex; lenstransform=identity)
+function lensmacro(lenstransform, ex)
     obj, lens = parse_obj_lens(ex)
     if obj != esc(:_)
         msg = """Cannot parse lens $ex. Lens expressions must start with _, got $obj instead."""
