@@ -133,6 +133,22 @@ struct _UpdateOp{OP,V}
 end
 (u::_UpdateOp)(x) = u.op(x, u.val)
 
+"""
+    setmacro(lenstransform, ex::Expr; overwrite::Bool=false)
+
+This function can be used to create a customized variant of [`@set`](@ref).
+It works by applying `lenstransform` to the lens that is used in the customized `@set` macro
+at runtime.
+```julia
+function mytransform(lens::Lens)::Lens
+    ...
+end
+macro myset(ex)
+    setmacro(mytransform, ex)
+end
+```
+See also [@lensmacro](@ref).
+"""
 function setmacro(lenstransform, ex::Expr; overwrite::Bool=false)
     @assert ex.head isa Symbol
     @assert length(ex.args) == 2
@@ -192,6 +208,22 @@ macro lens(ex)
     lensmacro(identity, ex)
 end
 
+
+"""
+    lensmacro(lenstransform, ex::Expr)
+
+This function can be used to create a customized variant of [`@lens`](@ref).
+It works by applying `lenstransform` to the created lens at runtime.
+```julia
+function mytransform(lens::Lens)::Lens
+    ...
+end
+macro mylens(ex)
+    lensmacro(mytransform, ex)
+end
+```
+See also [@setmacro](@ref).
+"""
 function lensmacro(lenstransform, ex)
     obj, lens = parse_obj_lens(ex)
     if obj != esc(:_)
