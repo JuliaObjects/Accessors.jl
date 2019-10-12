@@ -1,4 +1,3 @@
-module CustomMacros
 # # Extending `@set` and `@lens`
 # This code demonstrates how to extend the `@set` and `@lens` mechanism with custom
 # lenses.
@@ -74,5 +73,3 @@ set(o, l, 100)
 @test o == (foo=[100,2,3], bar=:bar)
 
 # Everything works, we can do arbitrary nesting and also use `+=` syntax etc.
-
-end#module

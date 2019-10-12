@@ -40,7 +40,7 @@ SpaceShip(Person(:JULIA, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 julia> s = @set s.velocity[1] += 999999
 SpaceShip(Person(:JULIA, 2009), [999999.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 
-julia> s = @set s.velocity[1] += 999999
+julia> s = @set s.velocity[1] += 1000001
 SpaceShip(Person(:JULIA, 2009), [2.0e6, 0.0, 0.0], [0.0, 0.0, 0.0])
 
 julia> @set s.position[2] = 20

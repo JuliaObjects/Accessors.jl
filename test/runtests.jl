@@ -1,6 +1,7 @@
 module TestSetfield
+
+include("test_examples.jl")
 include("test_setmacro.jl")
-include("test_custom_macros.jl")
 include("test_core.jl")
 include("test_functionlenses.jl")
 include("test_settable.jl")
