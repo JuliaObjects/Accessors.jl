@@ -112,7 +112,7 @@ end
 
 function parse_obj_lens(ex)
     obj, lenses = parse_obj_lenses(ex)
-    lens = Expr(:call, :compose, lenses...)
+    lens = Expr(:call, compose, lenses...)
     obj, lens
 end
 
@@ -133,7 +133,7 @@ struct _UpdateOp{OP,V}
 end
 (u::_UpdateOp)(x) = u.op(x, u.val)
 
-function atset_impl(ex::Expr; overwrite::Bool)
+function atset_impl(ex::Expr; overwrite::Bool=false, lenstransform=identity)
     @assert ex.head isa Symbol
     @assert length(ex.args) == 2
     ref, val = ex.args
@@ -142,14 +142,15 @@ function atset_impl(ex::Expr; overwrite::Bool)
     val = esc(val)
     ret = if ex.head == :(=)
         quote
-            lens = $lens
+            lens = ($lenstransform)($lens)
             $dst = set($obj, lens, $val)
         end
     else
         op = get_update_op(ex.head)
-        f = :(_UpdateOp($op,$val))
+        f = :($_UpdateOp($op,$val))
         quote
-            $dst = modify($f, $obj, $lens)
+            lens = ($lenstransform)($lens)
+            $dst = modify($f, $obj, lens)
         end
     end
     ret
@@ -188,12 +189,16 @@ julia> set(t, (@lens _[1]), "1")
 
 """
 macro lens(ex)
+    atlens_impl(ex)
+end
+
+function atlens_impl(ex; lenstransform=identity)
     obj, lens = parse_obj_lens(ex)
     if obj != esc(:_)
-        msg = """Cannot parse lens $ex. Lens expressions must start with @lens _"""
+        msg = """Cannot parse lens $ex. Lens expressions must start with _, got $obj instead."""
         throw(ArgumentError(msg))
     end
-    lens
+    :($(lenstransform)($lens))
 end
 
 has_atlens_support(l::Lens) = has_atlens_support(typeof(l))
