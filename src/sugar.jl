@@ -147,7 +147,7 @@ macro myset(ex)
     setmacro(mytransform, ex)
 end
 ```
-See also [@lensmacro](@ref).
+See also [`lensmacro`](@ref).
 """
 function setmacro(lenstransform, ex::Expr; overwrite::Bool=false)
     @assert ex.head isa Symbol
@@ -222,7 +222,7 @@ macro mylens(ex)
     lensmacro(mytransform, ex)
 end
 ```
-See also [@setmacro](@ref).
+See also [`setmacro`](@ref).
 """
 function lensmacro(lenstransform, ex)
     obj, lens = parse_obj_lens(ex)
