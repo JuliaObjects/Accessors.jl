@@ -98,6 +98,8 @@ function parse_obj_lenses(ex)
             lens = :($IndexLens($index))
         end
     elseif @capture(ex, front_.property_)
+        property isa Union{Symbol,String} ||
+            error("Second argument to `getproperty` can only be a `Symbol` or `String` literal.")
         obj, frontlens = parse_obj_lenses(front)
         lens = :($PropertyLens{$(QuoteNode(property))}())
     elseif @capture(ex, f_(front_))
