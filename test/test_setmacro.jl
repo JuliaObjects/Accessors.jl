@@ -45,9 +45,5 @@ using StaticArrays: @SMatrix
     @test m3 === @SMatrix[1 0; 0 0]
 end
 
-@testset "issue #83" begin
-    @test_throws LoadError eval(:(Setfield.@lens(_.[:a])))
-end
-
 end#module
 

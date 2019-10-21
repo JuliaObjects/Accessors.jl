@@ -460,4 +460,8 @@ ConstructionBase.constructorof(::Type{CustomProperties}) = error()
     @test o3 == CustomProperties("A", :B)
 end
 
+@testset "issue #83" begin
+    @test_throws ArgumentError Setfield.lensmacro(identity, :(_.[:a]))
+end
+
 end
