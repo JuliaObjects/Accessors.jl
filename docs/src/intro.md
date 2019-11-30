@@ -50,7 +50,7 @@ SpaceShip(Person(:JULIA, 2009), [2.0e6, 0.0, 0.0], [0.0, 20.0, 0.0])
 ## Under the hood
 
 Under the hood this package implements a simple [lens](https://hackage.haskell.org/package/lens) api.
-This api may be useful in its own rite and works as follows:
+This api may be useful in its own right and works as follows:
 
 ```jldoctest
 julia> using Setfield
