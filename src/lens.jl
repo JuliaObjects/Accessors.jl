@@ -7,7 +7,7 @@ export constructorof
 
 
 import Base: get
-using Base: setindex, getproperty
+using Base: getproperty
 
 """
     Lens

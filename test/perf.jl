@@ -42,7 +42,7 @@ function lens_set_i((obj, val, i))
 end
 
 function hand_set_i((obj, val, i))
-    @inbounds setindex(obj, val, i)
+    @inbounds Base.setindex(obj, val, i)
 end
 
 function benchmark_lens_vs_hand(b_lens::Benchmark, b_hand::Benchmark)

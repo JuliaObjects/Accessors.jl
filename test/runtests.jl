@@ -1,5 +1,6 @@
 module TestSetfield
 
+include("test_setindex.jl")
 include("test_examples.jl")
 include("test_setmacro.jl")
 include("test_core.jl")
