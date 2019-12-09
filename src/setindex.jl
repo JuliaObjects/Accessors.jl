@@ -4,7 +4,10 @@ end
 
 for T in [:Array, :Dict]
     @eval begin
-            Base.@propagate_inbounds setindex(o::$T, args...) =
-                setindex!(copy(o), args...)
+        Base.@propagate_inbounds function setindex(o::$T, args...)
+            new = copy(o)
+            setindex!(new, args...)
+            new
+        end
     end
 end
