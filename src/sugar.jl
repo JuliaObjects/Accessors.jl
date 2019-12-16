@@ -307,8 +307,3 @@ function print_in_atlens(io, l)
     end
     print(io, ')')
 end
-
-function Base.show(io::IO, T::Type{<:FunctionLens{S}}) where S
-   print(io, "typeof")
-   show(io, T())
-end

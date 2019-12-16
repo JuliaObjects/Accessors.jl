@@ -158,23 +158,7 @@ Base.show(io::IO, ::MIME"text/plain", ::LensWithTextPlain) =
         show(buf, item)
         item2 = eval(Meta.parse(String(take!(buf))))
         @test item === item2
-
-        # showing of Type{<:Lens}
-        show(buf, typeof(item))
-        typeof_item2 = eval(Meta.parse(String(take!(buf))))
-        @test typeof(item) === typeof_item2
     end
-end
-
-@testset "show of typeof(::FunctionLens)" begin
-    buf = IOBuffer()
-    flens = @lens first(_)
-    show(buf, typeof(flens))
-    @test String(take!(buf)) == "typeof$flens"
-
-    # test correct printing of UnionAll
-    show(buf, Setfield.FunctionLens)
-    @test String(take!(buf)) == "Setfield.FunctionLens"
 end
 
 function test_getset_laws(lens, obj, val1, val2)
