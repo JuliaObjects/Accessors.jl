@@ -170,7 +170,7 @@ end
     buf = IOBuffer()
     flens = @lens first(_)
     show(buf, typeof(flens))
-    @test String(take!(buf)) == "typeof(@lens first(_))"
+    @test String(take!(buf)) == "typeof$flens"
 
     # test correct printing of UnionAll
     show(buf, Setfield.FunctionLens)
