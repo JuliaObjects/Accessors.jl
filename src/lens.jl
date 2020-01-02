@@ -277,6 +277,3 @@ FunctionLens(f) = FunctionLens{f}()
 get(obj, ::FunctionLens{f}) where f = f(obj)
 
 Base.@deprecate constructor_of(T) constructorof(T)
-Base.@deprecate get(lens::Lens, obj)       get(obj, lens)
-Base.@deprecate set(lens::Lens, obj, val)  set(obj, lens, val)
-Base.@deprecate modify(f, lens::Lens, obj) modify(f, obj, lens)
