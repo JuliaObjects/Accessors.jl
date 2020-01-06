@@ -8,9 +8,10 @@ const NNamedTupleLens{N,s} = NamedTuple{s, T} where {T <: NTuple{N, Lens}}
 struct MultiPropertyLens{L <: NNamedTupleLens} <: Lens
     lenses::L
     function MultiPropertyLens(lenses::L) where {L <: NNamedTupleLens}
-        @warn """
+        msg = """
         `MultiPropertyLens` is planned to be removed. Please see [`Kaleido.jl`](https://github.com/tkf/Kaleido.jl) for a couple of similar useful lenses.
         """
+        Base.depwarn(msg, :MultiPropertyLens)
         new{L}(lenses)
     end
 end
