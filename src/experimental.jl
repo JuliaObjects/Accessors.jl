@@ -7,6 +7,12 @@ export MultiPropertyLens
 const NNamedTupleLens{N,s} = NamedTuple{s, T} where {T <: NTuple{N, Lens}}
 struct MultiPropertyLens{L <: NNamedTupleLens} <: Lens
     lenses::L
+    function MultiPropertyLens(lenses::L) where {L <: NNamedTupleLens}
+        @warn """
+        `MultiPropertyLens` is planned to be removed. Please see [`Kaleido.jl`](https://github.com/tkf/Kaleido.jl) for a couple of similar useful lenses.
+        """
+        new{L}(lenses)
+    end
 end
 
 _keys(::Type{MultiPropertyLens{NamedTuple{s,T}}}) where {s,T} = s

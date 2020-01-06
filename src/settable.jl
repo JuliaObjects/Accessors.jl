@@ -4,6 +4,13 @@ using MacroTools: splitdef, combinedef
 using MacroTools: splitstructdef, isstructdef, combinestructdef
 
 macro settable(ex)
+    @warn """
+    `Setfield.@settable` is planned to be removed. We believe that it is no longer needed.
+    Please try to remove it from your code. This might involve fixing some constructor calls,
+    but should be easy. If it turns out hard and you believe you have a use case, where `@settable`
+    is really crucial, please open an issue in the `Setfield` github repo:
+    https://github.com/jw3126/Setfield.jl/issues
+    """
     esc(settable(__module__, ex))
 end
 
