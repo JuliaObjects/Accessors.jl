@@ -18,6 +18,7 @@ using Test
 using .Clone: Clone
 
 using StaticArrays: @SMatrix
+using StaticNumbers
 
 @testset "setmacro, lensmacro isolation" begin
 
@@ -27,8 +28,8 @@ using StaticArrays: @SMatrix
     @test Clone.@lens(_[1]                                ) isa Setfield.Lens
     @test Clone.@lens(first(_)                            ) isa Setfield.Lens
     @test Clone.@lens(_[end]                              ) isa Setfield.Lens
-    @test Clone.@lens(_[$1]                           ) isa Setfield.Lens
-    @test Clone.@lens(_.a[1][end, end-2].b[$1, $1]) isa Setfield.Lens
+    @test Clone.@lens(_[static(1)]                           ) isa Setfield.Lens
+    @test Clone.@lens(_.a[1][end, end-2].b[static(1), static(1)]) isa Setfield.Lens
 
     @test Setfield.@lens(_.a) === Clone.@lens(_.a)
     @test Setfield.@lens(_.a.b) === Clone.@lens(_.a.b)

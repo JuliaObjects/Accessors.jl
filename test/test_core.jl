@@ -3,7 +3,8 @@ using Test
 using Setfield
 using Setfield: compose, get_update_op
 using Setfield.Experimental
-import ConstructionBase
+using ConstructionBase: ConstructionBase
+using StaticNumbers: static
 
 struct T
     a
@@ -110,10 +111,10 @@ end
     se1 = @set t.a[end-1] = 10
     @test s1 === se1
 
-    s1 = @set t.a[$1] = 10
+    s1 = @set t.a[static(1)] = 10
     @test s1 === T((10,2),(3,4))
     i = 1
-    si = @set t.a[$i] = 10
+    si = @set t.a[static(i)] = 10
     @test s1 === si
 
     t = @set T(1,2).a = 2
@@ -139,9 +140,9 @@ Base.show(io::IO, ::MIME"text/plain", ::LensWithTextPlain) =
             @lens _[1]
             @lens _[:a]
             @lens _["a"]
-            @lens _[$1]
-            @lens _[$1, $(1 + 1)]
-            @lens _.a.b[:c]["d"][2][$3]
+            @lens _[static(1)]
+            @lens _[static(1), static(1 + 1)]
+            @lens _.a.b[:c]["d"][2][static(3)]
             @lens _
             @lens first(_)
             @lens last(first(_))
@@ -194,8 +195,8 @@ end
             @lens _.b.a
             @lens _.b.a.b[2]
             @lens _.b.a.b[i]
-            @lens _.b.a.b[$2]
-            @lens _.b.a.b[$i]
+            @lens _.b.a.b[static(2)]
+            @lens _.b.a.b[static(i)]
             @lens _.b.a.b[end]
             @lens _.b.a.b[identity(end) - 1]
             @lens _
@@ -229,10 +230,10 @@ end
           ((@lens _.b.a         ),   o21),
           ((@lens _.b.a.b[2]    ),   4  ),
           ((@lens _.b.a.b[i+1]  ),   4  ),
-          ((@lens _.b.a.b[$2]   ),   4  ),
-          ((@lens _.b.a.b[$(i+1)]),  4  ),
-          ((@lens _.b.a.b[$2]   ),   4.0),
-          ((@lens _.b.a.b[$(i+1)]),  4.0),
+          ((@lens _.b.a.b[static(2)]   ),   4  ),
+          ((@lens _.b.a.b[static((i+1))]),  4  ),
+          ((@lens _.b.a.b[static(2)]   ),   4.0),
+          ((@lens _.b.a.b[static((i+1))]),  4.0),
           ((@lens _.b.a.b[end]),     4.0),
           ((@lens _.b.a.b[end÷2+1]), 4.0),
           ((@lens _             ),   obj),
@@ -292,26 +293,26 @@ end
     @test set(obj, l, true) == (a=(1, (a=10, b=true), 3), b=4)
 end
 
-@testset "ConstIndexLens" begin
+@testset "StaticNumbers" begin
     obj = (1, 2.0, '3')
-    l = @lens _[$1]
+    l = @lens _[static(1)]
     @test (@inferred get(obj, l)) === 1
     @test (@inferred set(obj, l, 6.0)) === (6.0, 2.0, '3')
-    l = @lens _[$(1 + 1)]
+    l = @lens _[static(1 + 1)]
     @test (@inferred get(obj, l)) === 2.0
     @test (@inferred set(obj, l, 6)) === (1, 6, '3')
     n = 1
-    l = @lens _[$(3n)]
+    l = @lens _[static(3n)]
     @test (@inferred get(obj, l)) === '3'
     @test (@inferred set(obj, l, 6)) === (1, 2.0, 6)
 
-    l = @lens _[$(1:3)]
+    l = @lens _[static(1):static(3)]
     @test get([4,5,6,7], l) == [4,5,6]
 
     @testset "complex example (sweeper)" begin
         sweeper_with_const = (
             model = (1, 2.0, 3im),
-            axis = (@lens _[$2]),
+            axis = (@lens _[static(2)]),
         )
 
         sweeper_with_noconst = @set sweeper_with_const.axis = @lens _[2]

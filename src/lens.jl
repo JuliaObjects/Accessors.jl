@@ -170,30 +170,25 @@ Base.@propagate_inbounds function set(obj, l::IndexLens, val)
     setindex(obj, val, l.indices...)
 end
 
-"""
-    ConstIndexLens{I}
+MSG_CONST_INDEX_LENS = """
+ConstIndexLens is deprecate. Replace as follows:
+```julia
+# old
+@set obj[\$1] = 2
 
-Lens with index stored in type parameter.  This is useful for type-stable
-[`get`](@ref) and [`set`](@ref) operations on tuples and named tuples.
-
-This lens can be constructed by, e.g., `@lens _[\$1]`.  Complex expression
-must be wrapped with `\$(...)` like `@lens _[\$(length(xs))]`.
-
-# Examples
-```jldoctest
-julia> using Setfield
-
-julia> get((1, 2.0), @lens _[\$1])
-1
-
-julia> Base.promote_op(get, typeof.(((1, 2.0), @lens _[\$1]))...)
-Int64
-
-julia> Base.promote_op(get, typeof.(((1, 2.0), @lens _[1]))...) !== Int
-true
+# new
+using StaticNumbers
+@set obj[static(1)] = 2
 ```
 """
-struct ConstIndexLens{I} <: Lens end
+
+@doc MSG_CONST_INDEX_LENS ->
+struct ConstIndexLens{I} <: Lens
+    function ConstIndexLens{I}() where {I}
+        Base.depwarn(MSG_CONST_INDEX_LENS, :ConstIndexLens)
+        new{I}()
+    end
+end
 
 Base.@propagate_inbounds get(obj, ::ConstIndexLens{I}) where I = obj[I...]
 
