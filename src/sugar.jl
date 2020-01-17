@@ -39,6 +39,8 @@ Shortcut for `obj = @set obj...`.
 
 # Example
 ```jldoctest
+julia> using Setfield
+
 julia> t = (a=1,)
 (a = 1,)
 
