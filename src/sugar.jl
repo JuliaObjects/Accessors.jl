@@ -37,6 +37,8 @@ end
 
 Shortcut for `obj = @set obj...`.
 
+# Example
+```jldoctest
 julia> t = (a=1,)
 (a = 1,)
 
@@ -45,6 +47,7 @@ julia> @set! t.a=2
 
 julia> t
 (a = 2,)
+```
 """
 macro set!(ex)
     setmacro(identity, ex, overwrite=true)
