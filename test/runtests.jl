@@ -1,6 +1,8 @@
 module TestSetfield
 
 import PerformanceTestTools
+import Setfield
+using Documenter: doctest
 
 include("test_setindex.jl")
 include("test_examples.jl")
@@ -12,4 +14,5 @@ include("test_staticarrays.jl")
 include("test_kwonly.jl")
 include("test_quicktypes.jl")
 PerformanceTestTools.@include("perf.jl")
+doctest(Setfield)
 end  # module
