@@ -82,7 +82,15 @@ function lower_index(collection::Symbol, index, dim)
 end
 
 function parse_obj_lenses(ex)
-    if @capture(ex, front_[indices__])
+    if @capture(ex, outer_∘inner_)
+        obj, outerlenses = parse_obj_lenses(outer)
+        innerobj, innerlenses = parse_obj_lenses(inner)
+        @assert innerobj == esc(:_)
+        return obj, tuple(outerlenses..., innerlenses...)
+    elseif is_interpolation(ex)
+        @assert length(ex.args) == 1
+        return esc(:_), (esc(ex.args[1]),)
+    elseif @capture(ex, front_[indices__])
         obj, frontlens = parse_obj_lenses(front)
         if any(is_interpolation, indices)
             if !all(is_interpolation, indices)
