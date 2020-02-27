@@ -449,13 +449,24 @@ end
     @test_throws ArgumentError Setfield.lensmacro(identity, :(_.[:a]))
 end
 
+@testset "@lens and ∘" begin
+    @test @lens(∘()) === @lens(_)
+    @test @lens(∘(_.a)) === @lens(_.a)
+    @test @lens(∘(_.a, _.b)) === @lens(_.a) ∘ @lens(_.b)
+    @test @lens(∘(_.a, _.b, _.c)) === Setfield.compose(@lens(_.a), @lens(_.b), @lens(_.c))
+
+    @test @lens(∘(_[1])) === @lens(_[1])
+    @test @lens(∘(_[1], _[2])) === @lens(_[1]) ∘ @lens(_[2])
+    @test @lens(∘(_[1], _[2], _[3])) === Setfield.compose(@lens(_[1]), @lens(_[2]), @lens(_[3]))
+
+    @test @lens(_ ∘ (_[1] ∘ _.a) ∘ first(_)) == @lens(_) ∘ (@lens(_[1]) ∘ @lens(_.a)) ∘ @lens(first(_))
+end
+
 @testset "@lens ∘ and \$" begin
-    @test @lens(_.a ∘ _.b) == @lens(_.a.b)
-    @test @lens(_.a ∘ _.b ∘ _[1]) == @lens(_.a.b[1])
     lbc = @lens _.b.c
     @test @lens($lbc)== lbc
-    @test @lens(_.a ∘ $lbc) == @lens(_.a.b.c)
-    @test @lens(_.a ∘ $lbc ∘ _[1] ∘ $lbc) == @lens(_.a) ∘ (lbc ∘ (@lens(_[1]) ∘ lbc))
+    @test @lens(_.a ∘ $lbc) == @lens(_.a) ∘ lbc
+    @test @lens(_.a ∘ $lbc ∘ _[1] ∘ $lbc) == @lens(_.a) ∘ lbc ∘ @lens(_[1]) ∘ lbc
 end
 
 end
