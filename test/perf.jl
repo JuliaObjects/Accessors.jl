@@ -111,4 +111,40 @@ let
         end
     end
 end
+
+function compose_left_assoc(obj, val)
+    l = @lens ((_.a∘_.b)∘_.c)∘_.d
+    set(obj, l, val)
+end
+
+function compose_right_assoc(obj, val)
+    l = @lens _.a∘(_.b∘(_.c∘_.d))
+    set(obj, l, val)
+end
+function compose_default_assoc(obj, val)
+    l = @lens _.a.b.c.d
+    set(obj, l, val)
+end
+@testset "Lens composition compiler prefered associativity" begin
+
+    obj = (a=(b=(c=(d=1,d2=2),c2=2),b2=3), a2=2)
+    val = 2.2
+    @test compose_left_assoc(obj, val) == compose_default_assoc(obj, val)
+    @test compose_right_assoc(obj, val) == compose_default_assoc(obj, val)
+
+    b_default = minimum(@benchmark compose_default_assoc($obj, $val))
+    println("Default associative composition: $b_default")
+    b_left    = minimum(@benchmark compose_left_assoc($obj, $val)   )
+    println("Left associative composition: $b_left")
+    b_right   = minimum(@benchmark compose_right_assoc($obj, $val)  )
+    println("Right associative composition: $b_right")
+
+    @test b_default.allocs == 0
+    @test b_right.allocs == 0
+    @test_broken b_left.allocs == 0
+
+    @test b_left.time > 2b_default.time
+    @test b_right.time ≈ b_default.time rtol=0.8
+end
+
 end
