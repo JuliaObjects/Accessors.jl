@@ -112,6 +112,17 @@ struct ComposedLens{LO, LI} <: Lens
     inner::LI
 end
 
+"""
+    compose([lens₁, [lens₂, [lens₃, ...]]])
+
+Compose `lens₁`, `lens₂` etc. There is one subtle point here:
+While the two composition orders `(lens₁ ∘ lens₂) ∘ lens₃` and `lens₁ ∘ (lens₂ ∘ lens₃)` have equivalent semantics,
+their performance may not be the same. The compiler tends to optimize right associative composition
+(second case) better then left associative composition.
+
+The compose function tries to use a composition order, that the compiler likes. The composition order is therefore not part of the stable API.
+"""
+function compose end
 compose() = IdentityLens()
 compose(l::Lens) = l
 compose(::IdentityLens, ::IdentityLens) = IdentityLens()
@@ -119,14 +130,11 @@ compose(::IdentityLens, l::Lens) = l
 compose(l::Lens, ::IdentityLens) = l
 compose(outer::Lens, inner::Lens) = ComposedLens(outer, inner)
 function compose(l1::Lens, ls::Lens...)
-    # We can build _.a.b.c as (_.a.b).c or _.a.(b.c)
-    # The compiler prefers (_.a.b).c
     compose(l1, compose(ls...))
 end
 
 """
     lens₁ ∘ lens₂
-    compose([lens₁, [lens₂, [lens₃, ...]]])
 
 Compose lenses `lens₁`, `lens₂`, ..., `lensₙ` to access nested objects.
 
