@@ -1,7 +1,9 @@
 set(obj, ::typeof(@lens last(_)), val) = @set obj[lastindex(obj)] = val
 set(obj, ::typeof(@lens first(_)), val) = @set obj[firstindex(obj)] = val
 
-set(obj::Array, ::typeof(@lens eltype(_)), T::Type) = collect(T, obj)
+set(obj::Array,  ::typeof(@lens eltype(_)), T::Type) = collect(T, obj)
+set(obj::Number, ::typeof(@lens eltype(_)), T::Type) = T(obj)
+set(::Type{<:Number}, ::typeof(@lens eltype(_)), ::Type{T}) where {T} = T
 set(::Type{<:Array{<:Any, N}}, ::typeof(@lens eltype(_)), ::Type{T}) where {N, T} =
     Array{T, N}
 
