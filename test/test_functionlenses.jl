@@ -33,12 +33,6 @@ end
 
 end
 
-@testset "eltype on Tuple" begin
-    @inferred set((1,1.2), @lens(eltype(_)), Float32)
-    @test set((1,1.2), @lens(eltype(_)), Float32) === (1f0, 1.2f0)
-    @test set((), @lens(eltype(_)), Int) === ()
-end
-
 @testset "eltype(::Type{<:Array})" begin
     obj = Vector{Int}
     @inferred set(obj, @lens(eltype(_)), Float32)

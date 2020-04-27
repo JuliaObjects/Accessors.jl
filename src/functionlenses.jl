@@ -14,10 +14,6 @@ set_eltype(::Type{<:Number}, ::Type{T}) where {T} = T
 set_eltype(::Type{<:Array{<:Any, N}}, ::Type{T}) where {N, T} = Array{T, N}
 set_eltype(::Type{<:Dict}, ::Type{Pair{K, V}}) where {K, V} = Dict{K, V}
 set_eltype(obj::Dict, ::Type{T}) where {T} = set_eltype(typeof(obj), T)(obj)
-# This is actually a violation of the lens laws:
-# We have e.g. eltype(@set eltype((1,)), Any) != Any
-set_eltype(obj::Tuple, T::Type) = map(T, obj)
-
 
 set(obj::Dict, l::Union{typeof(@lens keytype(_)), typeof(@lens valtype(_))},
     T::Type) = set(typeof(obj), l, T)(obj)
