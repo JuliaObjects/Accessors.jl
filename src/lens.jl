@@ -178,52 +178,6 @@ Base.@propagate_inbounds function set(obj, l::IndexLens, val)
     setindex(obj, val, l.indices...)
 end
 
-MSG_CONST_INDEX_LENS = """
-ConstIndexLens is deprecate. Replace as follows:
-```julia
-# old
-@set obj[\$1] = 2
-
-# new
-using StaticNumbers
-@set obj[static(1)] = 2
-```
-"""
-
-@doc MSG_CONST_INDEX_LENS ->
-struct ConstIndexLens{I} <: Lens
-    function ConstIndexLens{I}() where {I}
-        Base.depwarn(MSG_CONST_INDEX_LENS, :ConstIndexLens)
-        new{I}()
-    end
-end
-
-Base.@propagate_inbounds get(obj, ::ConstIndexLens{I}) where I = obj[I...]
-
-Base.@propagate_inbounds set(obj, ::ConstIndexLens{I}, val) where I =
-    setindex(obj, val, I...)
-
-@generated function set(obj::Union{Tuple, NamedTuple},
-                        ::ConstIndexLens{I},
-                        val) where I
-    if length(I) == 1
-        n, = I
-        args = map(1:length(obj.types)) do i
-            i == n ? :val : :(obj[$i])
-        end
-        quote
-            $(Expr(:meta, :inline))
-            ($(args...),)
-        end
-    else
-        quote
-            throw(ArgumentError($(string(
-                "A `Tuple` and `NamedTuple` can only be indexed with one ",
-                "integer.  Given: $I"))))
-        end
-    end
-end
-
 struct DynamicIndexLens{F} <: Lens
     f::F
 end
@@ -278,5 +232,3 @@ struct FunctionLens{f} <: Lens end
 FunctionLens(f) = FunctionLens{f}()
 
 get(obj, ::FunctionLens{f}) where f = f(obj)
-
-Base.@deprecate constructor_of(T) constructorof(T)
