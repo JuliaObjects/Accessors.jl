@@ -12,7 +12,6 @@ include("setindex.jl")
 include("lens.jl")
 include("sugar.jl")
 include("functionlenses.jl")
-include("settable.jl")
 include("experimental.jl")
 
 # To correctly dispatch to `show(::IO, ::CustomLens)` when it is defined by a

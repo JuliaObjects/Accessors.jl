@@ -32,7 +32,7 @@ end
 
 abstract type Vehicle end
 
-@settable @qstruct Car{T<:Number, U}(size::T, nwheels::Int=4; manufacturer::U=nothing,
+@qstruct Car{T<:Number, U}(size::T, nwheels::Int=4; manufacturer::U=nothing,
                            brand::String="off-brand") <: Vehicle
 
 @testset "Car" begin
@@ -45,8 +45,8 @@ abstract type Vehicle end
     @test c3 === Car(10;manufacturer =100)
 end
 
-@settable @qstruct Empty()
-@settable @qstruct Cat(name, age::Int, nlegs=4; species=:Siamese)
+@qstruct Empty()
+@qstruct Cat(name, age::Int, nlegs=4; species=:Siamese)
 
 @testset "Cat" begin
     x0 = Cat(:Tama, 1)
@@ -95,7 +95,7 @@ end
 end
 
 
-@settable @qstruct Human(; name=:Alice, height::Float64=170) do
+@qstruct Human(; name=:Alice, height::Float64=170) do
     @assert height > 0    # arbitrary code, executed in the constructor
 end
 
@@ -117,7 +117,7 @@ end
     @test x.members == (0, 111)
 end
 
-@settable @qstruct_fp Plane1(nwheels, weight::Number; brand=:zoomba)
+@qstruct_fp Plane1(nwheels, weight::Number; brand=:zoomba)
 
 @testset "Plane1" begin
     x0 = Plane1(3, 100)
