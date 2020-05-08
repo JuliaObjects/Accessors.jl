@@ -24,14 +24,25 @@ end
     @test (@set last(obj2.a).b = '2') === (a=(1, (b='2',)), c=3)
 end
 
+@testset "eltype on Number" begin
+    @test @set(eltype(Int) = Float32) === Float32
+    @test @set(eltype(1.0) = UInt8)   === UInt8(1)
+
+    @inferred set(Int, @lens(eltype(_)), Float32)
+    @inferred set(1.2, @lens(eltype(_)), Float32)
+
+end
+
 @testset "eltype(::Type{<:Array})" begin
     obj = Vector{Int}
+    @inferred set(obj, @lens(eltype(_)), Float32)
     obj2 = @set eltype(obj) = Float64
     @test obj2 === Vector{Float64}
 end
 
 @testset "eltype(::Array)" begin
     obj = [1, 2, 3]
+    @inferred set(obj, @lens(eltype(_)), Float32)
     obj2 = @set eltype(obj) = Float64
     @test eltype(obj2) == Float64
     @test obj == obj2
