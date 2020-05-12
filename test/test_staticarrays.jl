@@ -2,12 +2,12 @@ module TestStaticArrays
 using Test
 using Setfield
 using StaticArrays
+using StaticNumbers
 
 @testset "StaticArrays" begin
     obj = StaticArrays.@SMatrix [1 2; 3 4]
     @testset for l in [
             (@lens _[2,1]),
-            (@lens _[$2,$1]),
         ]
         @test get(obj, l) == 3
         @test set(obj, l, 5) == StaticArrays.@SMatrix [1 2; 5 4]

@@ -103,15 +103,7 @@ function parse_obj_lenses(ex)
         return esc(:_), (esc(ex.args[1]),)
     elseif @capture(ex, front_[indices__])
         obj, frontlens = parse_obj_lenses(front)
-        if any(is_interpolation, indices)
-            if !all(is_interpolation, indices)
-                throw(ArgumentError(string(
-                    "Constant and non-constant indexing (i.e., indices",
-                    " with and without \$) cannot be mixed.")))
-            end
-            index = esc(Expr(:tuple, [x.args[1] for x in indices]...))
-            lens = :($ConstIndexLens{$index}())
-        elseif any(need_dynamic_lens, indices)
+        if any(need_dynamic_lens, indices)
             @gensym collection
             indices = replace_underscore.(indices, collection)
             dims = length(indices) == 1 ? nothing : 1:length(indices)
@@ -263,15 +255,13 @@ end
 
 has_atlens_support(l::Lens) = has_atlens_support(typeof(l))
 has_atlens_support(::Type{<:Lens}) = false
-has_atlens_support(::Type{<:Union{PropertyLens, IndexLens, ConstIndexLens, FunctionLens, IdentityLens}}) =
+has_atlens_support(::Type{<:Union{PropertyLens, IndexLens, FunctionLens, IdentityLens}}) =
     true
 has_atlens_support(::Type{ComposedLens{LO, LI}}) where {LO, LI} =
     has_atlens_support(LO) && has_atlens_support(LI)
 
 print_application(io::IO, l::PropertyLens{field}) where {field} = print(io, ".", field)
 print_application(io::IO, l::IndexLens) = print(io, "[", join(repr.(l.indices), ", "), "]")
-print_application(io::IO, ::ConstIndexLens{I}) where I =
-    print(io, "[", join(string.("\$", I), ", "), "]")
 print_application(io::IO, l::IdentityLens) = print(io, "")
 
 function print_application(io::IO, l::ComposedLens)

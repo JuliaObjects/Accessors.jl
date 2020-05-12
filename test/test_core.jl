@@ -2,7 +2,6 @@ module TestCore
 using Test
 using Setfield
 using Setfield: compose, get_update_op
-using Setfield.Experimental
 using ConstructionBase: ConstructionBase
 using StaticNumbers: static
 
@@ -147,8 +146,6 @@ Base.show(io::IO, ::MIME"text/plain", ::LensWithTextPlain) =
             @lens first(_)
             @lens last(first(_))
             @lens last(first(_.a))[1]
-            MultiPropertyLens((a=@lens(_),))
-            (@lens _.a[1]) ∘ MultiPropertyLens((b = (@lens _[1]),))
             UserDefinedLens()
             (@lens _.a) ∘ UserDefinedLens()
             UserDefinedLens() ∘ (@lens _.b)
@@ -206,12 +203,6 @@ end
         test_getset_laws(lens, obj, val1, val2)
         test_modify_law(f, lens, obj)
     end
-    for (lens, val1, val2) in [
-        ((MultiPropertyLens((a=@lens(_),))), (a=10,), (a=20,))
-        ]
-        test_getset_laws(lens, obj, val1, val2)
-        test_modify_law(identity, lens, obj)
-    end
 end
 
 @testset "type stability" begin
@@ -238,7 +229,6 @@ end
           ((@lens _.b.a.b[end÷2+1]), 4.0),
           ((@lens _             ),   obj),
           ((@lens _             ),   :xy),
-          (MultiPropertyLens((a=(@lens _), b=(@lens _))), (a=1, b=2)),
         ]
         @inferred get(obj, lens)
         @inferred set(obj, lens, val)
@@ -350,26 +340,6 @@ struct ABC{A,B,C}
     a::A
     b::B
     c::C
-end
-
-@testset "MultiPropertyLens" begin
-    x = ABC(1,2,3)
-    l = MultiPropertyLens((a=@lens(_), c=@lens(_)))
-    @test get(x, l) == (a=1, c=3)
-    @inferred get(x, l)
-
-    @test set(x, l, (a=10, c=30)) == ABC{Int64,Int64,Int64}(10, 2, 30)
-    @inferred set(x, l, (a=10, c=30))
-
-    y = 5
-    obj = TT(x, y)
-    l_nested = MultiPropertyLens((a=l,b=@lens(_)))
-    @test get(obj, l_nested) == (a = (a = 1, c = 3), b = 5)
-    @inferred get(obj, l_nested)
-
-    @test set(obj, l_nested, (a=(a=10.0, c="twenty"), b=:thirty)) ==
-        TT(ABC(10.0, 2, "twenty"), :thirty)
-    @inferred set(obj, l_nested, (a=(a=10.0, c="twenty"), b=:thirty))
 end
 
 @testset "type change during @set (default constructorof)" begin
