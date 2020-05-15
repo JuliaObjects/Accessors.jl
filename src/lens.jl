@@ -46,7 +46,7 @@ Concrete subtypes of `Lens` have to implement
 
 These must be pure functions, that satisfy the three lens laws:
 
-```jldoctest; output = false, setup = :(using Setfield; obj = (a="A", b="B"); lens = @lens _.a; val = 2; val1 = 10; val2 = 20)
+```jldoctest; output = false, setup = :(using Setfield; (≅ = (==)); obj = (a="A", b="B"); lens = @lens _.a; val = 2; val1 = 10; val2 = 20)
 @assert get(set(obj, lens, val), lens) ≅ val
         # You get what you set.
 @assert set(obj, lens, get(obj, lens)) ≅ obj
