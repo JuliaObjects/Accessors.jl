@@ -57,10 +57,11 @@ These must be pure functions, that satisfy the three lens laws:
 # output
 
 ```
-Here `≅` is an appropriate notion of equality. In most contexts this is simply `==`. But in some
-contexts it might be `===`, `≈`, `isequal` or something else instead. For instance
-`==` does not work in `Float64` context, because `get(set(obj, lens, NaN), lens) == NaN` can never hold.
-Instead `isequal` or `≅(x::Float64, y::Float64) = isequal(x,y) | x ≈ y` are possible alternatives.
+Here `≅` is an appropriate notion of equality or an approximation of it. In most contexts
+this is simply `==`. But in some contexts it might be `===`, `≈`, `isequal` or something
+else instead. For instance `==` does not work in `Float64` context, because
+`get(set(obj, lens, NaN), lens) == NaN` can never hold. Instead `isequal` or
+`≅(x::Float64, y::Float64) = isequal(x,y) | x ≈ y` are possible alternatives.
 
 See also [`@lens`](@ref), [`set`](@ref), [`get`](@ref), [`modify`](@ref).
 """
