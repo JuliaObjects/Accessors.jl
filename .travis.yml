@@ -12,15 +12,12 @@ notifications:
 git:
   depth: 99999999
 
-matrix:
+jobs:
   allow_failures:
   - julia: nightly
   include:
       - os: osx
         julia: 1.0
-
-jobs:
-  include:
     - stage: "Documentation"
       julia: 1.4
       os: linux
