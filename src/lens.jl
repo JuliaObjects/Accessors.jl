@@ -105,11 +105,9 @@ function get(obj, l::PropertyLens{field}) where {field}
     getproperty(obj, field)
 end
 
-@generated function set(obj, l::PropertyLens{field}, val) where {field}
-    Expr(:block,
-         Expr(:meta, :inline),
-        :(setproperties(obj, ($field=val,)))
-       )
+@inline function set(obj, l::PropertyLens{field}, val) where {field}
+    patch = (;field => val)
+    setproperties(obj, patch)
 end
 
 struct ComposedLens{LO, LI} <: Lens
