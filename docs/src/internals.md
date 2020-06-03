@@ -1,6 +1,6 @@
-## Docstrings
+# Internals
 
 ```@autodocs
 Modules = [Setfield]
-Private = false
+Public = false
 ```
