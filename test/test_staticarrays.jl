@@ -9,9 +9,9 @@ using StaticNumbers
     @testset for l in [
             (@lens _[2,1]),
         ]
-        @test get(obj, l) == 3
-        @test set(obj, l, 5) == StaticArrays.@SMatrix [1 2; 5 4]
-        @test setindex(obj, 5, 2, 1) == StaticArrays.@SMatrix [1 2; 5 4]
+        @test l(obj) === 3
+        @test set(l, obj, 5)         === StaticArrays.@SMatrix [1 2; 5 4]
+        @test setindex(obj, 5, 2, 1) === StaticArrays.@SMatrix [1 2; 5 4]
     end
 
     v = @SVector [1,2,3]
@@ -34,8 +34,8 @@ using StaticNumbers
             (a=5, b=50) (a=6, b=60)
         ]
         obj = (a=m_orig, b=4)
-        @test get(obj, l1) === get(obj, l2) === 30
-        @test set(obj, l1, 3000) === set(obj, l2, 3000) === (a=m_mod, b=4)
+        @test l1(obj) === l2(obj) === 30
+        @test set(l1, obj, 3000) === set(l2, obj, 3000) === (a=m_mod, b=4)
     end
 end
 end

@@ -1,26 +1,26 @@
 # # Extending `@set` and `@lens`
 # This code demonstrates how to extend the `@set` and `@lens` mechanism with custom
 # lenses.
-# As a demo, we want to implement `@mylens!` and `@myreset`, which work much like 
+# As a demo, we want to implement `@mylens!` and `@myreset`, which work much like
 # `@lens` and `@set`, but mutate objects instead of returning modified copies.
 
 using Setfield
 using Setfield: IndexLens, PropertyLens, ComposedLens
 
-struct Lens!{L <:Lens} <: Lens
+struct Lens!{L}
     pure::L
 end
 
-Setfield.get(o, l::Lens!) = Setfield.get(o, l.pure)
-function Setfield.set(o, l::Lens!{<: ComposedLens}, val)
-    o_inner = get(o, l.pure.outer)
-    set(o_inner, Lens!(l.pure.inner), val)
+(l::Lens!)(o) = l.pure(o)
+function Setfield.set(l::Lens!{<: ComposedLens}, o, val)
+    o_inner = Setfield.inner(l.pure)(o)
+    set(Lens!(Setfield.outer(l.pure)), o_inner, val)
 end
-function Setfield.set(o, l::Lens!{PropertyLens{prop}}, val) where {prop}
+function Setfield.set(l::Lens!{PropertyLens{prop}}, o, val) where {prop}
     setproperty!(o, prop, val)
     o
 end
-function Setfield.set(o, l::Lens!{<:IndexLens}, val) where {prop}
+function Setfield.set(l::Lens!{<:IndexLens}, o, val) where {prop}
     o[l.pure.indices...] = val
     o
 end
@@ -37,12 +37,12 @@ end
 
 o = M(1,2)
 l = Lens!(@lens _.b)
-set(o, l, 20)
+set(l, o, 20)
 @test o.b == 20
 
 l = Lens!(@lens _.foo[1])
 o = (foo=[1,2,3], bar=:bar)
-set(o, l, 100)
+set(l, o, 100)
 @test o == (foo=[100,2,3], bar=:bar)
 
 # Now we can implement the syntax macros
@@ -69,7 +69,7 @@ deep = [[[[1]]]]
 
 l = @mylens! _.foo[1]
 o = (foo=[1,2,3], bar=:bar)
-set(o, l, 100)
+set(l, o, 100)
 @test o == (foo=[100,2,3], bar=:bar)
 
 # Everything works, we can do arbitrary nesting and also use `+=` syntax etc.

@@ -4,15 +4,16 @@ import PerformanceTestTools
 import Setfield
 using Documenter: doctest
 
-include("test_core.jl")
-include("test_functionlenses.jl")
+PerformanceTestTools.@include("perf.jl")
+include("test_examples.jl")
 include("test_staticarrays.jl")
 include("test_quicktypes.jl")
 include("test_setmacro.jl")
 include("test_setindex.jl")
-include("test_examples.jl")
-PerformanceTestTools.@include("perf.jl")
+include("test_core.jl")
+include("test_functionlenses.jl")
 
-doctest(Setfield)
+
+# TODO doctest(Setfield)
 
 end  # module
