@@ -23,13 +23,13 @@ using StaticNumbers
 @testset "setmacro, lensmacro isolation" begin
 
     # test that no symbols like `IndexLens` are needed:
-    @test Clone.@lens(_                                   ) isa Setfield.Lens
-    @test Clone.@lens(_.a                                 ) isa Setfield.Lens
-    @test Clone.@lens(_[1]                                ) isa Setfield.Lens
-    @test Clone.@lens(first(_)                            ) isa Setfield.Lens
-    @test Clone.@lens(_[end]                              ) isa Setfield.Lens
-    @test Clone.@lens(_[static(1)]                           ) isa Setfield.Lens
-    @test Clone.@lens(_.a[1][end, end-2].b[static(1), static(1)]) isa Setfield.Lens
+    Clone.@lens(_                                         )
+    Clone.@lens(_.a                                       )
+    Clone.@lens(_[1]                                      )
+    Clone.@lens(first(_)                                  )
+    Clone.@lens(_[end]                                    )
+    Clone.@lens(_[static(1)]                              )
+    Clone.@lens(_.a[1][end, end-2].b[static(1), static(1)])
 
     @test Setfield.@lens(_.a) === Clone.@lens(_.a)
     @test Setfield.@lens(_.a.b) === Clone.@lens(_.a.b)

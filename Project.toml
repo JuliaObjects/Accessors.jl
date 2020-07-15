@@ -3,10 +3,12 @@ uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 version = "0.7.0"
 
 [deps]
+CompositionsBase = "a33af91c-f02d-484b-be07-31d278c5ca2b"
 ConstructionBase = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
 Future = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+StaticNumbers = "c5e4b96a-f99f-5557-8ed2-dc63ef9b5131"
 
 [compat]
 ConstructionBase = "0.1, 1.0"
@@ -26,4 +28,3 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test", "Documenter", "PerformanceTestTools", "QuickTypes", "StaticArrays", "BenchmarkTools", "InteractiveUtils", "StaticNumbers"]
-

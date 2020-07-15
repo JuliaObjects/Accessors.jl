@@ -1,4 +1,4 @@
-export @set, @lens, @set!
+export @set, @lens, @reset
 using MacroTools
 
 """
@@ -33,7 +33,7 @@ macro set(ex)
 end
 
 """
-    @set! assignment
+    @reset assignment
 
 Shortcut for `obj = @set obj...`.
 
@@ -44,14 +44,14 @@ julia> using Setfield
 julia> t = (a=1,)
 (a = 1,)
 
-julia> @set! t.a=2
+julia> @reset t.a=2
 (a = 2,)
 
 julia> t
 (a = 2,)
 ```
 """
-macro set!(ex)
+macro reset(ex)
     setmacro(identity, ex, overwrite=true)
 end
 
@@ -96,8 +96,10 @@ function parse_obj_lenses_composite(lensexprs::Vector)
 end
 
 function parse_obj_lenses(ex)
-    if @capture(ex, ∘(lensexprs__))
+    if @capture(ex, ⨟(lensexprs__))
         return parse_obj_lenses_composite(lensexprs)
+    elseif @capture(ex, ∘(lensexprs__))
+        return parse_obj_lenses_composite(reverse(lensexprs))
     elseif is_interpolation(ex)
         @assert length(ex.args) == 1
         return esc(:_), (esc(ex.args[1]),)
@@ -122,7 +124,7 @@ function parse_obj_lenses(ex)
         lens = :($PropertyLens{$(QuoteNode(property))}())
     elseif @capture(ex, f_(front_))
         obj, frontlens = parse_obj_lenses(front)
-        lens = :($FunctionLens($(esc(f))))
+        lens = esc(f) # function lens
     else
         obj = esc(ex)
         return obj, ()
@@ -130,9 +132,12 @@ function parse_obj_lenses(ex)
     obj, tuple(frontlens..., lens)
 end
 
+lenscompose() = identity
+lenscompose(args...) = opcompose(args...)
+
 function parse_obj_lens(ex)
     obj, lenses = parse_obj_lenses(ex)
-    lens = Expr(:call, compose, lenses...)
+    lens = Expr(:call, lenscompose, lenses...)
     obj, lens
 end
 
@@ -179,14 +184,14 @@ function setmacro(lenstransform, ex::Expr; overwrite::Bool=false)
     ret = if ex.head == :(=)
         quote
             lens = ($lenstransform)($lens)
-            $dst = $set($obj, lens, $val)
+            $dst = $set(lens, $obj, $val)
         end
     else
         op = get_update_op(ex.head)
         f = :($_UpdateOp($op,$val))
         quote
             lens = ($lenstransform)($lens)
-            $dst = $modify($f, $obj, lens)
+            $dst = $modify($f, lens, $obj)
         end
     end
     ret
@@ -253,71 +258,9 @@ function lensmacro(lenstransform, ex)
     :($(lenstransform)($lens))
 end
 
-has_atlens_support(l::Lens) = has_atlens_support(typeof(l))
-has_atlens_support(::Type{<:Lens}) = false
-has_atlens_support(::Type{<:Union{PropertyLens, IndexLens, FunctionLens, IdentityLens}}) =
-    true
-has_atlens_support(::Type{ComposedLens{LO, LI}}) where {LO, LI} =
-    has_atlens_support(LO) && has_atlens_support(LI)
-
-print_application(io::IO, l::PropertyLens{field}) where {field} = print(io, ".", field)
-print_application(io::IO, l::IndexLens) = print(io, "[", join(repr.(l.indices), ", "), "]")
-print_application(io::IO, l::IdentityLens) = print(io, "")
-
-function print_application(io::IO, l::ComposedLens)
-    print_application(io, l.outer)
-    print_application(io, l.inner)
+function Base.show(io::IO, lens::PropertyLens{field}) where {field}
+    print(io, "(@lens _.$field)")
 end
-
-function print_application(printer, io, ::FunctionLens{f}) where f
-    print(io, f, '(')
-    printer(io)
-    print(io, ')')
-end
-
-function print_application(printer, io, l)
-    @assert has_atlens_support(l)
-    printer(io)
-    print_application(io, l)
-end
-
-function print_application(printer, io, l::ComposedLens)
-    print_application(io, l.inner) do io
-        print_application(printer, io, l.outer)
-    end
-end
-
-# Since `show` of `ComposedLens` needs to call `show` of other lenses,
-# we explicitly define text/plain `show` for `ComposedLens` to propagate
-# the "context" (2-arg or 3-arg `show`) with which `show` has to be called.
-# See: https://github.com/jw3126/Setfield.jl/pull/86
-Base.show(io::IO, ::MIME"text/plain", l::ComposedLens) =
-    _show(io, MIME("text/plain"), l)
-
-function _show(io::IO, mime, l::Lens)
-    if has_atlens_support(l)
-        print_in_atlens(io, l)
-    elseif mime === nothing
-        show(io, l)
-    else
-        show(io, mime, l)
-    end
-end
-
-function _show(io::IO, mime, l::ComposedLens)
-    if has_atlens_support(l)
-        print_in_atlens(io, l)
-    else
-        _show(io, mime, l.outer)
-        print(io, " ∘ ")
-        _show(io, mime, l.inner)
-    end
-end
-
-function print_in_atlens(io, l)
-    print(io, "(@lens ")
-    print_application(io, l) do io
-        print(io, '_')
-    end
-    print(io, ')')
+function Base.show(io::IO, lens::IndexLens)
+    print(io, "(@lens _[", join(repr.(lens.indices), ", "), "])")
 end

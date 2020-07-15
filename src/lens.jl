@@ -1,7 +1,8 @@
 export @lens
 export set, modify
+export ∘, ⨟
 using ConstructionBase
-using CompositionBase
+using CompositionsBase
 export setproperties
 export constructorof
 
@@ -97,7 +98,7 @@ TODO = """
     compose([lens₁, [lens₂, [lens₃, ...]]])
 
 Compose `lens₁`, `lens₂` etc. There is one subtle point here:
-While the two composition orders `(lens₁ ∘ lens₂) ∘ lens₃` and `lens₁ ∘ (lens₂ ∘ lens₃)` have equivalent semantics,
+While the two composition orders `(lens₁ ⨟ lens₂) ⨟ lens₃` and `lens₁ ⨟ (lens₂ ⨟ lens₃)` have equivalent semantics,
 their performance may not be the same. The compiler tends to optimize right associative composition
 (second case) better then left associative composition.
 
@@ -105,7 +106,7 @@ The compose function tries to use a composition order, that the compiler likes. 
 """
 
 TODO = """
-    lens₁ ∘ lens₂
+    lens₁ ⨟ lens₂
 
 Compose lenses `lens₁`, `lens₂`, ..., `lensₙ` to access nested objects.
 
@@ -118,7 +119,7 @@ julia> obj = (a = (b = (c = 1,),),);
 julia> la = @lens _.a
        lb = @lens _.b
        lc = @lens _.c
-       lens = la ∘ lb ∘ lc
+       lens = la ⨟ lb ⨟ lc
 (@lens _.a.b.c)
 
 julia> get(obj, lens)
@@ -131,23 +132,23 @@ outer(o::ComposedLens) = o.f
 inner(o::ComposedLens) = o.g
 
 function set(lens::Base.ComposedFunction, obj, val)
-    inner_obj = outer(lens)(obj)
-    inner_val = set(inner(lens), inner_obj, val)
-    set(outer(lens), obj, inner_val)
+    inner_obj = inner(lens)(obj)
+    inner_val = set(outer(lens), inner_obj, val)
+    set(inner(lens), obj, inner_val)
 end
 
-struct IndexLens{I <: Tuple} <: Lens
+struct IndexLens{I <: Tuple}
     indices::I
 end
 
 Base.@propagate_inbounds function (lens::IndexLens)(obj)
-    getindex(obj, l.indices...)
+    getindex(obj, lens.indices...)
 end
 Base.@propagate_inbounds function set(lens::IndexLens, obj, val)
     setindex(obj, val, lens.indices...)
 end
 
-struct DynamicIndexLens{F} <: Lens
+struct DynamicIndexLens{F}
     f::F
 end
 
@@ -166,7 +167,7 @@ Use `methods(set, (Any, Setfield.FunctionLens, Any))` to get a list of
 supported functions.
 
 Note that `FunctionLens` flips the order of composition; i.e.,
-`(@lens f(_)) ∘ (@lens g(_)) == @lens g(f(_))`.
+`(@lens f(_)) ⨟ (@lens g(_)) == @lens g(f(_))`.
 
 # Example
 ```jldoctest
@@ -174,7 +175,7 @@ julia> using Setfield
 
 julia> obj = ((1, 2), (3, 4));
 
-julia> lens = (@lens first(_)) ∘ (@lens last(_))
+julia> lens = (@lens first(_)) ⨟ (@lens last(_))
 (@lens last(first(_)))
 
 julia> get(obj, lens)

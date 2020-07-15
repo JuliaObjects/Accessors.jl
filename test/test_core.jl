@@ -24,25 +24,25 @@ end
     @test_throws ArgumentError get_update_op(:(<=))
 end
 
-@testset "@set!" begin
+@testset "@reset" begin
     a = 1
     @set a = 2
     @test a === 1
-    @set! a = 2
+    @reset a = 2
     @test a === 2
 
     t = T(1, T(2,3))
     @set t.b.a = 20
     @test t === T(1, T(2,3))
 
-    @set! t.b.a = 20
+    @reset t.b.a = 20
     @test t === T(1,T(20,3))
 
     a = 1
-    @set! a += 10
+    @reset a += 10
     @test a === 11
     nt = (a=1,)
-    @set! nt.a = 5
+    @reset nt.a = 5
     @test nt === (a=5,)
 end
 
@@ -125,9 +125,9 @@ end
 end
 
 
-struct UserDefinedLens <: Lens end
+struct UserDefinedLens end
 
-struct LensWithTextPlain <: Lens end
+struct LensWithTextPlain end
 Base.show(io::IO, ::MIME"text/plain", ::LensWithTextPlain) =
     print(io, "I define text/plain.")
 
@@ -147,10 +147,10 @@ Base.show(io::IO, ::MIME"text/plain", ::LensWithTextPlain) =
             @lens last(first(_))
             @lens last(first(_.a))[1]
             UserDefinedLens()
-            (@lens _.a) ∘ UserDefinedLens()
-            UserDefinedLens() ∘ (@lens _.b)
-            (@lens _.a) ∘ UserDefinedLens() ∘ (@lens _.b)
-            (@lens _.a) ∘ LensWithTextPlain() ∘ (@lens _.b)
+            (@lens _.a) ⨟ UserDefinedLens()
+            UserDefinedLens() ⨟ (@lens _.b)
+            # TODO (@lens _.a) ⨟ UserDefinedLens() ⨟ (@lens _.b)
+            # TODO (@lens _.a) ⨟ LensWithTextPlain() ⨟ (@lens _.b)
         ]
         buf = IOBuffer()
         show(buf, item)
@@ -161,25 +161,25 @@ end
 
 function test_getset_laws(lens, obj, val1, val2)
 
-    # set ∘ get
-    val = get(obj, lens)
-    @test set(obj, lens, val) == obj
+    # set ⨟ get
+    val = lens(obj)
+    @test set(lens, obj, val) == obj
 
-    # get ∘ set
-    obj1 = set(obj, lens, val1)
-    @test get(obj1, lens) == val1
+    # get ⨟ set
+    obj1 = set(lens, obj, val1)
+    @test lens(obj1) == val1
 
     # set idempotent
-    obj12 = set(obj1, lens, val2)
-    obj2 = set(obj, lens, val2)
+    obj12 = set(lens, obj1, val2)
+    obj2 = set(lens, obj12, val2)
     @test obj12 == obj2
 end
 
 function test_modify_law(f, lens, obj)
-    obj_modify = modify(f, obj, lens)
-    old_val = get(obj, lens)
+    obj_modify = modify(f, lens, obj)
+    old_val = lens(obj)
     val = f(old_val)
-    obj_setfget = set(obj, lens, val)
+    obj_setfget = set(lens, obj, val)
     @test obj_modify == obj_setfget
 end
 
@@ -230,9 +230,9 @@ end
           ((@lens _             ),   obj),
           ((@lens _             ),   :xy),
         ]
-        @inferred get(obj, lens)
-        @inferred set(obj, lens, val)
-        @inferred modify(identity, obj, lens)
+        @inferred lens(obj)
+        @inferred set(lens, obj, val)
+        @inferred modify(identity, lens, obj)
     end
 end
 
@@ -241,63 +241,63 @@ end
     @test l isa Setfield.IndexLens
     x = randn()
     obj = Ref(x)
-    @test get(obj, l) == x
+    @test l(obj) == x
 
     l = @lens _[][]
-    @test l.outer isa Setfield.IndexLens
-    @test l.inner isa Setfield.IndexLens
+    @test Setfield.outer(l) isa Setfield.IndexLens
+    @test Setfield.inner(l) isa Setfield.IndexLens
     inner = Ref(x)
     obj = Base.RefValue{typeof(inner)}(inner)
-    @test get(obj, l) == x
+    @test l(obj) == x
 
     obj = (1,2,3)
     l = @lens _[1]
     @test l isa Setfield.IndexLens
-    @test get(obj, l) == 1
-    @test set(obj, l, 6) == (6,2,3)
+    @test l(obj) == 1
+    @test set(l, obj, 6) == (6,2,3)
 
 
     l = @lens _[1:3]
     @test l isa Setfield.IndexLens
-    @test get([4,5,6,7], l) == [4,5,6]
+    @test l([4,5,6,7]) == [4,5,6]
 end
 
 @testset "DynamicIndexLens" begin
     l = @lens _[end]
     @test l isa Setfield.DynamicIndexLens
     obj = (1,2,3)
-    @test get(obj, l) == 3
-    @test set(obj, l, true) == (1,2,true)
+    @test l(obj) == 3
+    @test set(l, obj, true) == (1,2,true)
 
     l = @lens _[end÷2]
     @test l isa Setfield.DynamicIndexLens
     obj = (1,2,3)
-    @test get(obj, l) == 1
-    @test set(obj, l, true) == (true,2,3)
+    @test l(obj) == 1
+    @test set(l, obj, true) == (true,2,3)
 
     two = 2
     plusone(x) = x + 1
     l = @lens _.a[plusone(end) - two].b
     obj = (a=(1, (a=10, b=20), 3), b=4)
-    @test get(obj, l) == 20
-    @test set(obj, l, true) == (a=(1, (a=10, b=true), 3), b=4)
+    @test l(obj) == 20
+    @test set(l, obj, true) == (a=(1, (a=10, b=true), 3), b=4)
 end
 
 @testset "StaticNumbers" begin
     obj = (1, 2.0, '3')
     l = @lens _[static(1)]
-    @test (@inferred get(obj, l)) === 1
-    @test (@inferred set(obj, l, 6.0)) === (6.0, 2.0, '3')
+    @test (@inferred l(obj)) === 1
+    @test (@inferred set(l, obj, 6.0)) === (6.0, 2.0, '3')
     l = @lens _[static(1 + 1)]
-    @test (@inferred get(obj, l)) === 2.0
-    @test (@inferred set(obj, l, 6)) === (1, 6, '3')
+    @test (@inferred l(obj)) === 2.0
+    @test (@inferred set(l, obj, 6)) === (1, 6, '3')
     n = 1
     l = @lens _[static(3n)]
-    @test (@inferred get(obj, l)) === '3'
-    @test (@inferred set(obj, l, 6)) === (1, 2.0, 6)
+    @test (@inferred l(obj)) === '3'
+    @test (@inferred set(l, obj, 6)) === (1, 2.0, 6)
 
     l = @lens _[static(1):static(3)]
-    @test get([4,5,6,7], l) == [4,5,6]
+    @test l([4,5,6,7]) == [4,5,6]
 
     @testset "complex example (sweeper)" begin
         sweeper_with_const = (
@@ -308,9 +308,9 @@ end
         sweeper_with_noconst = @set sweeper_with_const.axis = @lens _[2]
 
         function f(s)
-            a = sum(set(s.model, s.axis, 0))
+            a = sum(set(s.axis, s.model, 0))
             for i in 1:10
-                a += sum(set(s.model, s.axis, i))
+                a += sum(set(s.axis, s.model, i))
             end
             return a
         end
@@ -326,14 +326,7 @@ mutable struct M
 end
 
 @testset "IdentityLens" begin
-    id = @lens _
-    @test compose(id, id) === id
-    obj1 = M(1,1)
-    obj2 = M(2,2)
-    @test obj2 === set(obj1, id, obj2)
-    la = @lens _.a
-    @test compose(id, la) === la
-    @test compose(la, id) === la
+    @test identity === @lens(_)
 end
 
 struct ABC{A,B,C}
@@ -362,33 +355,13 @@ ConstructionBase.constructorof(::Type{<: B{T}}) where T = B{T}
     @test obj2 === B{1}(2, :three)
 end
 
-@testset "text/plain show" begin
-    @testset for lens in [
-        LensWithTextPlain()
-        (@lens _.a) ∘ LensWithTextPlain()
-        LensWithTextPlain() ∘ (@lens _.b)
-        (@lens _.a) ∘ LensWithTextPlain() ∘ (@lens _.b)
-    ]
-        @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
-    end
-
-    @testset for lens in [
-        UserDefinedLens()
-        (@lens _.a) ∘ UserDefinedLens()
-        UserDefinedLens() ∘ (@lens _.b)
-        (@lens _.a) ∘ UserDefinedLens() ∘ (@lens _.b)
-    ]
-        @test sprint(show, lens) == sprint(show, "text/plain", lens)
-    end
-end
-
 @testset "Named Tuples" begin
     t = (x=1, y=2)
     @test (@set t.x =2) === (x=2, y=2)
     @test (@set t.x += 2) === (x=3, y=2)
     @test (@set t.x =:hello) === (x=:hello, y=2)
     l = @lens _.x
-    @test get(t, l) === 1
+    @test l(t) === 1
 
     # do we want this to throw an error?
     @test_throws ArgumentError (@set t.z = 3)
@@ -419,24 +392,44 @@ end
     @test_throws ArgumentError Setfield.lensmacro(identity, :(_.[:a]))
 end
 
-@testset "@lens and ∘" begin
-    @test @lens(∘()) === @lens(_)
-    @test @lens(∘(_.a)) === @lens(_.a)
-    @test @lens(∘(_.a, _.b)) === @lens(_.a) ∘ @lens(_.b)
-    @test @lens(∘(_.a, _.b, _.c)) === Setfield.compose(@lens(_.a), @lens(_.b), @lens(_.c))
+@testset "@lens and ⨟" begin
+    @test @lens(⨟()) === @lens(_)
+    @test @lens(⨟(_.a)) === @lens(_.a)
+    @test @lens(⨟(_.a, _.b)) === @lens(_.a) ⨟ @lens(_.b)
+    @test @lens(⨟(_.a, _.b, _.c)) === Setfield.lenscompose(@lens(_.a), @lens(_.b), @lens(_.c))
 
-    @test @lens(∘(_[1])) === @lens(_[1])
-    @test @lens(∘(_[1], _[2])) === @lens(_[1]) ∘ @lens(_[2])
-    @test @lens(∘(_[1], _[2], _[3])) === Setfield.compose(@lens(_[1]), @lens(_[2]), @lens(_[3]))
+    @test @lens(⨟(_[1])) === @lens(_[1])
+    @test @lens(⨟(_[1], _[2])) === @lens(_[1]) ⨟ @lens(_[2])
+    @test @lens(⨟(_[1], _[2], _[3])) === Setfield.lenscompose(@lens(_[1]), @lens(_[2]), @lens(_[3]))
 
-    @test @lens(_ ∘ (_[1] ∘ _.a) ∘ first(_)) == @lens(_) ∘ (@lens(_[1]) ∘ @lens(_.a)) ∘ @lens(first(_))
+    @test @lens(_ ⨟ (_[1] ⨟ _.a) ⨟ first(_)) == @lens(_) ⨟ (@lens(_[1]) ⨟ @lens(_.a)) ⨟ @lens(first(_))
 end
 
-@testset "@lens ∘ and \$" begin
+@testset "@lens ⨟ and \$" begin
     lbc = @lens _.b.c
     @test @lens($lbc)== lbc
-    @test @lens(_.a ∘ $lbc) == @lens(_.a) ∘ lbc
-    @test @lens(_.a ∘ $lbc ∘ _[1] ∘ $lbc) == @lens(_.a) ∘ lbc ∘ @lens(_[1]) ∘ lbc
+    @test @lens(_.a ⨟ $lbc) == @lens(_.a) ⨟ lbc
+    @test @lens(_.a ⨟ $lbc ⨟ _[1] ⨟ $lbc) == @lens(_.a) ⨟ lbc ⨟ @lens(_[1]) ⨟ lbc
+end
+
+@testset "text/plain show" begin
+    @testset for lens in [
+        LensWithTextPlain()
+        (@lens _.a) ⨟ LensWithTextPlain()
+        LensWithTextPlain() ⨟ (@lens _.b)
+        (@lens _.a) ⨟ LensWithTextPlain() ⨟ (@lens _.b)
+    ]
+        @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
+    end
+
+    @testset for lens in [
+        UserDefinedLens()
+        (@lens _.a) ⨟ UserDefinedLens()
+        UserDefinedLens() ⨟ (@lens _.b)
+        (@lens _.a) ⨟ UserDefinedLens() ⨟ (@lens _.b)
+    ]
+        @test sprint(show, lens) == sprint(show, "text/plain", lens)
+    end
 end
 
 end

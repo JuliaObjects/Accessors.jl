@@ -5,7 +5,7 @@ set(::typeof(identity), obj, val) = val
 ################################################################################
 ##### eltype
 ################################################################################
-function set(::typeo(eltype), obj, ::Type{T}) where {T}
+function set(::typeof(eltype), obj, ::Type{T}) where {T}
     return set_eltype(obj, T)
 end
 

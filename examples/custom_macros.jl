@@ -1,7 +1,7 @@
 # # Extending `@set` and `@lens`
 # This code demonstrates how to extend the `@set` and `@lens` mechanism with custom
 # lenses.
-# As a demo, we want to implement `@mylens!` and `@myset!`, which work much like 
+# As a demo, we want to implement `@mylens!` and `@myreset`, which work much like 
 # `@lens` and `@set`, but mutate objects instead of returning modified copies.
 
 using Setfield
@@ -49,7 +49,7 @@ set(o, l, 100)
 
 using Setfield: setmacro, lensmacro
 
-macro myset!(ex)
+macro myreset(ex)
     setmacro(Lens!, ex)
 end
 
@@ -58,13 +58,13 @@ macro mylens!(ex)
 end
 
 o = M(1,2)
-@myset! o.a = :hi
-@myset! o.b += 98
+@myreset o.a = :hi
+@myreset o.b += 98
 @test o.a == :hi
 @test o.b == 100
 
 deep = [[[[1]]]]
-@myset! deep[1][1][1][1] = 2
+@myreset deep[1][1][1][1] = 2
 @test deep[1][1][1][1] === 2
 
 l = @mylens! _.foo[1]
