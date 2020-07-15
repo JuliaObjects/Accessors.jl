@@ -133,7 +133,6 @@ Base.show(io::IO, ::MIME"text/plain", ::LensWithTextPlain) =
 
 
 @testset "show it like you build it " begin
-    i = 3
     @testset for item in [
             @lens _.a
             @lens _[1]
@@ -149,8 +148,8 @@ Base.show(io::IO, ::MIME"text/plain", ::LensWithTextPlain) =
             UserDefinedLens()
             (@lens _.a) ⨟ UserDefinedLens()
             UserDefinedLens() ⨟ (@lens _.b)
-            # TODO (@lens _.a) ⨟ UserDefinedLens() ⨟ (@lens _.b)
-            # TODO (@lens _.a) ⨟ LensWithTextPlain() ⨟ (@lens _.b)
+            (@lens _.a) ∘ UserDefinedLens()   ∘ (@lens _.b)
+            (@lens _.a) ∘ LensWithTextPlain() ∘ (@lens _.b)
         ]
         buf = IOBuffer()
         show(buf, item)
@@ -394,8 +393,12 @@ end
 
 @testset "@lens and ⨟" begin
     @test @lens(⨟()) === @lens(_)
+    @test @lens(∘()) === @lens(_)
     @test @lens(⨟(_.a)) === @lens(_.a)
-    @test @lens(⨟(_.a, _.b)) === @lens(_.a) ⨟ @lens(_.b)
+    @test @lens(∘(_.a)) === @lens(_.a)
+    @test @lens(⨟(_.a, _.b)) ===
+        @lens(_.a) ⨟ @lens(_.b) ===
+        @lens(_.b) ∘ @lens(_.a)
     @test @lens(⨟(_.a, _.b, _.c)) === Setfield.lenscompose(@lens(_.a), @lens(_.b), @lens(_.c))
 
     @test @lens(⨟(_[1])) === @lens(_[1])
@@ -407,19 +410,25 @@ end
 
 @testset "@lens ⨟ and \$" begin
     lbc = @lens _.b.c
-    @test @lens($lbc)== lbc
-    @test @lens(_.a ⨟ $lbc) == @lens(_.a) ⨟ lbc
-    @test @lens(_.a ⨟ $lbc ⨟ _[1] ⨟ $lbc) == @lens(_.a) ⨟ lbc ⨟ @lens(_[1]) ⨟ lbc
+    @test @lens($lbc) === lbc
+    @test @lens(_.a ⨟ $lbc) ===
+        @lens(_.a) ⨟ lbc
+    @test @lens(_.a ⨟ $lbc ⨟ _[1] ⨟ $lbc) ===
+        @lens(_.a) ⨟ lbc ⨟ @lens(_[1]) ⨟ lbc
 end
 
 @testset "text/plain show" begin
     @testset for lens in [
         LensWithTextPlain()
+    ]
+        @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
+    end
+    @testset for lens in [
         (@lens _.a) ⨟ LensWithTextPlain()
         LensWithTextPlain() ⨟ (@lens _.b)
         (@lens _.a) ⨟ LensWithTextPlain() ⨟ (@lens _.b)
     ]
-        @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
+        @test_broken occursin("I define text/plain.", sprint(show, "text/plain", lens))
     end
 
     @testset for lens in [

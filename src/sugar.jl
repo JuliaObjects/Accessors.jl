@@ -258,9 +258,8 @@ function lensmacro(lenstransform, ex)
     :($(lenstransform)($lens))
 end
 
-function Base.show(io::IO, lens::PropertyLens{field}) where {field}
-    print(io, "(@lens _.$field)")
-end
-function Base.show(io::IO, lens::IndexLens)
-    print(io, "(@lens _[", join(repr.(lens.indices), ", "), "])")
-end
+
+_show(io::IO, lens::PropertyLens{field}) where {field} = print(io, "(@lens _.$field)")
+_show(io::IO, lens::IndexLens) = print(io, "(@lens _[", join(repr.(lens.indices), ", "), "])")
+Base.show(io::IO, lens::Union{IndexLens, PropertyLens}) = _show(io, lens)
+Base.show(io::IO, ::MIME"text/plain", lens::Union{IndexLens, PropertyLens}) = _show(io, lens)
