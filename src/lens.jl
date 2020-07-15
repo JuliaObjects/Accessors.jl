@@ -1,15 +1,13 @@
-export Lens, set, get, modify
 export @lens
-export set, get, modify
+export set, modify
 using ConstructionBase
+using CompositionBase
 export setproperties
 export constructorof
 
-
-import Base: get
 using Base: getproperty
 
-"""
+TODO = """
     Lens
 
 A `Lens` allows to access or replace deeply nested parts of complicated objects.
@@ -65,57 +63,37 @@ else instead. For instance `==` does not work in `Float64` context, because
 
 See also [`@lens`](@ref), [`set`](@ref), [`get`](@ref), [`modify`](@ref).
 """
-abstract type Lens end
 
 """
-    modify(f, obj, l::Lens)
+    modify(f, lens, obj)
 
 Replace a deeply nested part `x` of `obj` by `f(x)`. See also [`Lens`](@ref).
 """
 function modify end
 
-
 """
-    get(obj, l::Lens)
-
-Access a deeply nested part of `obj`. See also [`Lens`](@ref).
-"""
-function get end
-
-"""
-    set(obj, l::Lens, val)
+    set(lens, obj, val)
 
 Replace a deeply nested part of `obj` by `val`. See also [`Lens`](@ref).
 """
 function set end
 
-@inline function modify(f, obj, l::Lens)
-    old_val = get(obj, l)
-    new_val = f(old_val)
-    set(obj, l, new_val)
+@inline function modify(f, lens, obj)
+    set(lens, obj, f(lens(obj)))
 end
 
-struct IdentityLens <: Lens end
-get(obj, ::IdentityLens) = obj
-set(obj, ::IdentityLens, val) = val
+struct PropertyLens{fieldname} end
 
-struct PropertyLens{fieldname} <: Lens end
-
-function get(obj, l::PropertyLens{field}) where {field}
+function (l::PropertyLens{field})(obj) where {field}
     getproperty(obj, field)
 end
 
-@inline function set(obj, l::PropertyLens{field}, val) where {field}
+@inline function set(l::PropertyLens{field}, obj, val) where {field}
     patch = (;field => val)
     setproperties(obj, patch)
 end
 
-struct ComposedLens{LO, LI} <: Lens
-    outer::LO
-    inner::LI
-end
-
-"""
+TODO = """
     compose([lens₁, [lens₂, [lens₃, ...]]])
 
 Compose `lens₁`, `lens₂` etc. There is one subtle point here:
@@ -125,18 +103,8 @@ their performance may not be the same. The compiler tends to optimize right asso
 
 The compose function tries to use a composition order, that the compiler likes. The composition order is therefore not part of the stable API.
 """
-function compose end
-compose() = IdentityLens()
-compose(l::Lens) = l
-compose(::IdentityLens, ::IdentityLens) = IdentityLens()
-compose(::IdentityLens, l::Lens) = l
-compose(l::Lens, ::IdentityLens) = l
-compose(outer::Lens, inner::Lens) = ComposedLens(outer, inner)
-function compose(l1::Lens, ls::Lens...)
-    compose(l1, compose(ls...))
-end
 
-"""
+TODO = """
     lens₁ ∘ lens₂
 
 Compose lenses `lens₁`, `lens₂`, ..., `lensₙ` to access nested objects.
@@ -157,40 +125,38 @@ julia> get(obj, lens)
 1
 ```
 """
-Base.:∘(l1::Lens, l2::Lens) = compose(l1, l2)
 
-function get(obj, l::ComposedLens)
-    inner_obj = get(obj, l.outer)
-    get(inner_obj, l.inner)
-end
+const ComposedLens{Outer, Inner} = Base.ComposedFunction{Outer, Inner}
+outer(o::ComposedLens) = o.f
+inner(o::ComposedLens) = o.g
 
-function set(obj,l::ComposedLens, val)
-    inner_obj = get(obj, l.outer)
-    inner_val = set(inner_obj, l.inner, val)
-    set(obj, l.outer, inner_val)
+function set(lens::Base.ComposedFunction, obj, val)
+    inner_obj = outer(lens)(obj)
+    inner_val = set(inner(lens), inner_obj, val)
+    set(outer(lens), obj, inner_val)
 end
 
 struct IndexLens{I <: Tuple} <: Lens
     indices::I
 end
 
-Base.@propagate_inbounds function get(obj, l::IndexLens)
+Base.@propagate_inbounds function (lens::IndexLens)(obj)
     getindex(obj, l.indices...)
 end
-Base.@propagate_inbounds function set(obj, l::IndexLens, val)
-    setindex(obj, val, l.indices...)
+Base.@propagate_inbounds function set(lens::IndexLens, obj, val)
+    setindex(obj, val, lens.indices...)
 end
 
 struct DynamicIndexLens{F} <: Lens
     f::F
 end
 
-Base.@propagate_inbounds get(obj, I::DynamicIndexLens) = obj[I.f(obj)...]
+Base.@propagate_inbounds (lens::DynamicIndexLens)(obj) = obj[lens.f(obj)...]
 
-Base.@propagate_inbounds set(obj, I::DynamicIndexLens, val) =
-    setindex(obj, val, I.f(obj)...)
+Base.@propagate_inbounds set(lens::DynamicIndexLens, obj, val) =
+    setindex(obj, val, lens.f(obj)...)
 
-"""
+TODO = """
     FunctionLens(f)
     @lens f(_)
 
@@ -231,7 +197,3 @@ Setfield.set(obj, ::typeof(@lens myfunction(_)), val) = ...
 type of `@lens myfunction(_)` is implemented is not the part of stable
 API.
 """
-struct FunctionLens{f} <: Lens end
-FunctionLens(f) = FunctionLens{f}()
-
-get(obj, ::FunctionLens{f}) where f = f(obj)
