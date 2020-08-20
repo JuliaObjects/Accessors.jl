@@ -114,16 +114,16 @@ end
 
 function compose_left_assoc(obj, val)
     l = @lens ((_.a⨟_.b)⨟_.c)⨟_.d
-    set(l, obj, val)
+    set(obj, l, val)
 end
 
 function compose_right_assoc(obj, val)
     l = @lens _.a⨟(_.b⨟(_.c⨟_.d))
-    set(l, obj, val)
+    set(obj, l, val)
 end
 function compose_default_assoc(obj, val)
     l = @lens _.a.b.c.d
-    set(l, obj, val)
+    set(obj, l, val)
 end
 @testset "Lens composition compiler prefered associativity" begin
 

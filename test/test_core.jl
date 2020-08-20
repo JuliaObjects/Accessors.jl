@@ -162,23 +162,23 @@ function test_getset_laws(lens, obj, val1, val2)
 
     # set ⨟ get
     val = lens(obj)
-    @test set(lens, obj, val) == obj
+    @test set(obj, lens, val) == obj
 
     # get ⨟ set
-    obj1 = set(lens, obj, val1)
+    obj1 = set(obj, lens, val1)
     @test lens(obj1) == val1
 
     # set idempotent
-    obj12 = set(lens, obj1, val2)
-    obj2 = set(lens, obj12, val2)
+    obj12 = set(obj1, lens, val2)
+    obj2 = set(obj12, lens, val2)
     @test obj12 == obj2
 end
 
 function test_modify_law(f, lens, obj)
-    obj_modify = modify(f, lens, obj)
+    obj_modify = modify(f, obj, lens)
     old_val = lens(obj)
     val = f(old_val)
-    obj_setfget = set(lens, obj, val)
+    obj_setfget = set(obj, lens, val)
     @test obj_modify == obj_setfget
 end
 
@@ -230,8 +230,8 @@ end
           ((@lens _             ),   :xy),
         ]
         @inferred lens(obj)
-        @inferred set(lens, obj, val)
-        @inferred modify(identity, lens, obj)
+        @inferred set(obj, lens, val)
+        @inferred modify(identity, obj, lens)
     end
 end
 
@@ -253,7 +253,7 @@ end
     l = @lens _[1]
     @test l isa Setfield.IndexLens
     @test l(obj) == 1
-    @test set(l, obj, 6) == (6,2,3)
+    @test set(obj, l, 6) == (6,2,3)
 
 
     l = @lens _[1:3]
@@ -266,34 +266,34 @@ end
     @test l isa Setfield.DynamicIndexLens
     obj = (1,2,3)
     @test l(obj) == 3
-    @test set(l, obj, true) == (1,2,true)
+    @test set(obj, l, true) == (1,2,true)
 
     l = @lens _[end÷2]
     @test l isa Setfield.DynamicIndexLens
     obj = (1,2,3)
     @test l(obj) == 1
-    @test set(l, obj, true) == (true,2,3)
+    @test set(obj, l, true) == (true,2,3)
 
     two = 2
     plusone(x) = x + 1
     l = @lens _.a[plusone(end) - two].b
     obj = (a=(1, (a=10, b=20), 3), b=4)
     @test l(obj) == 20
-    @test set(l, obj, true) == (a=(1, (a=10, b=true), 3), b=4)
+    @test set(obj, l, true) == (a=(1, (a=10, b=true), 3), b=4)
 end
 
 @testset "StaticNumbers" begin
     obj = (1, 2.0, '3')
     l = @lens _[static(1)]
     @test (@inferred l(obj)) === 1
-    @test (@inferred set(l, obj, 6.0)) === (6.0, 2.0, '3')
+    @test (@inferred set(obj, l, 6.0)) === (6.0, 2.0, '3')
     l = @lens _[static(1 + 1)]
     @test (@inferred l(obj)) === 2.0
-    @test (@inferred set(l, obj, 6)) === (1, 6, '3')
+    @test (@inferred set(obj, l, 6)) === (1, 6, '3')
     n = 1
     l = @lens _[static(3n)]
     @test (@inferred l(obj)) === '3'
-    @test (@inferred set(l, obj, 6)) === (1, 2.0, 6)
+    @test (@inferred set(obj, l, 6)) === (1, 2.0, 6)
 
     l = @lens _[static(1):static(3)]
     @test l([4,5,6,7]) == [4,5,6]
@@ -307,9 +307,9 @@ end
         sweeper_with_noconst = @set sweeper_with_const.axis = @lens _[2]
 
         function f(s)
-            a = sum(set(s.axis, s.model, 0))
+            a = sum(set(s.model, s.axis, 0))
             for i in 1:10
-                a += sum(set(s.axis, s.model, i))
+                a += sum(set(s.model, s.axis, i))
             end
             return a
         end

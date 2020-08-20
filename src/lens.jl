@@ -79,8 +79,8 @@ Replace a deeply nested part of `obj` by `val`. See also [`Lens`](@ref).
 """
 function set end
 
-@inline function modify(f, lens, obj)
-    set(lens, obj, f(lens(obj)))
+@inline function modify(f, obj, lens)
+    set(obj, lens, f(lens(obj)))
 end
 
 struct PropertyLens{fieldname} end
@@ -89,7 +89,7 @@ function (l::PropertyLens{field})(obj) where {field}
     getproperty(obj, field)
 end
 
-@inline function set(l::PropertyLens{field}, obj, val) where {field}
+@inline function set(obj, l::PropertyLens{field}, val) where {field}
     patch = (;field => val)
     setproperties(obj, patch)
 end
@@ -131,10 +131,10 @@ const ComposedLens{Outer, Inner} = Base.ComposedFunction{Outer, Inner}
 outer(o::ComposedLens) = o.f
 inner(o::ComposedLens) = o.g
 
-function set(lens::Base.ComposedFunction, obj, val)
+@inline function set(obj, lens::Base.ComposedFunction, val)
     inner_obj = inner(lens)(obj)
-    inner_val = set(outer(lens), inner_obj, val)
-    set(inner(lens), obj, inner_val)
+    inner_val = set(inner_obj, outer(lens), val)
+    set(obj, inner(lens), inner_val)
 end
 
 struct IndexLens{I <: Tuple}
@@ -144,7 +144,7 @@ end
 Base.@propagate_inbounds function (lens::IndexLens)(obj)
     getindex(obj, lens.indices...)
 end
-Base.@propagate_inbounds function set(lens::IndexLens, obj, val)
+Base.@propagate_inbounds function set(obj, lens::IndexLens, val)
     setindex(obj, val, lens.indices...)
 end
 
@@ -154,7 +154,7 @@ end
 
 Base.@propagate_inbounds (lens::DynamicIndexLens)(obj) = obj[lens.f(obj)...]
 
-Base.@propagate_inbounds set(lens::DynamicIndexLens, obj, val) =
+Base.@propagate_inbounds set(obj, lens::DynamicIndexLens, val) =
     setindex(obj, val, lens.f(obj)...)
 
 TODO = """

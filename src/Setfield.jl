@@ -1,4 +1,3 @@
-__precompile__(true)
 module Setfield
 using MacroTools
 using MacroTools: isstructdef, splitstructdef, postwalk
@@ -7,11 +6,6 @@ using Requires: @require
 # TODO erase these
 const get = nothing
 const Lens = nothing
-
-
-if VERSION < v"1.1-"
-    using Future: copy!
-end
 
 include("setindex.jl")
 include("lens.jl")

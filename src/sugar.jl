@@ -184,14 +184,14 @@ function setmacro(lenstransform, ex::Expr; overwrite::Bool=false)
     ret = if ex.head == :(=)
         quote
             lens = ($lenstransform)($lens)
-            $dst = $set(lens, $obj, $val)
+            $dst = $set($obj, lens, $val)
         end
     else
         op = get_update_op(ex.head)
         f = :($_UpdateOp($op,$val))
         quote
             lens = ($lenstransform)($lens)
-            $dst = $modify($f, lens, $obj)
+            $dst = $modify($f, $obj, lens)
         end
     end
     ret

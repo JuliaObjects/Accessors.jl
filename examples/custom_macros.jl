@@ -12,15 +12,15 @@ struct Lens!{L}
 end
 
 (l::Lens!)(o) = l.pure(o)
-function Setfield.set(l::Lens!{<: ComposedLens}, o, val)
+function Setfield.set(o, l::Lens!{<: ComposedLens}, val)
     o_inner = Setfield.inner(l.pure)(o)
-    set(Lens!(Setfield.outer(l.pure)), o_inner, val)
+    set(o_inner, Lens!(Setfield.outer(l.pure)), val)
 end
-function Setfield.set(l::Lens!{PropertyLens{prop}}, o, val) where {prop}
+function Setfield.set(o, l::Lens!{PropertyLens{prop}}, val) where {prop}
     setproperty!(o, prop, val)
     o
 end
-function Setfield.set(l::Lens!{<:IndexLens}, o, val) where {prop}
+function Setfield.set(o, l::Lens!{<:IndexLens}, val) where {prop}
     o[l.pure.indices...] = val
     o
 end
@@ -37,12 +37,12 @@ end
 
 o = M(1,2)
 l = Lens!(@lens _.b)
-set(l, o, 20)
+set(o, l, 20)
 @test o.b == 20
 
 l = Lens!(@lens _.foo[1])
 o = (foo=[1,2,3], bar=:bar)
-set(l, o, 100)
+set(o, l, 100)
 @test o == (foo=[100,2,3], bar=:bar)
 
 # Now we can implement the syntax macros
@@ -69,7 +69,7 @@ deep = [[[[1]]]]
 
 l = @mylens! _.foo[1]
 o = (foo=[1,2,3], bar=:bar)
-set(l, o, 100)
+set(o, l, 100)
 @test o == (foo=[100,2,3], bar=:bar)
 
 # Everything works, we can do arbitrary nesting and also use `+=` syntax etc.

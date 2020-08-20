@@ -1,24 +1,20 @@
-set(::typeof(last), obj, val) = @set obj[lastindex(obj)] = val
-set(::typeof(first), obj, val) = @set obj[firstindex(obj)] = val
-set(::typeof(identity), obj, val) = val
+set(obj, ::typeof(last), val) = @set obj[lastindex(obj)] = val
+set(obj, ::typeof(first), val) = @set obj[firstindex(obj)] = val
+set(obj, ::typeof(identity), val) = val
 
 ################################################################################
 ##### eltype
 ################################################################################
-function set(::typeof(eltype), obj, ::Type{T}) where {T}
-    return set_eltype(obj, T)
-end
+set(obj::Array, ::typeof(eltype), T::Type) = collect(T, obj)
+set(obj::Number, ::typeof(eltype), T::Type) = T(obj)
+set(obj::Type{<:Number}, ::typeof(eltype), ::Type{T}) where {T} = T
+set(obj::Type{<:Array{<:Any, N}}, ::typeof(eltype), ::Type{T}) where {N, T} = Array{T, N}
+set(obj::Type{<:Dict}, ::typeof(eltype), ::Type{Pair{K, V}}) where {K, V} = Dict{K, V}
+set(obj::Dict, ::typeof(eltype), ::Type{T}) where {T} = set(typeof(obj), eltype, T)(obj)
 
-set_eltype(obj::Array,  T::Type) = collect(T, obj)
-set_eltype(obj::Number, T::Type) = T(obj)
-set_eltype(::Type{<:Number}, ::Type{T}) where {T} = T
-set_eltype(::Type{<:Array{<:Any, N}}, ::Type{T}) where {N, T} = Array{T, N}
-set_eltype(::Type{<:Dict}, ::Type{Pair{K, V}}) where {K, V} = Dict{K, V}
-set_eltype(obj::Dict, ::Type{T}) where {T} = set_eltype(typeof(obj), T)(obj)
-
-set(lens::Union{typeof(keytype), typeof(valtype)}, obj::Dict, T::Type) =
-    set(lens, typeof(obj), T)(obj)
-set(lens::typeof(keytype), obj::Type{<:Dict{<:Any,V}}, ::Type{K}) where {K, V} =
+set(obj::Dict, lens::Union{typeof(keytype), typeof(valtype)}, T::Type) =
+    set(typeof(obj), lens, T)(obj)
+set(obj::Type{<:Dict{<:Any,V}}, lens::typeof(keytype), ::Type{K}) where {K, V} =
     Dict{K, V}
-set(lens::typeof(valtype), ::Type{<:Dict{K}}, ::Type{V}) where {K, V} =
+set(obj::Type{<:Dict{K}}, lens::typeof(valtype), ::Type{V}) where {K, V} =
     Dict{K, V}
