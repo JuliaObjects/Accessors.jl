@@ -13,6 +13,7 @@ makedocs(
          sitename = "Setfield.jl",
          pages = [
             "Introduction" => "intro.md",
+            "Lenses" => "lenses.md",
             "Docstrings" => "index.md",
             "Custom Macros" => "examples/custom_macros.md",
              hide("internals.md"),

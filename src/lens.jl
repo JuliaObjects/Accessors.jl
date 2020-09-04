@@ -8,67 +8,20 @@ export constructorof
 
 using Base: getproperty
 
-TODO = """
-    Lens
+"""
+    modify(f, obj, lens)
 
-A `Lens` allows to access or replace deeply nested parts of complicated objects.
+Replace a deeply nested part `x` of `obj` by `f(x)`.
 
-# Example
 ```jldoctest
 julia> using Setfield
 
-julia> struct T;a;b; end
+julia> obj = (a=1, b=2); lens=@lens _.a; f = x -> "hello \$x";
 
-julia> obj = T("AA", "BB")
-T("AA", "BB")
-
-julia> lens = @lens _.a
-(@lens _.a)
-
-julia> get(obj, lens)
-"AA"
-
-julia> set(obj, lens, 2)
-T(2, "BB")
-
-julia> obj
-T("AA", "BB")
-
-julia> modify(lowercase, obj, lens)
-T("aa", "BB")
+julia> modify(f, obj, lens)
+(a = "hello 1", b = 2)
 ```
-
-# Interface
-Concrete subtypes of `Lens` have to implement
-* `set(obj, lens, val)`
-* `get(obj, lens)`
-
-These must be pure functions, that satisfy the three lens laws:
-
-```jldoctest; output = false, setup = :(using Setfield; (≅ = (==)); obj = (a="A", b="B"); lens = @lens _.a; val = 2; val1 = 10; val2 = 20)
-@assert get(set(obj, lens, val), lens) ≅ val
-        # You get what you set.
-@assert set(obj, lens, get(obj, lens)) ≅ obj
-        # Setting what was already there changes nothing.
-@assert set(set(obj, lens, val1), lens, val2) ≅ set(obj, lens, val2)
-        # The last set wins.
-
-# output
-
-```
-Here `≅` is an appropriate notion of equality or an approximation of it. In most contexts
-this is simply `==`. But in some contexts it might be `===`, `≈`, `isequal` or something
-else instead. For instance `==` does not work in `Float64` context, because
-`get(set(obj, lens, NaN), lens) == NaN` can never hold. Instead `isequal` or
-`≅(x::Float64, y::Float64) = isequal(x,y) | x ≈ y` are possible alternatives.
-
-See also [`@lens`](@ref), [`set`](@ref), [`get`](@ref), [`modify`](@ref).
-"""
-
-"""
-    modify(f, lens, obj)
-
-Replace a deeply nested part `x` of `obj` by `f(x)`.
+See also [`set`](@ref).
 """
 function modify end
 
@@ -76,6 +29,16 @@ function modify end
     set(lens, obj, val)
 
 Replace a deeply nested part of `obj` by `val`.
+
+```jldoctest
+julia> using Setfield
+
+julia> obj = (a=1, b=2); lens=@lens _.a; val = 100;
+
+julia> set(obj, lens, val)
+(a = 100, b = 2)
+```
+See also [`modify`](@ref).
 """
 function set end
 
@@ -146,45 +109,3 @@ Base.@propagate_inbounds (lens::DynamicIndexLens)(obj) = obj[lens.f(obj)...]
 
 Base.@propagate_inbounds set(obj, lens::DynamicIndexLens, val) =
     setindex(obj, val, lens.f(obj)...)
-
-TODO = """
-    FunctionLens(f)
-    @lens f(_)
-
-Lens with [`get`](@ref) method definition that simply calls `f`.
-[`set`](@ref) method for each function `f` must be implemented manually.
-Use `methods(set, (Any, Setfield.FunctionLens, Any))` to get a list of
-supported functions.
-
-Note that `FunctionLens` flips the order of composition; i.e.,
-`(@lens f(_)) ⨟ (@lens g(_)) == @lens g(f(_))`.
-
-# Example
-```jldoctest
-julia> using Setfield
-
-julia> obj = ((1, 2), (3, 4));
-
-julia> lens = (@lens first(_)) ⨟ (@lens last(_))
-(@lens last(first(_)))
-
-julia> get(obj, lens)
-2
-
-julia> set(obj, lens, '2')
-((1, '2'), (3, 4))
-```
-
-# Implementation
-
-To use `myfunction` as a lens, define a `set` method with the following
-signature:
-
-```julia
-Setfield.set(obj, ::typeof(@lens myfunction(_)), val) = ...
-```
-
-`typeof` is used above instead of `FunctionLens` because how actual
-type of `@lens myfunction(_)` is implemented is not the part of stable
-API.
-"""

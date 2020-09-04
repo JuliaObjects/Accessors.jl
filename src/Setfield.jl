@@ -3,10 +3,6 @@ using MacroTools
 using MacroTools: isstructdef, splitstructdef, postwalk
 using Requires: @require
 
-# TODO erase these
-const get = nothing
-const Lens = nothing
-
 include("setindex.jl")
 include("lens.jl")
 include("sugar.jl")
