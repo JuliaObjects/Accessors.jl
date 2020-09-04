@@ -12,6 +12,6 @@ include("test_setindex.jl")
 include("test_core.jl")
 include("test_functionlenses.jl")
 PerformanceTestTools.@include("perf.jl")
-# TODO doctest(Setfield)
+doctest(Setfield)
 
 end  # module

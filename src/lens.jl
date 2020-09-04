@@ -68,14 +68,14 @@ See also [`@lens`](@ref), [`set`](@ref), [`get`](@ref), [`modify`](@ref).
 """
     modify(f, lens, obj)
 
-Replace a deeply nested part `x` of `obj` by `f(x)`. See also [`Lens`](@ref).
+Replace a deeply nested part `x` of `obj` by `f(x)`.
 """
 function modify end
 
 """
     set(lens, obj, val)
 
-Replace a deeply nested part of `obj` by `val`. See also [`Lens`](@ref).
+Replace a deeply nested part of `obj` by `val`.
 """
 function set end
 
@@ -94,18 +94,8 @@ end
     setproperties(obj, patch)
 end
 
-TODO = """
-    compose([lens₁, [lens₂, [lens₃, ...]]])
 
-Compose `lens₁`, `lens₂` etc. There is one subtle point here:
-While the two composition orders `(lens₁ ⨟ lens₂) ⨟ lens₃` and `lens₁ ⨟ (lens₂ ⨟ lens₃)` have equivalent semantics,
-their performance may not be the same. The compiler tends to optimize right associative composition
-(second case) better then left associative composition.
-
-The compose function tries to use a composition order, that the compiler likes. The composition order is therefore not part of the stable API.
 """
-
-TODO = """
     lens₁ ⨟ lens₂
 
 Compose lenses `lens₁`, `lens₂`, ..., `lensₙ` to access nested objects.

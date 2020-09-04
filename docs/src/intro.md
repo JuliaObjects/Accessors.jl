@@ -56,7 +56,7 @@ This api may be useful in its own right and works as follows:
 julia> using Setfield
 
 julia> l = @lens _.a.b
-(@lens _.a.b)
+(@lens _.b) ∘ (@lens _.a)
 
 julia> struct AB;a;b;end
 
@@ -69,7 +69,7 @@ AB(AB(1, 42), 3)
 julia> obj
 AB(AB(1, 2), 3)
 
-julia> get(obj, l)
+julia> l(obj)
 2
 
 julia> modify(x->10x, obj, l)

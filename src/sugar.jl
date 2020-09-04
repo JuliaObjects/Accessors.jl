@@ -132,6 +132,14 @@ function parse_obj_lenses(ex)
     obj, tuple(frontlens..., lens)
 end
 
+"""
+    lenscompose([lens₁, [lens₂, [lens₃, ...]]])
+
+Compose `lens₁`, `lens₂` etc. There is one subtle point here:
+While the two composition orders `(lens₁ ⨟ lens₂) ⨟ lens₃` and `lens₁ ⨟ (lens₂ ⨟ lens₃)` have equivalent semantics, their performance may not be the same.
+
+The `lenscompose` function tries to use a composition order, that the compiler likes. The composition order is therefore not part of the stable API.
+"""
 lenscompose() = identity
 lenscompose(args...) = opcompose(args...)
 
@@ -213,9 +221,9 @@ julia> t = T("A1", T(T("A3", "B3"), "B2"))
 T("A1", T(T("A3", "B3"), "B2"))
 
 julia> l = @lens _.b.a.b
-(@lens _.b.a.b)
+(@lens _.b) ∘ (@lens _.a) ∘ (@lens _.b)
 
-julia> get(t, l)
+julia> l(t)
 "B3"
 
 julia> set(t, l, 100)
@@ -240,9 +248,7 @@ end
 This function can be used to create a customized variant of [`@lens`](@ref).
 It works by applying `lenstransform` to the created lens at runtime.
 ```julia
-function mytransform(lens::Lens)::Lens
-    ...
-end
+# new_lens = mytransform(lens)
 macro mylens(ex)
     lensmacro(mytransform, ex)
 end
