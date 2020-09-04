@@ -81,6 +81,26 @@ function test_ir_lens_vs_hand(info_lens::Core.CodeInfo,
     @test uniquecounts(heads_lens) == uniquecounts(heads_hand)
 end
 
+using Setfield: ComposedLens
+is_fast_composition_order(lens) = true
+is_fast_composition_order(lens::ComposedLens{<:ComposedLens, <:Any}) = is_fast_composition_order(Setfield.outer(lens))
+is_fast_composition_order(lens::ComposedLens{<:Any, <:ComposedLens}) = false
+is_fast_composition_order(lens::ComposedLens{<:ComposedLens, <:ComposedLens}) = false
+@testset "default composition orders are fast" begin
+    @assert is_fast_composition_order(∘(first, last, eltype))
+    @assert is_fast_composition_order((first ∘ last) ∘ eltype)
+    @assert !is_fast_composition_order(first ∘ (last ∘ eltype))
+    @test is_fast_composition_order(⨟(eltype, last, first))
+    @test_broken is_fast_composition_order(first ⨟ last ⨟ eltype)
+    @test is_fast_composition_order(first ∘ last ∘ eltype)
+    @test is_fast_composition_order(@lens _)
+    @test is_fast_composition_order(@lens _ |> first |> last |> eltype)
+    @test is_fast_composition_order(@lens _.a.b)
+    @test is_fast_composition_order(@lens _[1][2][3])
+    @test is_fast_composition_order(@lens first(last(_)))
+    @test is_fast_composition_order(@lens last(_)[2].a |> first)
+end
+
 let
     obj = AB(AB(1,2), :b)
     val = (1,2)
@@ -125,6 +145,7 @@ function compose_default_assoc(obj, val)
     l = @lens _.a.b.c.d
     set(obj, l, val)
 end
+
 @testset "Lens composition compiler prefered associativity" begin
 
     obj = (a=(b=(c=(d=1,d2=2),c2=2),b2=3), a2=2)

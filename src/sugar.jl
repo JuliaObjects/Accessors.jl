@@ -106,8 +106,7 @@ function parse_obj_lenses(ex)
         obj, frontlens = parse_obj_lenses(front)
         lens = esc(funlens)
     elseif is_interpolation(ex)
-        @assert length(ex.args) == 1
-        return esc(:_), (esc(ex.args[1]),)
+        error(string(ex))
     elseif @capture(ex, front_[indices__])
         obj, frontlens = parse_obj_lenses(front)
         if any(need_dynamic_lens, indices)
@@ -275,3 +274,15 @@ _show(io::IO, lens::PropertyLens{field}) where {field} = print(io, "(@lens _.$fi
 _show(io::IO, lens::IndexLens) = print(io, "(@lens _[", join(repr.(lens.indices), ", "), "])")
 Base.show(io::IO, lens::Union{IndexLens, PropertyLens}) = _show(io, lens)
 Base.show(io::IO, ::MIME"text/plain", lens::Union{IndexLens, PropertyLens}) = _show(io, lens)
+
+# debugging
+show_composition_order(lens) = (show_composition_order(stdout, lens); println())
+show_composition_order(io::IO, lens) = show(io, lens)
+function show_composition_order(io::IO, lens::ComposedLens)
+    print(io, "(")
+    show_composition_order(io, outer(lens))
+    print(io, " ∘  ")
+    show_composition_order(io, inner(lens))
+    print(io, ")")
+end
+

@@ -414,13 +414,12 @@ end
     @test @lens(_ ⨟ (_[1] ⨟ _.a) ⨟ first(_)) == @lens(_) ⨟ (@lens(_[1]) ⨟ @lens(_.a)) ⨟ @lens(first(_))
 end
 
-@testset "@lens ⨟ and \$" begin
+@testset "|>" begin
     lbc = @lens _.b.c
-    @test @lens($lbc) === lbc
-    @test @lens(_.a ⨟ $lbc) ===
-        @lens(_.a) ⨟ lbc
-    @test @lens(_.a ⨟ $lbc ⨟ _[1] ⨟ $lbc) ===
-        @lens(_.a) ⨟ lbc ⨟ @lens(_[1]) ⨟ lbc
+    @test @lens(_ |> lbc) === lbc
+    @test @lens(_.a |> lbc) === @lens(_.a) ⨟ lbc
+    @test @lens((_.a |> lbc).d) === ⨟(@lens(_.a), lbc , @lens(_.d))
+    @test @lens(_.a |> lbc |> (@lens _[1]) |> lbc) === ⨟(@lens(_.a), lbc, @lens(_[1]), lbc)
 end
 
 @testset "text/plain show" begin

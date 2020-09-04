@@ -84,7 +84,7 @@ const ComposedLens{Outer, Inner} = Base.ComposedFunction{Outer, Inner}
 outer(o::ComposedLens) = o.f
 inner(o::ComposedLens) = o.g
 
-@inline function set(obj, lens::Base.ComposedFunction, val)
+@inline function set(obj, lens::ComposedLens, val)
     inner_obj = inner(lens)(obj)
     inner_val = set(inner_obj, outer(lens), val)
     set(obj, inner(lens), inner_val)
