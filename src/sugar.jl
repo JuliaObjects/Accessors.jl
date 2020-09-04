@@ -27,6 +27,7 @@ T(T(2, 2), 2)
 julia> @set t.a.b = 3
 T(T(2, 3), 2)
 ```
+Supports the same syntax as [`@lens`](@ref). See also [`@reset`](@ref).
 """
 macro set(ex)
     setmacro(identity, ex, overwrite=false)
@@ -50,6 +51,7 @@ julia> @reset t.a=2
 julia> t
 (a = 2,)
 ```
+Supports the same syntax as [`@lens`](@ref). See also [`@set`](@ref).
 """
 macro reset(ex)
     setmacro(identity, ex, overwrite=true)
@@ -100,6 +102,9 @@ function parse_obj_lenses(ex)
         return parse_obj_lenses_composite(lensexprs)
     elseif @capture(ex, ∘(lensexprs__))
         return parse_obj_lenses_composite(reverse(lensexprs))
+    elseif @capture(ex, (front_ |> funlens_))
+        obj, frontlens = parse_obj_lenses(front)
+        lens = esc(funlens)
     elseif is_interpolation(ex)
         @assert length(ex.args) == 1
         return esc(:_), (esc(ex.args[1]),)
@@ -129,7 +134,7 @@ function parse_obj_lenses(ex)
         obj = esc(ex)
         return obj, ()
     end
-    obj, tuple(frontlens..., lens)
+    return obj, tuple(frontlens..., lens)
 end
 
 """
@@ -236,6 +241,7 @@ julia> set(t, (@lens _[1]), "1")
 ("1", "two")
 ```
 
+See also [`@set`](@ref).
 """
 macro lens(ex)
     lensmacro(identity, ex)

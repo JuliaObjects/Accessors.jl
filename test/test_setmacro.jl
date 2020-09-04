@@ -1,16 +1,13 @@
 module TestSetMacro
 
 module Clone
-using Setfield: setmacro, lensmacro
-
-macro lens(ex)
-    lensmacro(identity, ex)
-end
-
-macro set(ex)
-    setmacro(identity, ex)
-end
-
+    import Setfield: setmacro, lensmacro
+    macro lens(ex)
+        lensmacro(identity, ex)
+    end
+    macro set(ex)
+        setmacro(identity, ex)
+    end
 end#module Clone
 
 using Setfield: Setfield
@@ -47,4 +44,3 @@ using StaticNumbers
 end
 
 end#module
-

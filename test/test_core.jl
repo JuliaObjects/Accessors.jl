@@ -122,6 +122,9 @@ end
     t = (1, 2, 3, 4)
     @test (@set t[length(t)] = 40) === (1, 2, 3, 40)
     @test (@set t[length(t) ÷ 2] = 20) === (1, 20, 3, 4)
+
+    t = (1, 2)
+    @test (@set t |> first = 10) === (10, 2)
 end
 
 
@@ -146,6 +149,9 @@ Base.show(io::IO, ::MIME"text/plain", ::LensWithTextPlain) =
             @lens last(first(_))
             @lens last(first(_.a))[1]
             UserDefinedLens()
+            @lens _ |> UserDefinedLens()
+            @lens UserDefinedLens()(_)
+            @lens _ |> ((x -> x)(first))
             (@lens _.a) ⨟ UserDefinedLens()
             UserDefinedLens() ⨟ (@lens _.b)
             (@lens _.a) ∘ UserDefinedLens()   ∘ (@lens _.b)
