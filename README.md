@@ -13,7 +13,9 @@ Updating deeply nested immutable structs was never easier:
 using Setfield
 @set obj.a.b.c = d
 ```
-For more information, see [the documentation](https://jw3126.github.io/Setfield.jl/latest/intro/).
+For more information, see [the documentation](https://jw3126.github.io/Setfield.jl/latest/intro/) and/or watch this video:
+
+[![JuliaCon2020 Changing the immutable](https://img.youtube.com/vi/vkAOYeTpLg0/0.jpg)](https://youtu.be/vkAOYeTpLg0 "Changing the immutable")
 
 # Some creative usages of Setfield
 
