@@ -132,13 +132,14 @@ let
     end
 end
 
-function compose_left_assoc(obj, val)
-    l = @lens ((_.a⨟_.b)⨟_.c)⨟_.d
+function compose_right_assoc(obj, val)
+    l = @lens(_.d) ∘ (@lens(_.c) ∘ (@lens(_.b) ∘ @lens(_.a)))
     set(obj, l, val)
 end
 
-function compose_right_assoc(obj, val)
-    l = @lens _.a⨟(_.b⨟(_.c⨟_.d))
+function compose_left_assoc(obj, val)
+    l = ((@lens(_.d) ∘ @lens(_.c)) ∘ @lens(_.b)) ∘ @lens(_.a)
+    set(obj, l, val)
     set(obj, l, val)
 end
 function compose_default_assoc(obj, val)
@@ -161,11 +162,11 @@ end
     println("Right associative composition: $b_right")
 
     @test b_default.allocs == 0
-    @test b_right.allocs == 0
-    @test_broken b_left.allocs == 0
+    @test_broken b_right.allocs == 0
+    @test b_left.allocs == 0
 
-    @test b_left.time > 2b_default.time
-    @test b_right.time ≈ b_default.time rtol=0.8
+    @test b_right.time > 2b_default.time
+    @test b_left.time ≈ b_default.time rtol=0.8
 end
 
 end

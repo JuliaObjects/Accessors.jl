@@ -397,23 +397,6 @@ end
     @test_throws ArgumentError Setfield.lensmacro(identity, :(_.[:a]))
 end
 
-@testset "@lens and ⨟" begin
-    @test @lens(⨟()) === @lens(_)
-    @test @lens(∘()) === @lens(_)
-    @test @lens(⨟(_.a)) === @lens(_.a)
-    @test @lens(∘(_.a)) === @lens(_.a)
-    @test @lens(⨟(_.a, _.b)) ===
-        @lens(_.a) ⨟ @lens(_.b) ===
-        @lens(_.b) ∘ @lens(_.a)
-    @test @lens(⨟(_.a, _.b, _.c)) === Setfield.lenscompose(@lens(_.a), @lens(_.b), @lens(_.c))
-
-    @test @lens(⨟(_[1])) === @lens(_[1])
-    @test @lens(⨟(_[1], _[2])) === @lens(_[1]) ⨟ @lens(_[2])
-    @test @lens(⨟(_[1], _[2], _[3])) === Setfield.lenscompose(@lens(_[1]), @lens(_[2]), @lens(_[3]))
-
-    @test @lens(_ ⨟ (_[1] ⨟ _.a) ⨟ first(_)) == @lens(_) ⨟ (@lens(_[1]) ⨟ @lens(_.a)) ⨟ @lens(first(_))
-end
-
 @testset "|>" begin
     lbc = @lens _.b.c
     @test @lens(_ |> lbc) === lbc
@@ -421,6 +404,7 @@ end
     @test @lens((_.a |> lbc).d) === ⨟(@lens(_.a), lbc , @lens(_.d))
     @test @lens(_.a |> lbc |> (@lens _[1]) |> lbc) === ⨟(@lens(_.a), lbc, @lens(_[1]), lbc)
 
+    @test @lens(_ |> _) === identity
     @test (@lens _ |> _[1])            === (@lens _[1])
     @test (@lens _ |> _.a)             === (@lens _.a)
     @test (@lens _ |> _.a.b)           === (@lens _.a.b)
@@ -431,6 +415,7 @@ end
     @test (@lens _ |> twice(first)) === first ∘ first
     @test (@lens _ |> first |> _.a |> (first ∘ last) |> _[2]) ===
         (@lens (first ∘ last)(first(_).a)[2])
+    @test (@lens _ |> _[1] |> _[2] |> _[3]) === @lens _[1][2][3]
 end
 
 @testset "text/plain show" begin

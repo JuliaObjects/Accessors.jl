@@ -81,26 +81,8 @@ function lower_index(collection::Symbol, index, dim)
     return index
 end
 
-function parse_obj_lenses_composite(lensexprs::Vector)
-    if isempty(lensexprs)
-        return esc(:_), ()
-    else
-        obj, outermostlens = parse_obj_lens(lensexprs[1])
-        innerlenses = map(lensexprs[2:end]) do innerex
-            o, lens = parse_obj_lens(innerex)
-            @assert o == esc(:_)
-            lens
-        end
-        return obj, (outermostlens, innerlenses...)
-    end
-end
-
 function parse_obj_lenses(ex)
-    if @capture(ex, ⨟(lensexprs__))
-        return parse_obj_lenses_composite(lensexprs)
-    elseif @capture(ex, ∘(lensexprs__))
-        return parse_obj_lenses_composite(reverse(lensexprs))
-    elseif @capture(ex, (front_ |> back_))
+    if @capture(ex, (front_ |> back_))
         obj, frontlens = parse_obj_lenses(front)
         backlens = try
             # allow e.g. obj |> first |> _.a.b
