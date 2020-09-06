@@ -100,9 +100,20 @@ function parse_obj_lenses(ex)
         return parse_obj_lenses_composite(lensexprs)
     elseif @capture(ex, ∘(lensexprs__))
         return parse_obj_lenses_composite(reverse(lensexprs))
-    elseif @capture(ex, (front_ |> funlens_))
+    elseif @capture(ex, (front_ |> back_))
         obj, frontlens = parse_obj_lenses(front)
-        lens = esc(funlens)
+        backlens = try
+            # allow e.g. obj |> first |> _.a.b
+            obj_back, backlens = parse_obj_lenses(back)
+            if obj_back == esc(:_)
+                backlens
+            else
+                (esc(back),)
+            end
+        catch ArgumentError
+            backlens = (esc(back),)
+        end
+        return obj, tuple(frontlens..., backlens...)
     elseif @capture(ex, front_[indices__])
         obj, frontlens = parse_obj_lenses(front)
         if any(need_dynamic_lens, indices)
@@ -129,7 +140,7 @@ function parse_obj_lenses(ex)
         obj = esc(ex)
         return obj, ()
     end
-    return obj, tuple(frontlens..., lens)
+    return (obj, tuple(frontlens..., lens))
 end
 
 """

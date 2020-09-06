@@ -420,6 +420,17 @@ end
     @test @lens(_.a |> lbc) === @lens(_.a) ⨟ lbc
     @test @lens((_.a |> lbc).d) === ⨟(@lens(_.a), lbc , @lens(_.d))
     @test @lens(_.a |> lbc |> (@lens _[1]) |> lbc) === ⨟(@lens(_.a), lbc, @lens(_[1]), lbc)
+
+    @test (@lens _ |> _[1])            === (@lens _[1])
+    @test (@lens _ |> _.a)             === (@lens _.a)
+    @test (@lens _ |> _.a.b)           === (@lens _.a.b)
+    @test (@lens _ |> _.a[2])          === (@lens _.a[2])
+    @test (@lens _ |> first |> _[1])   === (@lens first(_)[1])
+    @test (@lens _ |> identity(first)) === first
+    twice = lens -> lens ∘ lens
+    @test (@lens _ |> twice(first)) === first ∘ first
+    @test (@lens _ |> first |> _.a |> (first ∘ last) |> _[2]) ===
+        (@lens (first ∘ last)(first(_).a)[2])
 end
 
 @testset "text/plain show" begin
