@@ -57,8 +57,6 @@ macro reset(ex)
     setmacro(identity, ex, overwrite=true)
 end
 
-is_interpolation(x) = x isa Expr && x.head == :$
-
 foldtree(op, init, x) = op(init, x)
 foldtree(op, init, ex::Expr) =
     op(foldl((acc, x) -> foldtree(op, acc, x), ex.args; init=init), ex)
@@ -105,8 +103,6 @@ function parse_obj_lenses(ex)
     elseif @capture(ex, (front_ |> funlens_))
         obj, frontlens = parse_obj_lenses(front)
         lens = esc(funlens)
-    elseif is_interpolation(ex)
-        error(string(ex))
     elseif @capture(ex, front_[indices__])
         obj, frontlens = parse_obj_lenses(front)
         if any(need_dynamic_lens, indices)
