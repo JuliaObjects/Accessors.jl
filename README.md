@@ -2,7 +2,7 @@
 
 [![DocStable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliaobjects.github.io/Accessors.jl/stable/intro)
 [![DocDev](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliaobjects.github.io/Accessors.jl/dev/intro)
-[![GitHubCI](https://github.com/juliaobjects/Accessors.jl/workflows/Run%20tests/badge.svg)](https://github.com/juliaobjects/Accessors.jl/actions?query=workflow%3A%22Run+tests%22)
+![CI](https://github.com/JuliaObjects/Accessors.jl/workflows/CI/badge.svg)
 
 The goal of [Accessors.jl](https://github.com/JuliaObjects/Accessors.jl) is to make updating immutable simple.
 It is the successor of [Setfield.jl](https://github.com/jw3126/Setfield.jl).
