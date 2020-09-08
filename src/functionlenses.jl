@@ -18,3 +18,9 @@ set(obj::Type{<:Dict{<:Any,V}}, lens::typeof(keytype), ::Type{K}) where {K, V} =
     Dict{K, V}
 set(obj::Type{<:Dict{K}}, lens::typeof(valtype), ::Type{V}) where {K, V} =
     Dict{K, V}
+
+################################################################################
+##### os
+################################################################################
+set(path, ::typeof(splitext), (stem, ext)) = string(stem, ext)
+set(path, ::typeof(splitdir), (dir, last)) = joinpath(dir, last)

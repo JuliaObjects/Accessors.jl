@@ -2,6 +2,16 @@ module TestFunctionLenses
 using Test
 using Setfield
 
+@testset "os" begin
+    path = "hello.md"
+    path_new = @set splitext(path)[2] = ".jl"
+    @test path_new == "hello.jl"
+
+    path = joinpath("root", "somedir", "some.file")
+    path_new = @set splitdir(path)[1] = "otherdir"
+    @test path_new == joinpath("otherdir", "some.file")
+end
+
 @testset "first" begin
     obj = (1, 2.0, '3')
     l = @lens first(_)
@@ -67,4 +77,4 @@ end
     @test typeof(@set eltype(obj) = Pair{UInt, Float64}) === Dict{UInt, Float64}
 end
 
-end  # module
+end # module
