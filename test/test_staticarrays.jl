@@ -1,6 +1,6 @@
 module TestStaticArrays
 using Test
-using Setfield
+using Accessors
 using StaticArrays
 using StaticNumbers
 

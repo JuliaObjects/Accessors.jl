@@ -1,4 +1,4 @@
-using Setfield, Documenter, Literate
+using Accessors, Documenter, Literate
 
 inputdir = joinpath(@__DIR__, "..", "examples")
 outputdir = joinpath(@__DIR__, "src", "examples")
@@ -9,8 +9,8 @@ for filename in readdir(inputdir)
 end
 
 makedocs(
-         modules = [Setfield],
-         sitename = "Setfield.jl",
+         modules = [Accessors],
+         sitename = "Accessors.jl",
          pages = [
             "Introduction" => "intro.md",
             "Lenses" => "lenses.md",
@@ -22,5 +22,5 @@ makedocs(
         )
 
 deploydocs(
-    repo = "github.com/jw3126/Setfield.jl.git",
+    repo = "github.com/jw3126/Accessors.jl.git",
 )

@@ -1,7 +1,7 @@
 module Perf
 using BenchmarkTools
 using BenchmarkTools: Benchmark, TrialEstimate
-using Setfield
+using Accessors
 using Test
 using InteractiveUtils
 using StaticArrays
@@ -81,9 +81,9 @@ function test_ir_lens_vs_hand(info_lens::Core.CodeInfo,
     @test uniquecounts(heads_lens) == uniquecounts(heads_hand)
 end
 
-using Setfield: ComposedLens
+using Accessors: ComposedLens
 is_fast_composition_order(lens) = true
-is_fast_composition_order(lens::ComposedLens{<:ComposedLens, <:Any}) = is_fast_composition_order(Setfield.outer(lens))
+is_fast_composition_order(lens::ComposedLens{<:ComposedLens, <:Any}) = is_fast_composition_order(Accessors.outer(lens))
 is_fast_composition_order(lens::ComposedLens{<:Any, <:ComposedLens}) = false
 is_fast_composition_order(lens::ComposedLens{<:ComposedLens, <:ComposedLens}) = false
 @testset "default composition orders are fast" begin

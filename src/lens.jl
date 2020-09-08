@@ -14,7 +14,7 @@ using Base: getproperty
 Replace a deeply nested part `x` of `obj` by `f(x)`.
 
 ```jldoctest
-julia> using Setfield
+julia> using Accessors
 
 julia> obj = (a=1, b=2); lens=@lens _.a; f = x -> "hello \$x";
 
@@ -31,7 +31,7 @@ function modify end
 Replace a deeply nested part of `obj` by `val`.
 
 ```jldoctest
-julia> using Setfield
+julia> using Accessors
 
 julia> obj = (a=1, b=2); lens=@lens _.a; val = 100;
 
@@ -65,7 +65,7 @@ Compose lenses `lens₁`, `lens₂`, ..., `lensₙ` to access nested objects.
 
 # Example
 ```jldoctest
-julia> using Setfield
+julia> using Accessors
 
 julia> obj = (a = (b = (c = 1,),),);
 

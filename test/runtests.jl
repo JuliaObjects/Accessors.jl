@@ -1,6 +1,6 @@
-module TestSetfield
+module TestAccessors
 import PerformanceTestTools
-import Setfield
+import Accessors
 using Documenter: doctest
 
 include("test_examples.jl")
@@ -11,6 +11,6 @@ include("test_setindex.jl")
 include("test_core.jl")
 include("test_functionlenses.jl")
 PerformanceTestTools.@include("perf.jl")
-doctest(Setfield)
+doctest(Accessors)
 
 end  # module

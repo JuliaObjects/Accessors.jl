@@ -1,4 +1,4 @@
-The Setfield.jl package is licensed under the MIT "Expat" License:
+The Accessors.jl package is licensed under the MIT "Expat" License:
 
 > Copyright (c) 2017: Takafumi Arakaki and Jan Weidner.
 >

@@ -8,7 +8,7 @@ Return a modified copy of deeply nested objects.
 
 # Example
 ```jldoctest
-julia> using Setfield
+julia> using Accessors
 
 julia> struct T;a;b end
 
@@ -40,7 +40,7 @@ Shortcut for `obj = @set obj...`.
 
 # Example
 ```jldoctest
-julia> using Setfield
+julia> using Accessors
 
 julia> t = (a=1,)
 (a = 1,)
@@ -206,7 +206,7 @@ Construct a lens from a field access.
 # Example
 
 ```jldoctest
-julia> using Setfield
+julia> using Accessors
 
 julia> struct T;a;b;end
 

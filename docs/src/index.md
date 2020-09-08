@@ -1,6 +1,6 @@
 ## Docstrings
 
 ```@autodocs
-Modules = [Setfield]
+Modules = [Accessors]
 Private = false
 ```

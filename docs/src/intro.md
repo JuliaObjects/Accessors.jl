@@ -29,10 +29,10 @@ It's a bit cryptic but what it means that Julia tried very hard to set the field
 julia> SpaceShip(Person(:JULIA, s.captain.age), s.velocity, s.position)
 SpaceShip(Person(:JULIA, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 ```
-This is messy and things get worse, if the structs are bigger. `Setfields` to the rescue!
+This is messy and things get worse, if the structs are bigger. `Accessorss` to the rescue!
 
 ```jldoctest spaceship
-julia> using Setfield
+julia> using Accessors
 
 julia> s = @set s.captain.name = :JULIA
 SpaceShip(Person(:JULIA, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
@@ -53,7 +53,7 @@ Under the hood this package implements a simple [lens](https://hackage.haskell.o
 This api may be useful in its own right and works as follows:
 
 ```jldoctest
-julia> using Setfield
+julia> using Accessors
 
 julia> l = @lens _.a.b
 (@lens _.b) ∘ (@lens _.a)

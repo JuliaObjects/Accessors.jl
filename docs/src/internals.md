@@ -1,6 +1,6 @@
 # Internals
 
 ```@autodocs
-Modules = [Setfield]
+Modules = [Accessors]
 Public = false
 ```

@@ -4,23 +4,23 @@
 # As a demo, we want to implement `@mylens!` and `@myreset`, which work much like
 # `@lens` and `@set`, but mutate objects instead of returning modified copies.
 
-using Setfield
-using Setfield: IndexLens, PropertyLens, ComposedLens
+using Accessors
+using Accessors: IndexLens, PropertyLens, ComposedLens
 
 struct Lens!{L}
     pure::L
 end
 
 (l::Lens!)(o) = l.pure(o)
-function Setfield.set(o, l::Lens!{<: ComposedLens}, val)
-    o_inner = Setfield.inner(l.pure)(o)
-    set(o_inner, Lens!(Setfield.outer(l.pure)), val)
+function Accessors.set(o, l::Lens!{<: ComposedLens}, val)
+    o_inner = Accessors.inner(l.pure)(o)
+    set(o_inner, Lens!(Accessors.outer(l.pure)), val)
 end
-function Setfield.set(o, l::Lens!{PropertyLens{prop}}, val) where {prop}
+function Accessors.set(o, l::Lens!{PropertyLens{prop}}, val) where {prop}
     setproperty!(o, prop, val)
     o
 end
-function Setfield.set(o, l::Lens!{<:IndexLens}, val) where {prop}
+function Accessors.set(o, l::Lens!{<:IndexLens}, val) where {prop}
     o[l.pure.indices...] = val
     o
 end
@@ -47,7 +47,7 @@ set(o, l, 100)
 
 # Now we can implement the syntax macros
 
-using Setfield: setmacro, lensmacro
+using Accessors: setmacro, lensmacro
 
 macro myreset(ex)
     setmacro(Lens!, ex)

@@ -1,7 +1,7 @@
 module TestCore
 using Test
-using Setfield
-using Setfield: compose, get_update_op
+using Accessors
+using Accessors: compose, get_update_op
 using ConstructionBase: ConstructionBase
 using StaticNumbers: static
 
@@ -243,39 +243,39 @@ end
 
 @testset "IndexLens" begin
     l = @lens _[]
-    @test l isa Setfield.IndexLens
+    @test l isa Accessors.IndexLens
     x = randn()
     obj = Ref(x)
     @test l(obj) == x
 
     l = @lens _[][]
-    @test Setfield.outer(l) isa Setfield.IndexLens
-    @test Setfield.inner(l) isa Setfield.IndexLens
+    @test Accessors.outer(l) isa Accessors.IndexLens
+    @test Accessors.inner(l) isa Accessors.IndexLens
     inner = Ref(x)
     obj = Base.RefValue{typeof(inner)}(inner)
     @test l(obj) == x
 
     obj = (1,2,3)
     l = @lens _[1]
-    @test l isa Setfield.IndexLens
+    @test l isa Accessors.IndexLens
     @test l(obj) == 1
     @test set(obj, l, 6) == (6,2,3)
 
 
     l = @lens _[1:3]
-    @test l isa Setfield.IndexLens
+    @test l isa Accessors.IndexLens
     @test l([4,5,6,7]) == [4,5,6]
 end
 
 @testset "DynamicIndexLens" begin
     l = @lens _[end]
-    @test l isa Setfield.DynamicIndexLens
+    @test l isa Accessors.DynamicIndexLens
     obj = (1,2,3)
     @test l(obj) == 3
     @test set(obj, l, true) == (1,2,true)
 
     l = @lens _[end÷2]
-    @test l isa Setfield.DynamicIndexLens
+    @test l isa Accessors.DynamicIndexLens
     obj = (1,2,3)
     @test l(obj) == 1
     @test set(obj, l, true) == (true,2,3)
@@ -394,7 +394,7 @@ ConstructionBase.constructorof(::Type{CustomProperties}) = error()
 end
 
 @testset "issue #83" begin
-    @test_throws ArgumentError Setfield.lensmacro(identity, :(_.[:a]))
+    @test_throws ArgumentError Accessors.lensmacro(identity, :(_.[:a]))
 end
 
 @testset "|>" begin

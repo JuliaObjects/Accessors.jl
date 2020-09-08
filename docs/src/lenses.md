@@ -1,10 +1,10 @@
 # Lenses
 
-Setfield.jl is build around so called lenses. A Lens allows to access or replace deeply nested parts of complicated objects.
+Accessors.jl is build around so called lenses. A Lens allows to access or replace deeply nested parts of complicated objects.
 
 # Example
 ```jldoctest
-julia> using Setfield
+julia> using Accessors
 
 julia> struct T;a;b; end
 
@@ -29,12 +29,12 @@ T("aa", "BB")
 # Interface
 
 Implementing lenses is straight forward. They can be of any type and just need to implement the following interface:
-* `Setfield.set(obj, lens, val)`
+* `Accessors.set(obj, lens, val)`
 * `lens(obj)`
 
 These must be pure functions, that satisfy the three lens laws:
 
-```jldoctest; output = false, setup = :(using Setfield; (≅ = (==)); obj = (a="A", b="B"); lens = @lens _.a; val = 2; val1 = 10; val2 = 20)
+```jldoctest; output = false, setup = :(using Accessors; (≅ = (==)); obj = (a="A", b="B"); lens = @lens _.a; val = 2; val1 = 10; val2 = 20)
 @assert lens(set(obj, lens, val)) ≅ val
         # You get what you set.
 @assert set(obj, lens, lens(obj)) ≅ obj

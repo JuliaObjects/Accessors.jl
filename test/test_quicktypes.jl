@@ -5,7 +5,7 @@ import Base: ==
 import MacroTools
 
 using QuickTypes
-using Setfield
+using Accessors
 import ConstructionBase
 
 # this is a limitation in `MacroTools.splitarg`. If it is fixed

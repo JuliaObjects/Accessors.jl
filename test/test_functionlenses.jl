@@ -1,6 +1,6 @@
 module TestFunctionLenses
 using Test
-using Setfield
+using Accessors
 
 @testset "os" begin
     path = "hello.md"
