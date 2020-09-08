@@ -22,5 +22,5 @@ makedocs(
         )
 
 deploydocs(
-    repo = "github.com/jw3126/Accessors.jl.git",
+    repo = "github.com/JuliaObjects/Accessors.jl.git",
 )
