@@ -1,6 +1,7 @@
 set(obj, ::typeof(last), val) = @set obj[lastindex(obj)] = val
 set(obj, ::typeof(first), val) = @set obj[firstindex(obj)] = val
 set(obj, ::typeof(identity), val) = val
+set(obj, ::typeof(inv), new_inv) = inv(new_inv)
 
 ################################################################################
 ##### eltype
@@ -24,3 +25,8 @@ set(obj::Type{<:Dict{K}}, lens::typeof(valtype), ::Type{V}) where {K, V} =
 ################################################################################
 set(path, ::typeof(splitext), (stem, ext)) = string(stem, ext)
 set(path, ::typeof(splitdir), (dir, last)) = joinpath(dir, last)
+set(path, ::typeof(splitdrive), (drive, rest)) = joinpath(drive, rest)
+set(path, ::typeof(splitpath), pieces) = joinpath(pieces...)
+set(path, ::typeof(dirname), new_name) = @set splitdir(path)[1] = new_name
+set(path, ::typeof(basename), new_name) = @set splitdir(path)[2] = new_name
+

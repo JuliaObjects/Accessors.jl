@@ -1,5 +1,6 @@
 module TestFunctionLenses
 using Test
+using Accessors: test_getset_laws
 using Accessors
 
 @testset "os" begin
@@ -10,6 +11,12 @@ using Accessors
     path = joinpath("root", "somedir", "some.file")
     path_new = @set splitdir(path)[1] = "otherdir"
     @test path_new == joinpath("otherdir", "some.file")
+
+    test_getset_laws(splitext, "hello.world", ("hi", ".jl"), ("ho", ".md"))
+    test_getset_laws(splitdir, joinpath("hello", "world"), ("a", "b"), ("A", "B"))
+    test_getset_laws(splitpath, joinpath("hello", "world"), ["some"], ["some", "long", "path"])
+    test_getset_laws(dirname, joinpath("hello", "world"), "hi", "ho")
+    test_getset_laws(basename, joinpath("hello", "world"), "planet", "earth")
 end
 
 @testset "first" begin
