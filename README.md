@@ -1,9 +1,11 @@
 # Accessors
 
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://jw3126.github.io/Accessors.jl/stable/intro)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://jw3126.github.io/Accessors.jl/dev/intro)
+[![DocStable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliaobjects.github.io/Accessors.jl/stable/intro)
+[![DocDev](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliaobjects.github.io/Accessors.jl/dev/intro)
+[![GitHubCI](https://github.com/juliaobjects/Accessors.jl/workflows/Run%20tests/badge.svg)](https://github.com/juliaobjects/Accessors.jl/actions?query=workflow%3A%22Run+tests%22)
 
-Update deeply nested immutable structs. Successor of [Setfield.jl](https://github.com/jw3126/Setfield.jl).
+The goal of [Accessors.jl](https://github.com/JuliaObjects/Accessors.jl) is to make updating immutable simple.
+It is the successor of [Setfield.jl](https://github.com/jw3126/Setfield.jl).
 
 # Usage
 Updating deeply nested immutable structs was never easier:
@@ -11,7 +13,7 @@ Updating deeply nested immutable structs was never easier:
 using Accessors
 @set obj.a.b.c = d
 ```
-For more information, see [the documentation](https://JuliaObjects.github.io/Accessors.jl/latest/intro/) and/or watch this video:
+For more information, see [the documentation](https://juliaobjects.github.io/Accessors.jl/dev/intro/) and/or watch this video:
 
 [![JuliaCon2020 Changing the immutable](https://img.youtube.com/vi/vkAOYeTpLg0/0.jpg)](https://youtu.be/vkAOYeTpLg0 "Changing the immutable")
 
