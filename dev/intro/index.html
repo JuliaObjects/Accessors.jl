@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Introduction · Accessors.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Accessors.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Introduction</a><ul class="internal"><li><a class="tocitem" href="#Usage"><span>Usage</span></a></li><li><a class="tocitem" href="#Under-the-hood"><span>Under the hood</span></a></li></ul></li><li><a class="tocitem" href="../lenses/">Lenses</a></li><li><a class="tocitem" href="../">Docstrings</a></li><li><a class="tocitem" href="../examples/custom_macros/">Custom Macros</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Introduction</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Introduction</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaObjects/Accessors.jl/blob/master/docs/src/intro.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h2 id="Usage"><a class="docs-heading-anchor" href="#Usage">Usage</a><a id="Usage-1"></a><a class="docs-heading-anchor-permalink" href="#Usage" title="Permalink"></a></h2><p>Say we have a deeply nested struct:</p><pre><code class="language-julia-repl">julia&gt; using StaticArrays;
+
+julia&gt; struct Person
+           name::Symbol
+           age::Int
+       end;
+
+julia&gt; struct SpaceShip
+           captain::Person
+           velocity::SVector{3, Float64}
+           position::SVector{3, Float64}
+       end;
+
+julia&gt; s = SpaceShip(Person(:julia, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+SpaceShip(Person(:julia, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])</code></pre><p>Lets update the captains name:</p><pre><code class="language-julia-repl">julia&gt; s.captain.name = :JULIA
+ERROR: type Person is immutable</code></pre><p>It&#39;s a bit cryptic but what it means that Julia tried very hard to set the field but gave it up since the struct is immutable.  So we have to do:</p><pre><code class="language-julia-repl">julia&gt; SpaceShip(Person(:JULIA, s.captain.age), s.velocity, s.position)
+SpaceShip(Person(:JULIA, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])</code></pre><p>This is messy and things get worse, if the structs are bigger. <code>Accessorss</code> to the rescue!</p><pre><code class="language-julia-repl">julia&gt; using Accessors
+
+julia&gt; s = @set s.captain.name = :JULIA
+SpaceShip(Person(:JULIA, 2009), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+
+julia&gt; s = @set s.velocity[1] += 999999
+SpaceShip(Person(:JULIA, 2009), [999999.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+
+julia&gt; s = @set s.velocity[1] += 1000001
+SpaceShip(Person(:JULIA, 2009), [2.0e6, 0.0, 0.0], [0.0, 0.0, 0.0])
+
+julia&gt; @set s.position[2] = 20
+SpaceShip(Person(:JULIA, 2009), [2.0e6, 0.0, 0.0], [0.0, 20.0, 0.0])</code></pre><h2 id="Under-the-hood"><a class="docs-heading-anchor" href="#Under-the-hood">Under the hood</a><a id="Under-the-hood-1"></a><a class="docs-heading-anchor-permalink" href="#Under-the-hood" title="Permalink"></a></h2><p>Under the hood this package implements a simple <a href="https://hackage.haskell.org/package/lens">lens</a> api. This api may be useful in its own right and works as follows:</p><pre><code class="language-julia-repl">julia&gt; using Accessors
+
+julia&gt; l = @lens _.a.b
+(@lens _.b) ∘ (@lens _.a)
+
+julia&gt; struct AB;a;b;end
+
+julia&gt; obj = AB(AB(1,2),3)
+AB(AB(1, 2), 3)
+
+julia&gt; set(obj, l, 42)
+AB(AB(1, 42), 3)
+
+julia&gt; obj
+AB(AB(1, 2), 3)
+
+julia&gt; l(obj)
+2
+
+julia&gt; modify(x-&gt;10x, obj, l)
+AB(AB(1, 20), 3)</code></pre><p>Now the <code>@set</code> macro simply provides sugar for creating a <code>lens</code> and applying it. For instance</p><pre><code class="language-julia">@set obj.a.b = 42</code></pre><p>expands roughly to</p><pre><code class="language-julia">l = @lens _.a.b
+set(obj, l, 42)</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="../lenses/">Lenses »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 8 September 2020 19:28">Tuesday 8 September 2020</span>. Using Julia version 1.6.0-DEV.861.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
