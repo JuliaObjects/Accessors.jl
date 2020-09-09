@@ -13,6 +13,7 @@ StaticNumbers = "c5e4b96a-f99f-5557-8ed2-dc63ef9b5131"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+CompositionsBase = "0.1"
 ConstructionBase = "0.1, 1.0"
 MacroTools = "0.4.4, 0.5"
 Requires = "0.5, 1.0"
