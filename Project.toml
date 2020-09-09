@@ -16,6 +16,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ConstructionBase = "0.1, 1.0"
 MacroTools = "0.4.4, 0.5"
 Requires = "0.5, 1.0"
+StaticNumbers = "0.3"
 julia = "1.6"
 
 [extras]
