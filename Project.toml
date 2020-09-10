@@ -9,7 +9,6 @@ ConstructionBase = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
 Future = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
-StaticNumbers = "c5e4b96a-f99f-5557-8ed2-dc63ef9b5131"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
@@ -17,7 +16,6 @@ CompositionsBase = "0.1"
 ConstructionBase = "0.1, 1.0"
 MacroTools = "0.4.4, 0.5"
 Requires = "0.5, 1.0"
-StaticNumbers = "0.3"
 julia = "1.6"
 
 [extras]
