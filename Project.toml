@@ -17,6 +17,7 @@ CompositionsBase = "0.1"
 ConstructionBase = "0.1, 1.0"
 MacroTools = "0.4.4, 0.5"
 Requires = "0.5, 1.0"
+StaticNumbers = "0.3"
 julia = "1.6"
 
 [extras]
