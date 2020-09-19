@@ -81,11 +81,11 @@ function test_ir_lens_vs_hand(info_lens::Core.CodeInfo,
     @test uniquecounts(heads_lens) == uniquecounts(heads_hand)
 end
 
-using Accessors: ComposedLens
+using Accessors: ComposedOptic
 is_fast_composition_order(lens) = true
-is_fast_composition_order(lens::ComposedLens{<:ComposedLens, <:Any}) = is_fast_composition_order(Accessors.outer(lens))
-is_fast_composition_order(lens::ComposedLens{<:Any, <:ComposedLens}) = false
-is_fast_composition_order(lens::ComposedLens{<:ComposedLens, <:ComposedLens}) = false
+is_fast_composition_order(lens::ComposedOptic{<:ComposedOptic, <:Any}) = is_fast_composition_order(Accessors.outer(lens))
+is_fast_composition_order(lens::ComposedOptic{<:Any, <:ComposedOptic}) = false
+is_fast_composition_order(lens::ComposedOptic{<:ComposedOptic, <:ComposedOptic}) = false
 @testset "default composition orders are fast" begin
     @assert is_fast_composition_order(∘(first, last, eltype))
     @assert is_fast_composition_order((first ∘ last) ∘ eltype)

@@ -267,7 +267,7 @@ Base.show(io::IO, ::MIME"text/plain", lens::Union{IndexLens, PropertyLens}) = _s
 # debugging
 show_composition_order(lens) = (show_composition_order(stdout, lens); println())
 show_composition_order(io::IO, lens) = show(io, lens)
-function show_composition_order(io::IO, lens::ComposedLens)
+function show_composition_order(io::IO, lens::ComposedOptic)
     print(io, "(")
     show_composition_order(io, outer(lens))
     print(io, " ∘  ")

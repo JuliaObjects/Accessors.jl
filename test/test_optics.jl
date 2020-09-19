@@ -4,7 +4,7 @@ using Accessors
 using Test
 
 obj = (a=1, b=2)
-@test mapproperties(x -> x+1, obj) === (a=2, b=3)
+@test Accessors.mapproperties(x -> x+1, obj) === (a=2, b=3)
 
 @testset "Recursive" begin
     obj = (a=1, b=(1,2), c=(A=1, B=(1,2,3), D=4))
@@ -12,7 +12,7 @@ obj = (a=1, b=2)
     @test modify(collect, obj, rp) == (a = 1, b = [1, 2], c = (A = 1, B = [1, 2, 3], D = 4))
 end
 
-@testset "Semantic editor combinators" begin
+@testset "Molecule example" begin
     # inspired by https://hackage.haskell.org/package/lens-tutorial-1.0.3/docs/Control-Lens-Tutorial.html
     molecule = (
         name="water",
@@ -24,10 +24,10 @@ end
     )
 
 
-    se = @lens _.atoms ⨟ Elements() ⨟_.position.x
+    se = @lens _.atoms |> Elements() |> _.position.x
     res_modify = modify(x->x+1, molecule, se)
 
-    res_macro = @set _.atoms ⨟ Elements() ⨟_.position.x += 1
+    res_macro = @set molecule.atoms |> Elements() |> _.position.x += 1
     @test res_macro == res_modify
 
     res_expected = (
@@ -42,7 +42,7 @@ end
     @test res_expected == res_macro
 
     res_set = set(molecule, se, 4.0)
-    res_macro = @set _.atoms ⨟ Elements() ⨟_.position.x = 4.0
+    res_macro = @set molecule.atoms |> Elements() |> _.position.x = 4.0
     @test res_macro == res_set
 
     res_expected = (

@@ -11,16 +11,16 @@ using Base: getproperty
 const EXPERIMENTAL = """This function/method/type is experimental. It can be changed or deleted at any point without warning"""
 
 """
-    modify(f, obj, lens)
+    modify(f, obj, optic)
 
 Replace a deeply nested part `x` of `obj` by `f(x)`.
 
 ```jldoctest
 julia> using Accessors
 
-julia> obj = (a=1, b=2); lens=@lens _.a; f = x -> "hello \$x";
+julia> obj = (a=1, b=2); optic=@lens _.a; f = x -> "hello \$x";
 
-julia> modify(f, obj, lens)
+julia> modify(f, obj, optic)
 (a = "hello 1", b = 2)
 ```
 See also [`set`](@ref).
@@ -28,7 +28,7 @@ See also [`set`](@ref).
 function modify end
 
 """
-    set(lens, obj, val)
+    set(optic, obj, val)
 
 Replace a deeply nested part of `obj` by `val`.
 
@@ -45,9 +45,9 @@ See also [`modify`](@ref).
 function set end
 
 """
-    lens₁ ⨟ lens₂
+    optic₁ ⨟ optic₂
 
-Compose lenses `lens₁`, `lens₂`, ..., `lensₙ` to access nested objects.
+Compose optics `optic₁`, `optic₂`, ..., `opticₙ` to access nested objects.
 
 # Example
 ```jldoctest
@@ -81,11 +81,11 @@ function mapproperties(f, obj)
     end
 end
 
-const ComposedLens{Outer, Inner} = Base.ComposedFunction{Outer, Inner}
-outer(o::ComposedLens) = o.f
-inner(o::ComposedLens) = o.g
-outertype(::Type{ComposedLens{Outer, Inner}}) where {Outer, Inner} = Outer
-innertype(::Type{ComposedLens{Outer, Inner}}) where {Outer, Inner} = Inner
+const ComposedOptic{Outer, Inner} = Base.ComposedFunction{Outer, Inner}
+outer(o::ComposedOptic) = o.f
+inner(o::ComposedOptic) = o.g
+outertype(::Type{ComposedOptic{Outer, Inner}}) where {Outer, Inner} = Outer
+innertype(::Type{ComposedOptic{Outer, Inner}}) where {Outer, Inner} = Inner
 
 # TODO better name
 # also better way to organize traits will
@@ -100,7 +100,7 @@ OpticStyle(obj) = OpticStyle(typeof(obj))
 OpticStyle(::Type{T}) where {T} = SetBased()
 
 
-function OpticStyle(::Type{ComposedLens{O,I}}) where {O,I}
+function OpticStyle(::Type{ComposedOptic{O,I}}) where {O,I}
     composed_optic_style(OpticStyle(O), OpticStyle(I))
 end
 composed_optic_style(::SetBased, ::SetBased) = SetBased()
@@ -130,7 +130,7 @@ end
     modify(Constant(val), obj, optic)
 end
 
-@inline function _set(obj, optic::ComposedLens, val, ::SetBased)
+@inline function _set(obj, optic::ComposedOptic, val, ::SetBased)
     inner_obj = inner(optic)(obj)
     inner_val = set(inner_obj, outer(optic), val)
     set(obj, inner(optic), inner_val)
@@ -148,7 +148,7 @@ function _modify(f, obj, optic, ::ModifyBased)
           """)
 end
 
-function _modify(f, obj, optic::ComposedLens, ::ModifyBased)
+function _modify(f, obj, optic::ComposedOptic, ::ModifyBased)
     otr = outer(optic)
     inr = inner(optic)
     modify(obj, inr) do o1
@@ -273,7 +273,6 @@ end
     patch = (;field => val)
     setproperties(obj, patch)
 end
-
 
 struct IndexLens{I <: Tuple}
     indices::I

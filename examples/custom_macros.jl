@@ -5,14 +5,14 @@
 # `@lens` and `@set`, but mutate objects instead of returning modified copies.
 
 using Accessors
-using Accessors: IndexLens, PropertyLens, ComposedLens
+using Accessors: IndexLens, PropertyLens, ComposedOptic
 
 struct Lens!{L}
     pure::L
 end
 
 (l::Lens!)(o) = l.pure(o)
-function Accessors.set(o, l::Lens!{<: ComposedLens}, val)
+function Accessors.set(o, l::Lens!{<: ComposedOptic}, val)
     o_inner = Accessors.inner(l.pure)(o)
     set(o_inner, Lens!(Accessors.outer(l.pure)), val)
 end
