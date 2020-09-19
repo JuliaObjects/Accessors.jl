@@ -3,8 +3,10 @@ using Accessors, Documenter, Literate
 inputdir = joinpath(@__DIR__, "..", "examples")
 outputdir = joinpath(@__DIR__, "src", "examples")
 mkpath(outputdir)
+mkpath(joinpath(outputdir, "examples"))
 for filename in readdir(inputdir)
     inpath = joinpath(inputdir, filename)
+    cp(inpath, joinpath(outputdir, "examples", filename))
     Literate.markdown(inpath, outputdir; documenter=true)
 end
 

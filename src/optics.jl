@@ -7,6 +7,7 @@ export constructorof
 using ConstructionBase
 using CompositionsBase
 using Base: getproperty
+using Base
 
 const EXPERIMENTAL = """This function/method/type is experimental. It can be changed or deleted at any point without warning"""
 
@@ -67,6 +68,23 @@ julia> lens(obj)
 """
 ⨟
 
+"""
+    mapproperties(f, obj)
+
+Construct a copy of `obj`, with each property replaced by
+the result of applying `f` to it.
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = (a=1, b=2);
+
+julia> Accessors.mapproperties(x -> x+1, obj)
+(a = 2, b = 3)
+```
+
+$EXPERIMENTAL
+"""
 function mapproperties(f, obj)
     # TODO move this helper elsewhere?
     pnames = propertynames(obj)
@@ -177,7 +195,7 @@ julia> set(obj, Properties(), "hi")
 julia> modify(x -> 2x, obj, Properties())
 (a = 2, b = 4, c = 6)
 ```
-Based on [`Accessors.mapproperties`](@ref).
+Based on [`mapproperties`](@ref).
 
 $EXPERIMENTAL
 """
@@ -191,7 +209,8 @@ end
 """
     Elements
 
-Access all elements of a collection that implements [`Base.map`](@ref).
+Access all elements of a collection that implements `map`.
+
 ```jldoctest
 julia> using Accessors
 

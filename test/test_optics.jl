@@ -3,9 +3,6 @@ module TestOptics
 using Accessors
 using Test
 
-obj = (a=1, b=2)
-@test Accessors.mapproperties(x -> x+1, obj) === (a=2, b=3)
-
 @testset "Recursive" begin
     obj = (a=1, b=(1,2), c=(A=1, B=(1,2,3), D=4))
     rp = Recursive(x -> !(x isa Tuple), Properties())
