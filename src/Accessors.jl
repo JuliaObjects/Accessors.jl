@@ -4,7 +4,7 @@ using MacroTools: isstructdef, splitstructdef, postwalk
 using Requires: @require
 
 include("setindex.jl")
-include("lens.jl")
+include("optics.jl")
 include("sugar.jl")
 include("functionlenses.jl")
 include("testing.jl")
