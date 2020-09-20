@@ -6,6 +6,73 @@
 using Test
 using Accessors
 
+import Accessors: modify, OpticStyle
+using Accessors: ModifyBased, SetBased, setindex
+"""
+    mapvals(f, d)
+
+Apply `f` to all values of and `AbstractDict`.
+```jldoctest
+julia> using Accessors: mapvals
+
+julia> mapvals(x -> 2x, Dict(:a => 1, :b => 2)) == Dict(:a => 2, :b => 4)
+true
+```
+"""
+function mapvals(f, d)
+    Dict(k => f(v) for (k,v) in pairs(d))
+end
+
+mapvals(f, nt::NamedTuple) = map(f, nt)
+"""
+    mapkeys(f, d)
+
+Apply `f` to all keys of and `AbstractDict`.
+```jldoctest
+julia> using Accessors: mapkeys
+
+julia> mapkeys(string, Dict(:a => 1, :b => 2)) == Dict("a" => 1, "b" => 2)
+true
+```
+"""
+function mapkeys(f, d)
+    Dict(f(k) => v for (k,v) in pairs(d))
+end
+
+function mapkeys(f, nt::NamedTuple)
+    kw = map(pairs(nt)) do (key, val)
+        f(key) => val
+    end
+    (;kw...)
+end
+
+struct Keys end
+OpticStyle(::Type{Keys}) = ModifyBased()
+modify(f, obj, ::Keys) = mapkeys(f, obj)
+
+struct Vals end
+OpticStyle(::Type{Vals}) = ModifyBased()
+modify(f, obj, ::Vals) = mapvals(f, obj)
+
+struct Filter{F}
+    keep_condition::F
+end
+OpticStyle(::Type{<:Filter}) = ModifyBased()
+(o::Filter)(x) = filter(o.keep_condition, x)
+function modify(f, obj, optic::Filter)
+    I = eltype(eachindex(obj))
+    inds = I[]
+    for i in eachindex(obj)
+        x = obj[i]
+        if optic.keep_condition(x)
+            push!(inds, i)
+        end
+    end
+    vals = f(obj[inds])
+    setindex(obj, vals, inds)
+end
+
+
 # ### Increment all even numbers
 data = (a = [(aa=1, bb=2), (cc=3,)], b = [(dd=4,)])
 

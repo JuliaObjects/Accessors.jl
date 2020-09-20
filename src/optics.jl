@@ -1,7 +1,7 @@
 export @lens
 export set, modify
 export ∘, ⨟
-export Elements, Properties, Recursive, With, Keys, Vals, Filter
+export Elements, Recursive, With, Properties
 export setproperties
 export constructorof
 using ConstructionBase
@@ -10,8 +10,6 @@ using Base: getproperty
 using Base
 
 const EXPERIMENTAL = """This function/method/type is experimental. It can be changed or deleted at any point without warning"""
-
-const HACKY = """This is a hack and will change in future. Don't rely on it."""
 
 """
     modify(f, obj, optic)
@@ -69,77 +67,6 @@ julia> lens(obj)
 ```
 """
 ⨟
-
-"""
-    mapproperties(f, obj)
-
-Construct a copy of `obj`, with each property replaced by
-the result of applying `f` to it.
-
-```jldoctest
-julia> using Accessors
-
-julia> obj = (a=1, b=2);
-
-julia> Accessors.mapproperties(x -> x+1, obj)
-(a = 2, b = 3)
-```
-$HACKY
-"""
-function mapproperties(f, obj)
-    # TODO move this helper elsewhere?
-    pnames = propertynames(obj)
-    if isempty(pnames)
-        return obj
-    else
-        ctor = constructorof(typeof(obj))
-        new_props = map(pnames) do p
-            f(getproperty(obj, p))
-        end
-        return ctor(new_props...)
-    end
-end
-
-"""
-    mapvals(f, d)
-
-Apply `f` to all values of and `AbstractDict`.
-```jldoctest
-julia> using Accessors: mapvals
-
-julia> mapvals(x -> 2x, Dict(:a => 1, :b => 2)) == Dict(:a => 2, :b => 4)
-true
-```
-$HACKY
-"""
-function mapvals(f, d)
-    Dict(k => f(v) for (k,v) in pairs(d))
-end
-
-mapvals(f, nt::NamedTuple) = map(f, nt)
-"""
-    mapkeys(f, d)
-
-Apply `f` to all keys of and `AbstractDict`.
-```jldoctest
-julia> using Accessors: mapkeys
-
-julia> mapkeys(string, Dict(:a => 1, :b => 2)) == Dict("a" => 1, "b" => 2)
-true
-```
-$HACKY
-"""
-function mapkeys(f, d)
-    Dict(f(k) => v for (k,v) in pairs(d))
-end
-
-function mapkeys(f, nt::NamedTuple)
-    kw = map(pairs(nt)) do (key, val)
-        f(key) => val
-    end
-    (;kw...)
-end
-
 const ComposedOptic{Outer, Inner} = Base.ComposedFunction{Outer, Inner}
 outer(o::ComposedOptic) = o.f
 inner(o::ComposedOptic) = o.g
@@ -150,14 +77,13 @@ innertype(::Type{ComposedOptic{Outer, Inner}}) where {Outer, Inner} = Inner
 # also better way to organize traits will
 # probably only emerge over time
 abstract type OpticStyle end
-struct ModifyBased end
-struct SetBased end
+struct ModifyBased <: OpticStyle end
+struct SetBased <: OpticStyle end
 OpticStyle(obj) = OpticStyle(typeof(obj))
 # defining lenses should be very lightweight
 # e.g. only a single `set` implementation
 # so we choose this as the default trait
 OpticStyle(::Type{T}) where {T} = SetBased()
-
 
 function OpticStyle(::Type{ComposedOptic{O,I}}) where {O,I}
     composed_optic_style(OpticStyle(O), OpticStyle(I))
@@ -220,34 +146,6 @@ function _modify(f, obj, optic, ::SetBased)
 end
 
 """
-    Properties()
-
-Access all properties of an objects.
-
-```jldoctest
-julia> using Accessors
-
-julia> obj = (a=1, b=2, c=3)
-(a = 1, b = 2, c = 3)
-
-julia> set(obj, Properties(), "hi")
-(a = "hi", b = "hi", c = "hi")
-
-julia> modify(x -> 2x, obj, Properties())
-(a = 2, b = 4, c = 6)
-```
-Based on [`mapproperties`](@ref).
-
-$EXPERIMENTAL
-"""
-struct Properties end
-OpticStyle(::Type{Properties}) = ModifyBased()
-
-function modify(f, o, ::Properties)
-    mapproperties(f, o)
-end
-
-"""
     Elements
 
 Access all elements of a collection that implements `map`.
@@ -281,22 +179,6 @@ OpticStyle(::Type{Elements}) = ModifyBased()
 function modify(f, obj, ::Elements)
     map(f, obj)
 end
-
-"""
-
-$EXPERIMENTAL
-"""
-struct Keys end
-OpticStyle(::Type{Keys}) = ModifyBased()
-modify(f, obj, ::Keys) = mapkeys(f, obj)
-
-"""
-
-$EXPERIMENTAL
-"""
-struct Vals end
-OpticStyle(::Type{Vals}) = ModifyBased()
-modify(f, obj, ::Vals) = mapvals(f, obj)
 
 """
     With(modify_condition)
@@ -334,30 +216,60 @@ function modify(f, obj, w::With)
 end
 
 """
-    Filter(keep_condition)
+    mapproperties(f, obj)
+
+Construct a copy of `obj`, with each property replaced by
+the result of applying `f` to it.
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = (a=1, b=2);
+
+julia> Accessors.mapproperties(x -> x+1, obj)
+(a = 2, b = 3)
+```
+$EXPERIMENTAL
+"""
+function mapproperties(f, obj)
+    # TODO move this helper elsewhere?
+    # TODO should we use a generated function based on fieldnames?
+    pnames = propertynames(obj)
+    if isempty(pnames)
+        return obj
+    else
+        ctor = constructorof(typeof(obj))
+        new_props = map(pnames) do p
+            f(getproperty(obj, p))
+        end
+        return ctor(new_props...)
+    end
+end
+
+"""
+    Properties()
+
+Access all properties of an objects.
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = (a=1, b=2, c=3)
+(a = 1, b = 2, c = 3)
+
+julia> set(obj, Properties(), "hi")
+(a = "hi", b = "hi", c = "hi")
+
+julia> modify(x -> 2x, obj, Properties())
+(a = 2, b = 4, c = 6)
+```
+Based on [`mapproperties`](@ref).
 
 $EXPERIMENTAL
-$HACKY
 """
-struct Filter{F}
-    keep_condition::F
-end
-OpticStyle(::Type{<:Filter}) = ModifyBased()
-function (o::Filter)(x)
-    filter(o.keep_condition, x)
-end
-function modify(f, obj, optic::Filter)
-    I = eltype(eachindex(obj))
-    inds = I[]
-    for i in eachindex(obj)
-        x = obj[i]
-        if optic.keep_condition(x)
-            push!(inds, i)
-        end
-    end
-    vals = f(obj[inds])
-    setindex(obj, vals, inds)
-end
+struct Properties end
+OpticStyle(::Type{Properties}) = ModifyBased()
+modify(f, o, ::Properties) = mapproperties(f, o)
 
 """
     Recursive(descent_condition, optic)
@@ -378,8 +290,6 @@ julia> obj = (1,2,(3,(4,5),6))
 julia> modify(x -> 100x, obj, Recursive(x -> (x isa Tuple), Elements()))
 (100, 200, (300, (400, 500), 600))
 ```
-
-$EXPERIMENTAL
 """
 struct Recursive{Descent, Optic}
     descent_condition::Descent
