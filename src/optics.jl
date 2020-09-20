@@ -1,7 +1,7 @@
 export @lens
 export set, modify
 export ∘, ⨟
-export Elements, Properties, Recursive
+export Elements, Properties, Recursive, With
 export setproperties
 export constructorof
 using ConstructionBase
@@ -240,6 +240,42 @@ OpticStyle(::Type{Elements}) = ModifyBased()
 function modify(f, obj, ::Elements)
     map(f, obj)
 end
+
+"""
+    With(modify_condition)
+
+Restric access to locations for which `modify_condition` holds.
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = 1:6;
+
+julia> @set obj |> Elements() |> With(iseven) *= 10
+6-element Vector{Int64}:
+  1
+ 20
+  3
+ 40
+  5
+ 60
+```
+
+$EXPERIMENTAL
+"""
+struct With{C}
+    modify_condition::C
+end
+OpticStyle(::Type{With}) = ModifyBased()
+
+function modify(f, obj, w::With)
+    if w.modify_condition(obj)
+        f(obj)
+    else
+        obj
+    end
+end
+
 
 """
     Recursive(descent_condition, optic)
