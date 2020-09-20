@@ -1,7 +1,7 @@
 export @lens
 export set, modify
 export ∘, ⨟
-export Elements, Properties, Recursive, With
+export Elements, Properties, Recursive, With, Keys, Vals, Filter
 export setproperties
 export constructorof
 using ConstructionBase
@@ -10,6 +10,8 @@ using Base: getproperty
 using Base
 
 const EXPERIMENTAL = """This function/method/type is experimental. It can be changed or deleted at any point without warning"""
+
+const HACKY = """This is a hack and will change in future. Don't rely on it."""
 
 """
     modify(f, obj, optic)
@@ -82,8 +84,7 @@ julia> obj = (a=1, b=2);
 julia> Accessors.mapproperties(x -> x+1, obj)
 (a = 2, b = 3)
 ```
-
-$EXPERIMENTAL
+$HACKY
 """
 function mapproperties(f, obj)
     # TODO move this helper elsewhere?
@@ -97,6 +98,46 @@ function mapproperties(f, obj)
         end
         return ctor(new_props...)
     end
+end
+
+"""
+    mapvals(f, d)
+
+Apply `f` to all values of and `AbstractDict`.
+```jldoctest
+julia> using Accessors: mapvals
+
+julia> mapvals(x -> 2x, Dict(:a => 1, :b => 2)) == Dict(:a => 2, :b => 4)
+true
+```
+$HACKY
+"""
+function mapvals(f, d)
+    Dict(k => f(v) for (k,v) in pairs(d))
+end
+
+mapvals(f, nt::NamedTuple) = map(f, nt)
+"""
+    mapkeys(f, d)
+
+Apply `f` to all keys of and `AbstractDict`.
+```jldoctest
+julia> using Accessors: mapkeys
+
+julia> mapkeys(string, Dict(:a => 1, :b => 2)) == Dict("a" => 1, "b" => 2)
+true
+```
+$HACKY
+"""
+function mapkeys(f, d)
+    Dict(f(k) => v for (k,v) in pairs(d))
+end
+
+function mapkeys(f, nt::NamedTuple)
+    kw = map(pairs(nt)) do (key, val)
+        f(key) => val
+    end
+    (;kw...)
 end
 
 const ComposedOptic{Outer, Inner} = Base.ComposedFunction{Outer, Inner}
@@ -242,6 +283,22 @@ function modify(f, obj, ::Elements)
 end
 
 """
+
+$EXPERIMENTAL
+"""
+struct Keys end
+OpticStyle(::Type{Keys}) = ModifyBased()
+modify(f, obj, ::Keys) = mapkeys(f, obj)
+
+"""
+
+$EXPERIMENTAL
+"""
+struct Vals end
+OpticStyle(::Type{Vals}) = ModifyBased()
+modify(f, obj, ::Vals) = mapvals(f, obj)
+
+"""
     With(modify_condition)
 
 Restric access to locations for which `modify_condition` holds.
@@ -276,6 +333,31 @@ function modify(f, obj, w::With)
     end
 end
 
+"""
+    Filter(keep_condition)
+
+$EXPERIMENTAL
+$HACKY
+"""
+struct Filter{F}
+    keep_condition::F
+end
+OpticStyle(::Type{<:Filter}) = ModifyBased()
+function (o::Filter)(x)
+    filter(o.keep_condition, x)
+end
+function modify(f, obj, optic::Filter)
+    I = eltype(eachindex(obj))
+    inds = I[]
+    for i in eachindex(obj)
+        x = obj[i]
+        if optic.keep_condition(x)
+            push!(inds, i)
+        end
+    end
+    vals = f(obj[inds])
+    setindex(obj, vals, inds)
+end
 
 """
     Recursive(descent_condition, optic)
@@ -348,3 +430,4 @@ Base.@propagate_inbounds (lens::DynamicIndexLens)(obj) = obj[lens.f(obj)...]
 
 Base.@propagate_inbounds set(obj, lens::DynamicIndexLens, val) =
     setindex(obj, val, lens.f(obj)...)
+
