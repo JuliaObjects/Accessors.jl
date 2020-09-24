@@ -13,8 +13,8 @@ end
 
 (l::Lens!)(o) = l.pure(o)
 function Accessors.set(o, l::Lens!{<: ComposedOptic}, val)
-    o_inner = Accessors.inner(l.pure)(o)
-    set(o_inner, Lens!(Accessors.outer(l.pure)), val)
+    o_inner = l.pure.inner(o)
+    set(o_inner, Lens!(l.pure.outer), val)
 end
 function Accessors.set(o, l::Lens!{PropertyLens{prop}}, val) where {prop}
     setproperty!(o, prop, val)

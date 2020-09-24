@@ -3,54 +3,31 @@ module TestOptics
 using Accessors
 using Test
 
+@testset "Properties" begin
+    pt = (x=1, y=2, z=3)
+    @test (x=0, y=1, z=2) === @set pt |> Properties() -= 1
+end
+
+@testset "Elements" begin
+    arr = 1:3
+    @test 2:4 == (@set arr |> Elements() += 1)
+    @test map(cos, arr) == modify(cos, arr, Elements())
+
+    @test modify(cos, (), Elements()) === ()
+
+    @inferred modify(cos, arr, Elements())
+    @inferred modify(cos, (), Elements())
+end
+
 @testset "Recursive" begin
     obj = (a=1, b=(1,2), c=(A=1, B=(1,2,3), D=4))
     rp = Recursive(x -> !(x isa Tuple), Properties())
     @test modify(collect, obj, rp) == (a = 1, b = [1, 2], c = (A = 1, B = [1, 2, 3], D = 4))
-end
 
-@testset "Molecule example" begin
-    # inspired by https://hackage.haskell.org/package/lens-tutorial-1.0.3/docs/Control-Lens-Tutorial.html
-    molecule = (
-        name="water",
-        atoms=[
-            (name="H", position=(x=1,y=1)),
-            (name="H", position=(x=1,y=2)),
-            (name="O", position=(x=1,y=3)),
-        ]
-    )
-
-
-    se = @lens _.atoms |> Elements() |> _.position.x
-    res_modify = modify(x->x+1, molecule, se)
-
-    res_macro = @set molecule.atoms |> Elements() |> _.position.x += 1
-    @test res_macro == res_modify
-
-    res_expected = (
-        name="water",
-        atoms=[
-            (name="H", position=(x=2,y=1)),
-            (name="H", position=(x=2,y=2)),
-            (name="O", position=(x=2,y=3)),
-        ]
-    )
-
-    @test res_expected == res_macro
-
-    res_set = set(molecule, se, 4.0)
-    res_macro = @set molecule.atoms |> Elements() |> _.position.x = 4.0
-    @test res_macro == res_set
-
-    res_expected = (
-        name="water",
-        atoms=[
-            (name="H", position=(x=4.0,y=1)),
-            (name="H", position=(x=4.0,y=2)),
-            (name="O", position=(x=4.0,y=3)),
-        ]
-    )
-    @test res_expected == res_set
+    arr = [1,2,[3,4], [5, 6:7,8, 9,]]
+    oc = Recursive(x -> x isa AbstractArray, Elements())
+    expected = [0,1,[2,3], [4, 5:6,7, 8,]]
+    @test modify(x-> x - 1, arr, oc) == expected
 end
 
 end#module

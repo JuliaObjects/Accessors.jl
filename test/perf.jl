@@ -83,9 +83,12 @@ end
 
 using Accessors: ComposedOptic
 is_fast_composition_order(lens) = true
-is_fast_composition_order(lens::ComposedOptic{<:ComposedOptic, <:Any}) = is_fast_composition_order(Accessors.outer(lens))
+function is_fast_composition_order(lens::ComposedOptic{<:ComposedOptic, <:Any})
+    is_fast_composition_order(lens.outer)
+end
 is_fast_composition_order(lens::ComposedOptic{<:Any, <:ComposedOptic}) = false
 is_fast_composition_order(lens::ComposedOptic{<:ComposedOptic, <:ComposedOptic}) = false
+
 @testset "default composition orders are fast" begin
     @assert is_fast_composition_order(∘(first, last, eltype))
     @assert is_fast_composition_order((first ∘ last) ∘ eltype)

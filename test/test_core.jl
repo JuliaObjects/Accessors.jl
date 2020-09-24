@@ -226,8 +226,8 @@ end
     @test l(obj) == x
 
     l = @lens _[][]
-    @test Accessors.outer(l) isa Accessors.IndexLens
-    @test Accessors.inner(l) isa Accessors.IndexLens
+    @test l.outer isa Accessors.IndexLens
+    @test l.inner isa Accessors.IndexLens
     inner = Ref(x)
     obj = Base.RefValue{typeof(inner)}(inner)
     @test l(obj) == x

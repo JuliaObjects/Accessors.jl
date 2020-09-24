@@ -68,8 +68,6 @@ julia> lens(obj)
 """
 ⨟
 const ComposedOptic{Outer, Inner} = Base.ComposedFunction{Outer, Inner}
-outer(o::ComposedOptic) = o.f
-inner(o::ComposedOptic) = o.g
 outertype(::Type{ComposedOptic{Outer, Inner}}) where {Outer, Inner} = Outer
 innertype(::Type{ComposedOptic{Outer, Inner}}) where {Outer, Inner} = Inner
 
@@ -116,9 +114,9 @@ end
 end
 
 @inline function _set(obj, optic::ComposedOptic, val, ::SetBased)
-    inner_obj = inner(optic)(obj)
-    inner_val = set(inner_obj, outer(optic), val)
-    set(obj, inner(optic), inner_val)
+    inner_obj = optic.inner(obj)
+    inner_val = set(inner_obj, optic.outer, val)
+    set(obj, optic.inner, inner_val)
 end
 
 @inline function modify(f, obj, optic)
@@ -134,8 +132,8 @@ function _modify(f, obj, optic, ::ModifyBased)
 end
 
 function _modify(f, obj, optic::ComposedOptic, ::ModifyBased)
-    otr = outer(optic)
-    inr = inner(optic)
+    otr = optic.outer
+    inr = optic.inner
     modify(obj, inr) do o1
         modify(f, o1, otr)
     end

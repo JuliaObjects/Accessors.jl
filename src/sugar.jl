@@ -269,9 +269,9 @@ show_composition_order(lens) = (show_composition_order(stdout, lens); println())
 show_composition_order(io::IO, lens) = show(io, lens)
 function show_composition_order(io::IO, lens::ComposedOptic)
     print(io, "(")
-    show_composition_order(io, outer(lens))
+    show_composition_order(io, lens.outer)
     print(io, " ∘  ")
-    show_composition_order(io, inner(lens))
+    show_composition_order(io, lens.inner)
     print(io, ")")
 end
 
