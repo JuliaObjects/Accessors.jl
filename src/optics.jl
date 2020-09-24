@@ -172,7 +172,7 @@ julia> modify(x -> 2x, obj, Elements())
 $EXPERIMENTAL
 """
 struct Elements end
-OpticStyle(::Type{Elements}) = ModifyBased()
+OpticStyle(::Type{<:Elements}) = ModifyBased()
 
 function modify(f, obj, ::Elements)
     map(f, obj)
@@ -203,7 +203,7 @@ $EXPERIMENTAL
 struct With{C}
     modify_condition::C
 end
-OpticStyle(::Type{With}) = ModifyBased()
+OpticStyle(::Type{<:With}) = ModifyBased()
 
 function modify(f, obj, w::With)
     if w.modify_condition(obj)
@@ -266,7 +266,7 @@ Based on [`mapproperties`](@ref).
 $EXPERIMENTAL
 """
 struct Properties end
-OpticStyle(::Type{Properties}) = ModifyBased()
+OpticStyle(::Type{<:Properties}) = ModifyBased()
 modify(f, o, ::Properties) = mapproperties(f, o)
 
 """
