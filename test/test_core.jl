@@ -138,25 +138,25 @@ Base.show(io::IO, ::MIME"text/plain", ::LensWithTextPlain) =
 
 @testset "show it like you build it " begin
     @testset for item in [
-            @lens _.a
-            @lens _[1]
-            @lens _[:a]
-            @lens _["a"]
-            @lens _[static(1)]
-            @lens _[static(1), static(1 + 1)]
-            @lens _.a.b[:c]["d"][2][static(3)]
-            @lens _
-            @lens first(_)
-            @lens last(first(_))
-            @lens last(first(_.a))[1]
+            @optic _.a
+            @optic _[1]
+            @optic _[:a]
+            @optic _["a"]
+            @optic _[static(1)]
+            @optic _[static(1), static(1 + 1)]
+            @optic _.a.b[:c]["d"][2][static(3)]
+            @optic _
+            @optic first(_)
+            @optic last(first(_))
+            @optic last(first(_.a))[1]
             UserDefinedLens()
-            @lens _ |> UserDefinedLens()
-            @lens UserDefinedLens()(_)
-            @lens _ |> ((x -> x)(first))
-            (@lens _.a) ⨟ UserDefinedLens()
-            UserDefinedLens() ⨟ (@lens _.b)
-            (@lens _.a) ∘ UserDefinedLens()   ∘ (@lens _.b)
-            (@lens _.a) ∘ LensWithTextPlain() ∘ (@lens _.b)
+            @optic _ |> UserDefinedLens()
+            @optic UserDefinedLens()(_)
+            @optic _ |> ((x -> x)(first))
+            (@optic _.a) ⨟ UserDefinedLens()
+            UserDefinedLens() ⨟ (@optic _.b)
+            (@optic _.a) ∘ UserDefinedLens()   ∘ (@optic _.b)
+            (@optic _.a) ∘ LensWithTextPlain() ∘ (@optic _.b)
         ]
         buf = IOBuffer()
         show(buf, item)
@@ -169,16 +169,16 @@ end
     obj = T(2, T(T(3,(4,4)), 2))
     i = 2
     for lens ∈ [
-            @lens _.a
-            @lens _.b
-            @lens _.b.a
-            @lens _.b.a.b[2]
-            @lens _.b.a.b[i]
-            @lens _.b.a.b[static(2)]
-            @lens _.b.a.b[static(i)]
-            @lens _.b.a.b[end]
-            @lens _.b.a.b[identity(end) - 1]
-            @lens _
+            @optic _.a
+            @optic _.b
+            @optic _.b.a
+            @optic _.b.a.b[2]
+            @optic _.b.a.b[i]
+            @optic _.b.a.b[static(2)]
+            @optic _.b.a.b[static(i)]
+            @optic _.b.a.b[end]
+            @optic _.b.a.b[identity(end) - 1]
+            @optic _
         ]
         val1, val2 = randn(2)
         f(x) = (x,x)
@@ -198,19 +198,19 @@ end
     @assert obj === TT(2, TT(TT(3,(4,4)), 2))
     i = 1
     for (lens, val) ∈ [
-          ((@lens _.a           ),   o1 ),
-          ((@lens _.b           ),   o2 ),
-          ((@lens _.b.a         ),   o21),
-          ((@lens _.b.a.b[2]    ),   4  ),
-          ((@lens _.b.a.b[i+1]  ),   4  ),
-          ((@lens _.b.a.b[static(2)]   ),   4  ),
-          ((@lens _.b.a.b[static((i+1))]),  4  ),
-          ((@lens _.b.a.b[static(2)]   ),   4.0),
-          ((@lens _.b.a.b[static((i+1))]),  4.0),
-          ((@lens _.b.a.b[end]),     4.0),
-          ((@lens _.b.a.b[end÷2+1]), 4.0),
-          ((@lens _             ),   obj),
-          ((@lens _             ),   :xy),
+          ((@optic _.a           ),   o1 ),
+          ((@optic _.b           ),   o2 ),
+          ((@optic _.b.a         ),   o21),
+          ((@optic _.b.a.b[2]    ),   4  ),
+          ((@optic _.b.a.b[i+1]  ),   4  ),
+          ((@optic _.b.a.b[static(2)]   ),   4  ),
+          ((@optic _.b.a.b[static((i+1))]),  4  ),
+          ((@optic _.b.a.b[static(2)]   ),   4.0),
+          ((@optic _.b.a.b[static((i+1))]),  4.0),
+          ((@optic _.b.a.b[end]),     4.0),
+          ((@optic _.b.a.b[end÷2+1]), 4.0),
+          ((@optic _             ),   obj),
+          ((@optic _             ),   :xy),
         ]
         @inferred lens(obj)
         @inferred set(obj, lens, val)
@@ -219,13 +219,13 @@ end
 end
 
 @testset "IndexLens" begin
-    l = @lens _[]
+    l = @optic _[]
     @test l isa Accessors.IndexLens
     x = randn()
     obj = Ref(x)
     @test l(obj) == x
 
-    l = @lens _[][]
+    l = @optic _[][]
     @test l.outer isa Accessors.IndexLens
     @test l.inner isa Accessors.IndexLens
     inner = Ref(x)
@@ -233,25 +233,25 @@ end
     @test l(obj) == x
 
     obj = (1,2,3)
-    l = @lens _[1]
+    l = @optic _[1]
     @test l isa Accessors.IndexLens
     @test l(obj) == 1
     @test set(obj, l, 6) == (6,2,3)
 
 
-    l = @lens _[1:3]
+    l = @optic _[1:3]
     @test l isa Accessors.IndexLens
     @test l([4,5,6,7]) == [4,5,6]
 end
 
 @testset "DynamicIndexLens" begin
-    l = @lens _[end]
+    l = @optic _[end]
     @test l isa Accessors.DynamicIndexLens
     obj = (1,2,3)
     @test l(obj) == 3
     @test set(obj, l, true) == (1,2,true)
 
-    l = @lens _[end÷2]
+    l = @optic _[end÷2]
     @test l isa Accessors.DynamicIndexLens
     obj = (1,2,3)
     @test l(obj) == 1
@@ -259,7 +259,7 @@ end
 
     two = 2
     plusone(x) = x + 1
-    l = @lens _.a[plusone(end) - two].b
+    l = @optic _.a[plusone(end) - two].b
     obj = (a=(1, (a=10, b=20), 3), b=4)
     @test l(obj) == 20
     @test set(obj, l, true) == (a=(1, (a=10, b=true), 3), b=4)
@@ -267,27 +267,27 @@ end
 
 @testset "StaticNumbers" begin
     obj = (1, 2.0, '3')
-    l = @lens _[static(1)]
+    l = @optic _[static(1)]
     @test (@inferred l(obj)) === 1
     @test (@inferred set(obj, l, 6.0)) === (6.0, 2.0, '3')
-    l = @lens _[static(1 + 1)]
+    l = @optic _[static(1 + 1)]
     @test (@inferred l(obj)) === 2.0
     @test (@inferred set(obj, l, 6)) === (1, 6, '3')
     n = 1
-    l = @lens _[static(3n)]
+    l = @optic _[static(3n)]
     @test (@inferred l(obj)) === '3'
     @test (@inferred set(obj, l, 6)) === (1, 2.0, 6)
 
-    l = @lens _[static(1):static(3)]
+    l = @optic _[static(1):static(3)]
     @test l([4,5,6,7]) == [4,5,6]
 
     @testset "complex example (sweeper)" begin
         sweeper_with_const = (
             model = (1, 2.0, 3im),
-            axis = (@lens _[static(2)]),
+            axis = (@optic _[static(2)]),
         )
 
-        sweeper_with_noconst = @set sweeper_with_const.axis = @lens _[2]
+        sweeper_with_noconst = @set sweeper_with_const.axis = @optic _[2]
 
         function f(s)
             a = sum(set(s.model, s.axis, 0))
@@ -308,7 +308,7 @@ mutable struct M
 end
 
 @testset "IdentityLens" begin
-    @test identity === @lens(_)
+    @test identity === @optic(_)
 end
 
 struct ABC{A,B,C}
@@ -342,7 +342,7 @@ end
     @test (@set t.x =2) === (x=2, y=2)
     @test (@set t.x += 2) === (x=3, y=2)
     @test (@set t.x =:hello) === (x=:hello, y=2)
-    l = @lens _.x
+    l = @optic _.x
     @test l(t) === 1
 
     # do we want this to throw an error?
@@ -371,28 +371,28 @@ ConstructionBase.constructorof(::Type{CustomProperties}) = error()
 end
 
 @testset "issue #83" begin
-    @test_throws ArgumentError Accessors.lensmacro(identity, :(_.[:a]))
+    @test_throws ArgumentError Accessors.opticmacro(identity, :(_.[:a]))
 end
 
 @testset "|>" begin
-    lbc = @lens _.b.c
-    @test @lens(_ |> lbc) === lbc
-    @test @lens(_.a |> lbc) === @lens(_.a) ⨟ lbc
-    @test @lens((_.a |> lbc).d) === ⨟(@lens(_.a), lbc , @lens(_.d))
-    @test @lens(_.a |> lbc |> (@lens _[1]) |> lbc) === ⨟(@lens(_.a), lbc, @lens(_[1]), lbc)
+    lbc = @optic _.b.c
+    @test @optic(_ |> lbc) === lbc
+    @test @optic(_.a |> lbc) === @optic(_.a) ⨟ lbc
+    @test @optic((_.a |> lbc).d) === ⨟(@optic(_.a), lbc , @optic(_.d))
+    @test @optic(_.a |> lbc |> (@optic _[1]) |> lbc) === ⨟(@optic(_.a), lbc, @optic(_[1]), lbc)
 
-    @test @lens(_ |> _) === identity
-    @test (@lens _ |> _[1])            === (@lens _[1])
-    @test (@lens _ |> _.a)             === (@lens _.a)
-    @test (@lens _ |> _.a.b)           === (@lens _.a.b)
-    @test (@lens _ |> _.a[2])          === (@lens _.a[2])
-    @test (@lens _ |> first |> _[1])   === (@lens first(_)[1])
-    @test (@lens _ |> identity(first)) === first
+    @test @optic(_ |> _) === identity
+    @test (@optic _ |> _[1])            === (@optic _[1])
+    @test (@optic _ |> _.a)             === (@optic _.a)
+    @test (@optic _ |> _.a.b)           === (@optic _.a.b)
+    @test (@optic _ |> _.a[2])          === (@optic _.a[2])
+    @test (@optic _ |> first |> _[1])   === (@optic first(_)[1])
+    @test (@optic _ |> identity(first)) === first
     twice = lens -> lens ∘ lens
-    @test (@lens _ |> twice(first)) === first ∘ first
-    @test (@lens _ |> first |> _.a |> (first ∘ last) |> _[2]) ===
-        (@lens (first ∘ last)(first(_).a)[2])
-    @test (@lens _ |> _[1] |> _[2] |> _[3]) === @lens _[1][2][3]
+    @test (@optic _ |> twice(first)) === first ∘ first
+    @test (@optic _ |> first |> _.a |> (first ∘ last) |> _[2]) ===
+        (@optic (first ∘ last)(first(_).a)[2])
+    @test (@optic _ |> _[1] |> _[2] |> _[3]) === @optic _[1][2][3]
 end
 
 @testset "text/plain show" begin
@@ -402,18 +402,18 @@ end
         @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
     end
     @testset for lens in [
-        (@lens _.a) ⨟ LensWithTextPlain()
-        LensWithTextPlain() ⨟ (@lens _.b)
-        (@lens _.a) ⨟ LensWithTextPlain() ⨟ (@lens _.b)
+        (@optic _.a) ⨟ LensWithTextPlain()
+        LensWithTextPlain() ⨟ (@optic _.b)
+        (@optic _.a) ⨟ LensWithTextPlain() ⨟ (@optic _.b)
     ]
         @test_broken occursin("I define text/plain.", sprint(show, "text/plain", lens))
     end
 
     @testset for lens in [
         UserDefinedLens()
-        (@lens _.a) ⨟ UserDefinedLens()
-        UserDefinedLens() ⨟ (@lens _.b)
-        (@lens _.a) ⨟ UserDefinedLens() ⨟ (@lens _.b)
+        (@optic _.a) ⨟ UserDefinedLens()
+        UserDefinedLens() ⨟ (@optic _.b)
+        (@optic _.a) ⨟ UserDefinedLens() ⨟ (@optic _.b)
     ]
         @test sprint(show, lens) == sprint(show, "text/plain", lens)
     end

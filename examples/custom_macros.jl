@@ -1,8 +1,8 @@
-# # Extending `@set` and `@lens`
-# This code demonstrates how to extend the `@set` and `@lens` mechanism with custom
+# # Extending `@set` and `@optic`
+# This code demonstrates how to extend the `@set` and `@optic` mechanism with custom
 # lenses.
 # As a demo, we want to implement `@mylens!` and `@myreset`, which work much like
-# `@lens` and `@set`, but mutate objects instead of returning modified copies.
+# `@optic` and `@set`, but mutate objects instead of returning modified copies.
 
 using Accessors
 using Accessors: IndexLens, PropertyLens, ComposedOptic
@@ -36,25 +36,25 @@ mutable struct M
 end
 
 o = M(1,2)
-l = Lens!(@lens _.b)
+l = Lens!(@optic _.b)
 set(o, l, 20)
 @test o.b == 20
 
-l = Lens!(@lens _.foo[1])
+l = Lens!(@optic _.foo[1])
 o = (foo=[1,2,3], bar=:bar)
 set(o, l, 100)
 @test o == (foo=[100,2,3], bar=:bar)
 
 # Now we can implement the syntax macros
 
-using Accessors: setmacro, lensmacro
+using Accessors: setmacro, opticmacro
 
 macro myreset(ex)
     setmacro(Lens!, ex)
 end
 
 macro mylens!(ex)
-    lensmacro(Lens!, ex)
+    opticmacro(Lens!, ex)
 end
 
 o = M(1,2)

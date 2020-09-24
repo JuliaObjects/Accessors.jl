@@ -1,4 +1,4 @@
-export @lens
+export @optic
 export set, modify
 export ∘, ⨟
 export Elements, Recursive, With, Properties
@@ -19,7 +19,7 @@ Replace a deeply nested part `x` of `obj` by `f(x)`.
 ```jldoctest
 julia> using Accessors
 
-julia> obj = (a=1, b=2); optic=@lens _.a; f = x -> "hello \$x";
+julia> obj = (a=1, b=2); optic=@optic _.a; f = x -> "hello \$x";
 
 julia> modify(f, obj, optic)
 (a = "hello 1", b = 2)
@@ -36,7 +36,7 @@ Replace a deeply nested part of `obj` by `val`.
 ```jldoctest
 julia> using Accessors
 
-julia> obj = (a=1, b=2); lens=@lens _.a; val = 100;
+julia> obj = (a=1, b=2); lens=@optic _.a; val = 100;
 
 julia> set(obj, lens, val)
 (a = 100, b = 2)
@@ -56,11 +56,11 @@ julia> using Accessors
 
 julia> obj = (a = (b = (c = 1,),),);
 
-julia> la = @lens _.a
-       lb = @lens _.b
-       lc = @lens _.c
+julia> la = @optic _.a
+       lb = @optic _.b
+       lc = @optic _.c
        lens = la ⨟ lb ⨟ lc
-(@lens _.c) ∘ (@lens _.b) ∘ (@lens _.a)
+(@optic _.c) ∘ (@optic _.b) ∘ (@optic _.a)
 
 julia> lens(obj)
 1

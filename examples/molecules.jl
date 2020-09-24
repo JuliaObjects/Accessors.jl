@@ -14,7 +14,7 @@ molecule = (
     ]
 )
 
-oc = @lens _.atoms |> Elements() |> _.position.x
+oc = @optic _.atoms |> Elements() |> _.position.x
 res_modify = modify(x->x+1, molecule, oc)
 
 res_macro = @set molecule.atoms |> Elements() |> _.position.x += 1

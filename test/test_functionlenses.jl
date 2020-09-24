@@ -21,7 +21,7 @@ end
 
 @testset "first" begin
     obj = (1, 2.0, '3')
-    l = @lens first(_)
+    l = @optic first(_)
     @test l === first
     @test l(obj) === 1
     @test set(obj, l, "1") === ("1", 2.0, '3')
@@ -33,7 +33,7 @@ end
 
 @testset "last" begin
     obj = (1, 2.0, '3')
-    l = @lens last(_)
+    l = @optic last(_)
     @test l === last
     @test set(obj, l, '4') === (1, 2.0, '4')
     @test (@set last(obj) = '4') === (1, 2.0, '4')

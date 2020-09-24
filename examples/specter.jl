@@ -61,7 +61,7 @@ out = @set data |> Vals() |> Elements() |> Vals() |> With(iseven) += 1
 # ### Append to nested vector
 data = (a = 1:3,)
 
-optic = @lens _.a
+optic = @optic _.a
 out = modify(v -> vcat(v, [4,5]), data, optic)
 
 @test out == (a = [1,2,3,4,5],)
@@ -101,7 +101,7 @@ function getall(obj, optic)
 end
 
 data = [[1,2,3,4],[], [5,3,2,18],[2,4,6], [12]]
-optic = @lens _ |> Elements() |> Elements() |> With(x -> mod(x, 3) == 0)
+optic = @optic _ |> Elements() |> Elements() |> With(x -> mod(x, 3) == 0)
 out = getall(data, optic)
 @test out == [3, 3, 18, 6, 12]
 @test_broken eltype(out) == Int
@@ -116,6 +116,6 @@ out = @set data |> Filter(isodd) |> _[end] += 1
 # ### Remove nils from a nested sequence
 
 data = (a = [1,2,missing, 3, missing],)
-optic = @lens _.a |> Filter(!ismissing)
+optic = @optic _.a |> Filter(!ismissing)
 out = optic(data)
 @test out == [1,2,3]

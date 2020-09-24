@@ -42,7 +42,7 @@ end
 
     arr = 1:6
     @test [1, 0, 3, 0, 5, 0] == @set(arr |> Elements() |> With(iseven) = 0)
-    @inferred modify(x -> 0, arr, @lens _ |> Elements() |> With(iseven))
+    @inferred modify(x -> 0, arr, @optic _ |> Elements() |> With(iseven))
 end
 
 end#module
