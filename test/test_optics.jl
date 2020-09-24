@@ -35,13 +35,14 @@ end
 end
 
 @testset "With" begin
+    @test 10 === @set(1 |> With(>=(0)) = 10)
+    @test -1 === @set(-1 |> With(>=(0)) = 10)
+    @inferred set(1, With(iseven), 2)
+    @inferred modify(x -> 0, 1, With(iseven))
+
     arr = 1:6
     @test [1, 0, 3, 0, 5, 0] == @set(arr |> Elements() |> With(iseven) = 0)
     @inferred modify(x -> 0, arr, @lens _ |> Elements() |> With(iseven))
-
-    @test 10 === @set(1 |> With(>=(0)) = 10)
-    @test -1 === @set(-1 |> With(>=(0)) = 10)
-
 end
 
 end#module
