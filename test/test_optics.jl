@@ -34,15 +34,15 @@ end
     @test modify(x-> x - 1, arr, oc) == expected
 end
 
-@testset "With" begin
-    @test 10 === @set(1 |> With(>=(0)) = 10)
-    @test -1 === @set(-1 |> With(>=(0)) = 10)
-    @inferred set(1, With(iseven), 2)
-    @inferred modify(x -> 0, 1, With(iseven))
+@testset "If" begin
+    @test 10 === @set(1 |> If(>=(0)) = 10)
+    @test -1 === @set(-1 |> If(>=(0)) = 10)
+    @inferred set(1, If(iseven), 2)
+    @inferred modify(x -> 0, 1, If(iseven))
 
     arr = 1:6
-    @test [1, 0, 3, 0, 5, 0] == @set(arr |> Elements() |> With(iseven) = 0)
-    @inferred modify(x -> 0, arr, @optic _ |> Elements() |> With(iseven))
+    @test [1, 0, 3, 0, 5, 0] == @set(arr |> Elements() |> If(iseven) = 0)
+    @inferred modify(x -> 0, arr, @optic _ |> Elements() |> If(iseven))
 end
 
 end#module

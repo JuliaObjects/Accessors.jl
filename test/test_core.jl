@@ -131,8 +131,8 @@ end
 
 struct UserDefinedLens end
 
-struct LensWithTextPlain end
-Base.show(io::IO, ::MIME"text/plain", ::LensWithTextPlain) =
+struct LensIfTextPlain end
+Base.show(io::IO, ::MIME"text/plain", ::LensIfTextPlain) =
     print(io, "I define text/plain.")
 
 
@@ -372,14 +372,14 @@ if !Accessors.BASE_COMPOSED_FUNCTION_HAS_SHOW
 else
     @testset "text/plain show" begin
         @testset for lens in [
-            LensWithTextPlain()
+            LensIfTextPlain()
         ]
             @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
         end
         @testset for lens in [
-            (@optic _.a) ⨟ LensWithTextPlain()
-            LensWithTextPlain() ⨟ (@optic _.b)
-            (@optic _.a) ⨟ LensWithTextPlain() ⨟ (@optic _.b)
+            (@optic _.a) ⨟ LensIfTextPlain()
+            LensIfTextPlain() ⨟ (@optic _.b)
+            (@optic _.a) ⨟ LensIfTextPlain() ⨟ (@optic _.b)
         ]
             @test_broken occursin("I define text/plain.", sprint(show, "text/plain", lens))
         end
@@ -414,7 +414,7 @@ else
                 (@optic _.a) ⨟ UserDefinedLens()
                 UserDefinedLens() ⨟ (@optic _.b)
                 (@optic _.a) ∘ UserDefinedLens()   ∘ (@optic _.b)
-                (@optic _.a) ∘ LensWithTextPlain() ∘ (@optic _.b)
+                (@optic _.a) ∘ LensIfTextPlain() ∘ (@optic _.b)
             ]
             buf = IOBuffer()
             show(buf, item)

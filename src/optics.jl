@@ -1,7 +1,7 @@
 export @optic
 export set, modify
 export ∘, ⨟
-export Elements, Recursive, With, Properties
+export Elements, Recursive, If, Properties
 export setproperties
 export constructorof
 using ConstructionBase
@@ -186,7 +186,7 @@ function modify(f, obj, ::Elements)
 end
 
 """
-    With(modify_condition)
+    If(modify_condition)
 
 Restric access to locations for which `modify_condition` holds.
 
@@ -195,7 +195,7 @@ julia> using Accessors
 
 julia> obj = 1:6;
 
-julia> @set obj |> Elements() |> With(iseven) *= 10
+julia> @set obj |> Elements() |> If(iseven) *= 10
 6-element Vector{Int64}:
   1
  20
@@ -207,12 +207,12 @@ julia> @set obj |> Elements() |> With(iseven) *= 10
 
 $EXPERIMENTAL
 """
-struct With{C}
+struct If{C}
     modify_condition::C
 end
-OpticStyle(::Type{<:With}) = ModifyBased()
+OpticStyle(::Type{<:If}) = ModifyBased()
 
-function modify(f, obj, w::With)
+function modify(f, obj, w::If)
     if w.modify_condition(obj)
         f(obj)
     else
@@ -341,8 +341,10 @@ struct DynamicIndexLens{F}
     f::F
 end
 
-Base.@propagate_inbounds (lens::DynamicIndexLens)(obj) = obj[lens.f(obj)...]
+Base.@propagate_inbounds function (lens::DynamicIndexLens)(obj)
+    return obj[lens.f(obj)...]
+end
 
-Base.@propagate_inbounds set(obj, lens::DynamicIndexLens, val) =
-    setindex(obj, val, lens.f(obj)...)
-
+Base.@propagate_inbounds function set(obj, lens::DynamicIndexLens, val)
+    return setindex(obj, val, lens.f(obj)...)
+end
