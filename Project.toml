@@ -4,6 +4,7 @@ authors = ["Takafumi Arakaki <aka.tkf@gmail.com>", "Jan Weidner <jw3126@gmail.co
 version = "0.1.0"
 
 [deps]
+Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 CompositionsBase = "a33af91c-f02d-484b-be07-31d278c5ca2b"
 ConstructionBase = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
 Future = "9fa8497b-333b-5362-9e8d-4d0656e87820"
@@ -18,7 +19,7 @@ ConstructionBase = "0.1, 1.0"
 MacroTools = "0.4.4, 0.5"
 Requires = "0.5, 1.0"
 StaticNumbers = "0.3"
-julia = "1.6"
+julia = "1.0"
 
 [extras]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"

@@ -4,7 +4,7 @@ using Accessors
 using Accessors: test_getset_laws, test_modify_law
 using Accessors: compose, get_update_op
 using ConstructionBase: ConstructionBase
-using StaticNumbers: static
+using StaticNumbers: StaticNumbers, static
 
 struct T
     a
@@ -136,34 +136,6 @@ Base.show(io::IO, ::MIME"text/plain", ::LensWithTextPlain) =
     print(io, "I define text/plain.")
 
 
-@testset "show it like you build it " begin
-    @testset for item in [
-            @optic _.a
-            @optic _[1]
-            @optic _[:a]
-            @optic _["a"]
-            @optic _[static(1)]
-            @optic _[static(1), static(1 + 1)]
-            @optic _.a.b[:c]["d"][2][static(3)]
-            @optic _
-            @optic first(_)
-            @optic last(first(_))
-            @optic last(first(_.a))[1]
-            UserDefinedLens()
-            @optic _ |> UserDefinedLens()
-            @optic UserDefinedLens()(_)
-            @optic _ |> ((x -> x)(first))
-            (@optic _.a) ⨟ UserDefinedLens()
-            UserDefinedLens() ⨟ (@optic _.b)
-            (@optic _.a) ∘ UserDefinedLens()   ∘ (@optic _.b)
-            (@optic _.a) ∘ LensWithTextPlain() ∘ (@optic _.b)
-        ]
-        buf = IOBuffer()
-        show(buf, item)
-        item2 = eval(Meta.parse(String(take!(buf))))
-        @test item === item2
-    end
-end
 
 @testset "lens laws" begin
     obj = T(2, T(T(3,(4,4)), 2))
@@ -395,27 +367,60 @@ end
     @test (@optic _ |> _[1] |> _[2] |> _[3]) === @optic _[1][2][3]
 end
 
-@testset "text/plain show" begin
-    @testset for lens in [
-        LensWithTextPlain()
-    ]
-        @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
-    end
-    @testset for lens in [
-        (@optic _.a) ⨟ LensWithTextPlain()
-        LensWithTextPlain() ⨟ (@optic _.b)
-        (@optic _.a) ⨟ LensWithTextPlain() ⨟ (@optic _.b)
-    ]
-        @test_broken occursin("I define text/plain.", sprint(show, "text/plain", lens))
+if !Accessors.BASE_COMPOSED_FUNCTION_HAS_SHOW
+    @info "Skipping show tests, on old VERSION = $VERSION"
+else
+    @testset "text/plain show" begin
+        @testset for lens in [
+            LensWithTextPlain()
+        ]
+            @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
+        end
+        @testset for lens in [
+            (@optic _.a) ⨟ LensWithTextPlain()
+            LensWithTextPlain() ⨟ (@optic _.b)
+            (@optic _.a) ⨟ LensWithTextPlain() ⨟ (@optic _.b)
+        ]
+            @test_broken occursin("I define text/plain.", sprint(show, "text/plain", lens))
+        end
+
+        @testset for lens in [
+            UserDefinedLens()
+            (@optic _.a) ⨟ UserDefinedLens()
+            UserDefinedLens() ⨟ (@optic _.b)
+            (@optic _.a) ⨟ UserDefinedLens() ⨟ (@optic _.b)
+        ]
+            @test sprint(show, lens) == sprint(show, "text/plain", lens)
+        end
     end
 
-    @testset for lens in [
-        UserDefinedLens()
-        (@optic _.a) ⨟ UserDefinedLens()
-        UserDefinedLens() ⨟ (@optic _.b)
-        (@optic _.a) ⨟ UserDefinedLens() ⨟ (@optic _.b)
-    ]
-        @test sprint(show, lens) == sprint(show, "text/plain", lens)
+    @testset "show it like you build it " begin
+        @testset for item in [
+                @optic _.a
+                @optic _[1]
+                @optic _[:a]
+                @optic _["a"]
+                @optic _[static(1)]
+                @optic _[static(1), static(1 + 1)]
+                @optic _.a.b[:c]["d"][2][static(3)]
+                @optic _
+                @optic first(_)
+                @optic last(first(_))
+                @optic last(first(_.a))[1]
+                UserDefinedLens()
+                @optic _ |> UserDefinedLens()
+                @optic UserDefinedLens()(_)
+                @optic _ |> ((x -> x)(first))
+                (@optic _.a) ⨟ UserDefinedLens()
+                UserDefinedLens() ⨟ (@optic _.b)
+                (@optic _.a) ∘ UserDefinedLens()   ∘ (@optic _.b)
+                (@optic _.a) ∘ LensWithTextPlain() ∘ (@optic _.b)
+            ]
+            buf = IOBuffer()
+            show(buf, item)
+            item2 = eval(Meta.parse(String(take!(buf))))
+            @test item === item2
+        end
     end
 end
 

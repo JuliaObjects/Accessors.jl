@@ -67,7 +67,14 @@ julia> lens(obj)
 ```
 """
 ⨟
-const ComposedOptic{Outer, Inner} = Base.ComposedFunction{Outer, Inner}
+
+const BASE_COMPOSED_FUNCTION_HAS_SHOW = VERSION >= v"1.6.0-DEV.85"
+const BASE_COMPOSED_FUNCTION_IS_PUBLIC = VERSION >= v"1.6.0-DEV.1037"
+if !BASE_COMPOSED_FUNCTION_IS_PUBLIC
+    using Compat: ComposedFunction
+end
+
+const ComposedOptic{Outer, Inner} = ComposedFunction{Outer, Inner}
 outertype(::Type{ComposedOptic{Outer, Inner}}) where {Outer, Inner} = Outer
 innertype(::Type{ComposedOptic{Outer, Inner}}) where {Outer, Inner} = Inner
 
