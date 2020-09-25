@@ -11,7 +11,7 @@ jobs:
       matrix:
         version:
           - 1 # Supporting < 1.5 is a bit awkward since \bbsemi is missing
-          - 'nightly' # TODO stable
+          - 'nightly'
         os:
           - ubuntu-latest
           - macOS-latest
