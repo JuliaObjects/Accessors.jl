@@ -1,6 +1,6 @@
 export @optic
 export set, modify
-export ∘, ⨟
+export ∘, opcompose, var"⨟"
 export Elements, Recursive, If, Properties
 export setproperties
 export constructorof
@@ -66,12 +66,25 @@ julia> lens(obj)
 1
 ```
 """
-⨟
+opcompose
 
 const BASE_COMPOSED_FUNCTION_HAS_SHOW = VERSION >= v"1.6.0-DEV.85"
 const BASE_COMPOSED_FUNCTION_IS_PUBLIC = VERSION >= v"1.6.0-DEV.1037"
 if !BASE_COMPOSED_FUNCTION_IS_PUBLIC
     using Compat: ComposedFunction
+end
+if !BASE_COMPOSED_FUNCTION_HAS_SHOW
+    function show_composed_function(io::IO, c::ComposedFunction)
+        show(io, c.outer)
+        print(io, " ∘ ")
+        show(io, c.inner)
+    end
+    function Base.show(io::IO, c::ComposedFunction)
+        show_composed_function(io, c)
+    end
+    function Base.show(io::IO, ::MIME"text/plain", c::ComposedFunction)
+        show_composed_function(io, c)
+    end
 end
 
 const ComposedOptic{Outer, Inner} = ComposedFunction{Outer, Inner}
@@ -158,23 +171,13 @@ Access all elements of a collection that implements `map`.
 ```jldoctest
 julia> using Accessors
 
-julia> obj = [1,2,3]
-3-element Vector{Int64}:
- 1
- 2
- 3
+julia> obj = (1,2,3);
 
 julia> set(obj, Elements(), 0)
-3-element Vector{Int64}:
- 0
- 0
- 0
+(0, 0, 0)
 
 julia> modify(x -> 2x, obj, Elements())
-3-element Vector{Int64}:
- 2
- 4
- 6
+(2, 4, 6)
 ```
 $EXPERIMENTAL
 """
@@ -193,16 +196,10 @@ Restric access to locations for which `modify_condition` holds.
 ```jldoctest
 julia> using Accessors
 
-julia> obj = 1:6;
+julia> obj = (1,2,3,4,5,6);
 
 julia> @set obj |> Elements() |> If(iseven) *= 10
-6-element Vector{Int64}:
-  1
- 20
-  3
- 40
-  5
- 60
+(1, 20, 3, 40, 5, 60)
 ```
 
 $EXPERIMENTAL
