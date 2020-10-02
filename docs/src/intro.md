@@ -55,8 +55,8 @@ This api may be useful in its own right and works as follows:
 ```jldoctest
 julia> using Accessors
 
-julia> l = @lens _.a.b
-(@lens _.b) ∘ (@lens _.a)
+julia> l = @optic _.a.b
+(@optic _.b) ∘ (@optic _.a)
 
 julia> struct AB;a;b;end
 
@@ -83,6 +83,6 @@ For instance
 ```
 expands roughly to
 ```julia
-l = @lens _.a.b
+l = @optic _.a.b
 set(obj, l, 42)
 ```

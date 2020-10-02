@@ -10,7 +10,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - 'nightly' # TODO stable
+          - 1 # Supporting < 1.5 is a bit awkward since \bbsemi is missing
+          - 'nightly'
         os:
           - ubuntu-latest
           - macOS-latest

@@ -81,11 +81,14 @@ function test_ir_lens_vs_hand(info_lens::Core.CodeInfo,
     @test uniquecounts(heads_lens) == uniquecounts(heads_hand)
 end
 
-using Accessors: ComposedLens
+using Accessors: ComposedOptic
 is_fast_composition_order(lens) = true
-is_fast_composition_order(lens::ComposedLens{<:ComposedLens, <:Any}) = is_fast_composition_order(Accessors.outer(lens))
-is_fast_composition_order(lens::ComposedLens{<:Any, <:ComposedLens}) = false
-is_fast_composition_order(lens::ComposedLens{<:ComposedLens, <:ComposedLens}) = false
+function is_fast_composition_order(lens::ComposedOptic{<:ComposedOptic, <:Any})
+    is_fast_composition_order(lens.outer)
+end
+is_fast_composition_order(lens::ComposedOptic{<:Any, <:ComposedOptic}) = false
+is_fast_composition_order(lens::ComposedOptic{<:ComposedOptic, <:ComposedOptic}) = false
+
 @testset "default composition orders are fast" begin
     @assert is_fast_composition_order(∘(first, last, eltype))
     @assert is_fast_composition_order((first ∘ last) ∘ eltype)
@@ -93,12 +96,12 @@ is_fast_composition_order(lens::ComposedLens{<:ComposedLens, <:ComposedLens}) = 
     @test is_fast_composition_order(⨟(eltype, last, first))
     @test_broken is_fast_composition_order(first ⨟ last ⨟ eltype)
     @test is_fast_composition_order(first ∘ last ∘ eltype)
-    @test is_fast_composition_order(@lens _)
-    @test is_fast_composition_order(@lens _ |> first |> last |> eltype)
-    @test is_fast_composition_order(@lens _.a.b)
-    @test is_fast_composition_order(@lens _[1][2][3])
-    @test is_fast_composition_order(@lens first(last(_)))
-    @test is_fast_composition_order(@lens last(_)[2].a |> first)
+    @test is_fast_composition_order(@optic _)
+    @test is_fast_composition_order(@optic _ |> first |> last |> eltype)
+    @test is_fast_composition_order(@optic _.a.b)
+    @test is_fast_composition_order(@optic _[1][2][3])
+    @test is_fast_composition_order(@optic first(last(_)))
+    @test is_fast_composition_order(@optic last(_)[2].a |> first)
 end
 
 let
@@ -133,17 +136,17 @@ let
 end
 
 function compose_right_assoc(obj, val)
-    l = @lens(_.d) ∘ (@lens(_.c) ∘ (@lens(_.b) ∘ @lens(_.a)))
+    l = @optic(_.d) ∘ (@optic(_.c) ∘ (@optic(_.b) ∘ @optic(_.a)))
     set(obj, l, val)
 end
 
 function compose_left_assoc(obj, val)
-    l = ((@lens(_.d) ∘ @lens(_.c)) ∘ @lens(_.b)) ∘ @lens(_.a)
+    l = ((@optic(_.d) ∘ @optic(_.c)) ∘ @optic(_.b)) ∘ @optic(_.a)
     set(obj, l, val)
     set(obj, l, val)
 end
 function compose_default_assoc(obj, val)
-    l = @lens _.a.b.c.d
+    l = @optic _.a.b.c.d
     set(obj, l, val)
 end
 

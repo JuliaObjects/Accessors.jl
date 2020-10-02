@@ -1,4 +1,4 @@
-export @set, @lens, @reset
+export @set, @optic, @reset
 using MacroTools
 
 """
@@ -27,7 +27,7 @@ T(T(2, 2), 2)
 julia> @set t.a.b = 3
 T(T(2, 3), 2)
 ```
-Supports the same syntax as [`@lens`](@ref). See also [`@reset`](@ref).
+Supports the same syntax as [`@optic`](@ref). See also [`@reset`](@ref).
 """
 macro set(ex)
     setmacro(identity, ex, overwrite=false)
@@ -51,7 +51,7 @@ julia> @reset t.a=2
 julia> t
 (a = 2,)
 ```
-Supports the same syntax as [`@lens`](@ref). See also [`@set`](@ref).
+Supports the same syntax as [`@optic`](@ref). See also [`@set`](@ref).
 """
 macro reset(ex)
     setmacro(identity, ex, overwrite=true)
@@ -126,19 +126,19 @@ function parse_obj_lenses(ex)
 end
 
 """
-    lenscompose([lens₁, [lens₂, [lens₃, ...]]])
+    opticcompose([lens₁, [lens₂, [lens₃, ...]]])
 
 Compose `lens₁`, `lens₂` etc. There is one subtle point here:
 While the two composition orders `(lens₁ ⨟ lens₂) ⨟ lens₃` and `lens₁ ⨟ (lens₂ ⨟ lens₃)` have equivalent semantics, their performance may not be the same.
 
-The `lenscompose` function tries to use a composition order, that the compiler likes. The composition order is therefore not part of the stable API.
+The `opticcompose` function tries to use a composition order, that the compiler likes. The composition order is therefore not part of the stable API.
 """
-lenscompose() = identity
-lenscompose(args...) = opcompose(args...)
+opticcompose() = identity
+opticcompose(args...) = opcompose(args...)
 
 function parse_obj_lens(ex)
     obj, lenses = parse_obj_lenses(ex)
-    lens = Expr(:call, lenscompose, lenses...)
+    lens = Expr(:call, opticcompose, lenses...)
     obj, lens
 end
 
@@ -160,10 +160,10 @@ end
 (u::_UpdateOp)(x) = u.op(x, u.val)
 
 """
-    setmacro(lenstransform, ex::Expr; overwrite::Bool=false)
+    setmacro(optictransform, ex::Expr; overwrite::Bool=false)
 
 This function can be used to create a customized variant of [`@set`](@ref).
-It works by applying `lenstransform` to the lens that is used in the customized `@set` macro
+It works by applying `optictransform` to the lens that is used in the customized `@set` macro
 at runtime.
 ```julia
 function mytransform(lens::Lens)::Lens
@@ -173,9 +173,9 @@ macro myset(ex)
     setmacro(mytransform, ex)
 end
 ```
-See also [`lensmacro`](@ref).
+See also [`opticmacro`](@ref).
 """
-function setmacro(lenstransform, ex::Expr; overwrite::Bool=false)
+function setmacro(optictransform, ex::Expr; overwrite::Bool=false)
     @assert ex.head isa Symbol
     @assert length(ex.args) == 2
     ref, val = ex.args
@@ -184,14 +184,14 @@ function setmacro(lenstransform, ex::Expr; overwrite::Bool=false)
     val = esc(val)
     ret = if ex.head == :(=)
         quote
-            lens = ($lenstransform)($lens)
+            lens = ($optictransform)($lens)
             $dst = $set($obj, lens, $val)
         end
     else
         op = get_update_op(ex.head)
         f = :($_UpdateOp($op,$val))
         quote
-            lens = ($lenstransform)($lens)
+            lens = ($optictransform)($lens)
             $dst = $modify($f, $obj, lens)
         end
     end
@@ -199,7 +199,7 @@ function setmacro(lenstransform, ex::Expr; overwrite::Bool=false)
 end
 
 """
-    @lens
+    @optic
 
 Construct a lens from a field access.
 
@@ -213,8 +213,8 @@ julia> struct T;a;b;end
 julia> t = T("A1", T(T("A3", "B3"), "B2"))
 T("A1", T(T("A3", "B3"), "B2"))
 
-julia> l = @lens _.b.a.b
-(@lens _.b) ∘ (@lens _.a) ∘ (@lens _.b)
+julia> l = @optic _.b.a.b
+(@optic _.b) ∘ (@optic _.a) ∘ (@optic _.b)
 
 julia> l(t)
 "B3"
@@ -225,53 +225,53 @@ T("A1", T(T("A3", 100), "B2"))
 julia> t = ("one", "two")
 ("one", "two")
 
-julia> set(t, (@lens _[1]), "1")
+julia> set(t, (@optic _[1]), "1")
 ("1", "two")
 ```
 
 See also [`@set`](@ref).
 """
-macro lens(ex)
-    lensmacro(identity, ex)
+macro optic(ex)
+    opticmacro(identity, ex)
 end
 
 
 """
-    lensmacro(lenstransform, ex::Expr)
+    opticmacro(optictransform, ex::Expr)
 
-This function can be used to create a customized variant of [`@lens`](@ref).
-It works by applying `lenstransform` to the created lens at runtime.
+This function can be used to create a customized variant of [`@optic`](@ref).
+It works by applying `optictransform` to the created lens at runtime.
 ```julia
 # new_lens = mytransform(lens)
 macro mylens(ex)
-    lensmacro(mytransform, ex)
+    opticmacro(mytransform, ex)
 end
 ```
 See also [`setmacro`](@ref).
 """
-function lensmacro(lenstransform, ex)
+function opticmacro(optictransform, ex)
     obj, lens = parse_obj_lens(ex)
     if obj != esc(:_)
         msg = """Cannot parse lens $ex. Lens expressions must start with _, got $obj instead."""
         throw(ArgumentError(msg))
     end
-    :($(lenstransform)($lens))
+    :($(optictransform)($lens))
 end
 
 
-_show(io::IO, lens::PropertyLens{field}) where {field} = print(io, "(@lens _.$field)")
-_show(io::IO, lens::IndexLens) = print(io, "(@lens _[", join(repr.(lens.indices), ", "), "])")
+_show(io::IO, lens::PropertyLens{field}) where {field} = print(io, "(@optic _.$field)")
+_show(io::IO, lens::IndexLens) = print(io, "(@optic _[", join(repr.(lens.indices), ", "), "])")
 Base.show(io::IO, lens::Union{IndexLens, PropertyLens}) = _show(io, lens)
 Base.show(io::IO, ::MIME"text/plain", lens::Union{IndexLens, PropertyLens}) = _show(io, lens)
 
 # debugging
 show_composition_order(lens) = (show_composition_order(stdout, lens); println())
 show_composition_order(io::IO, lens) = show(io, lens)
-function show_composition_order(io::IO, lens::ComposedLens)
+function show_composition_order(io::IO, lens::ComposedOptic)
     print(io, "(")
-    show_composition_order(io, outer(lens))
+    show_composition_order(io, lens.outer)
     print(io, " ∘  ")
-    show_composition_order(io, inner(lens))
+    show_composition_order(io, lens.inner)
     print(io, ")")
 end
 

@@ -7,7 +7,7 @@ using StaticNumbers
 @testset "StaticArrays" begin
     obj = StaticArrays.@SMatrix [1 2; 3 4]
     @testset for l in [
-            (@lens _[2,1]),
+            (@optic _[2,1]),
         ]
         @test l(obj) === 3
         @test set(obj, l, 5)         === StaticArrays.@SMatrix [1 2; 5 4]
@@ -21,8 +21,8 @@ using StaticNumbers
     @testset "Multi-dynamic indexing" begin
         two = 2
         plusone(x) = x + 1
-        l1 = @lens _.a[2, 1].b
-        l2 = @lens _.a[plusone(end) - two, end÷2].b
+        l1 = @optic _.a[2, 1].b
+        l2 = @optic _.a[plusone(end) - two, end÷2].b
         m_orig = @SMatrix [
             (a=1, b=10) (a=2, b=20)
             (a=3, b=30) (a=4, b=40)
