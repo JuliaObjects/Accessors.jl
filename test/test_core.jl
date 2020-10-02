@@ -349,9 +349,10 @@ end
 @testset "|>" begin
     lbc = @optic _.b.c
     @test @optic(_ |> lbc) === lbc
-    @test @optic(_.a |> lbc) === @optic(_.a) ⨟ lbc
-    @test @optic((_.a |> lbc).d) === ⨟(@optic(_.a), lbc , @optic(_.d))
-    @test @optic(_.a |> lbc |> (@optic _[1]) |> lbc) === ⨟(@optic(_.a), lbc, @optic(_[1]), lbc)
+    @test @optic(_.a |> lbc) === opcompose(@optic(_.a), lbc)
+    @test @optic((_.a |> lbc).d) === opcompose(@optic(_.a), lbc , @optic(_.d))
+    @test @optic(_.a |> lbc |> (@optic _[1]) |> lbc) ===
+        opcompose(@optic(_.a), lbc, @optic(_[1]), lbc)
 
     @test @optic(_ |> _) === identity
     @test (@optic _ |> _[1])            === (@optic _[1])
@@ -377,18 +378,18 @@ else
             @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
         end
         @testset for lens in [
-            (@optic _.a) ⨟ LensIfTextPlain()
-            LensIfTextPlain() ⨟ (@optic _.b)
-            (@optic _.a) ⨟ LensIfTextPlain() ⨟ (@optic _.b)
+            @optic _.a |> LensIfTextPlain()
+            @optic _ |> LensIfTextPlain() |> _.b
+            @optic _.a |> LensIfTextPlain() |> @optic _.b
         ]
             @test_broken occursin("I define text/plain.", sprint(show, "text/plain", lens))
         end
 
         @testset for lens in [
             UserDefinedLens()
-            (@optic _.a) ⨟ UserDefinedLens()
-            UserDefinedLens() ⨟ (@optic _.b)
-            (@optic _.a) ⨟ UserDefinedLens() ⨟ (@optic _.b)
+            @optic _.a |> UserDefinedLens()
+            @optic _ |> UserDefinedLens() |> _.b
+            @optic _.a |> UserDefinedLens() |> _.b
         ]
             @test sprint(show, lens) == sprint(show, "text/plain", lens)
         end
@@ -411,8 +412,8 @@ else
                 @optic _ |> UserDefinedLens()
                 @optic UserDefinedLens()(_)
                 @optic _ |> ((x -> x)(first))
-                (@optic _.a) ⨟ UserDefinedLens()
-                UserDefinedLens() ⨟ (@optic _.b)
+                @optic _.a |> UserDefinedLens()
+                @optic _ |> UserDefinedLens() |> _.b
                 (@optic _.a) ∘ UserDefinedLens()   ∘ (@optic _.b)
                 (@optic _.a) ∘ LensIfTextPlain() ∘ (@optic _.b)
             ]
