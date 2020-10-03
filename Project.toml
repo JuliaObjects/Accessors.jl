@@ -13,6 +13,7 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+Compat = "3.18"
 CompositionsBase = "0.1"
 ConstructionBase = "0.1, 1.0"
 MacroTools = "0.4.4, 0.5"
