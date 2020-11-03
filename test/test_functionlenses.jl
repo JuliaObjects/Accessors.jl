@@ -84,4 +84,12 @@ end
     @test typeof(@set eltype(obj) = Pair{UInt, Float64}) === Dict{UInt, Float64}
 end
 
+@testset "math" begin
+    x = 1
+    @test 2.0       === @set real(1) = 2.0
+    @test 1.0 + 2im === @set imag(1) = 2.0
+    @test 1.0 + 2im === @set imag(1+1im) = 2.0
+
+end
+
 end # module

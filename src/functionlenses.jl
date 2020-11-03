@@ -27,3 +27,10 @@ set(path, ::typeof(splitdrive), (drive, rest)) = joinpath(drive, rest)
 set(path, ::typeof(splitpath), pieces)         = joinpath(pieces...)
 set(path, ::typeof(dirname), new_name)         = @set splitdir(path)[1] = new_name
 set(path, ::typeof(basename), new_name)        = @set splitdir(path)[2] = new_name
+
+################################################################################
+##### math
+################################################################################
+set(x::Real, ::typeof(real), y) = y
+set(x,       ::typeof(real), y) = y + im*imag(x)
+set(x,       ::typeof(imag), y) = real(x) + im*y
