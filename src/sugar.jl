@@ -316,20 +316,20 @@ propname(::PropertyLens{name}) where {name} = name
 transforms the optic such that the `inner` lens contains always a the `PropertyLens`
 
 ```julia 
-julia> optic = (@optic _.a) ∘ (@optic _.b.c)
-(@optic _.a) ∘ (@optic _.c) ∘ (@optic _.b)
+julia> optic = (@optic _.c) ∘ (@optic _.a.b)
+(@optic _.c) ∘ (@optic _.b) ∘ (@optic _.a)
 
 julia> optic.inner
-(@optic _.c) ∘ (@optic _.b)
+(@optic _.b) ∘ (@optic _.a)
 
 julia> optic.outer
 (@optic _.a)
 
 julia> normalise(optic).inner
-(@optic _.b)
+(@optic _.a)
 
 julia> normalise(optic).outer
-(@optic _.a) ∘ (@optic _.c)
+(@optic _.c) ∘ (@optic _.b)
 """
 normalise(optic) = optic
 normalise(optic::ComposedOptic) = foldl(∘, decompose(optic))
