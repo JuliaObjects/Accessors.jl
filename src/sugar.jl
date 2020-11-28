@@ -275,3 +275,61 @@ function show_composition_order(io::IO, lens::ComposedOptic)
     print(io, ")")
 end
 
+
+"""
+    decompose(optic)
+
+decomposes the `ComposedOptic` into tuple of simple properties (Lenses) 
+while preserving the order
+
+```julia 
+julia> decompose(@optic _.a.b.c.d)
+((@optic _.d), (@optic _.c), (@optic _.b), (@optic _.a))
+
+julia> decompose((@optic _.c.d) ∘ (@optic _.a.b))
+((@optic _.d), (@optic _.c), (@optic _.b), (@optic _.a))
+"""
+decompose(optic) = (optic,)
+decompose(optic::ComposedOptic) = (decompose(optic.outer)..., decompose(optic.inner)...)
+
+"""
+    propname(::PropertyLens{name})
+
+returns the name of the propery lens 
+```julia
+julia> propname(@optic _.a)
+:a
+```
+
+Using `propname` with `decompose`, list all keys of can be listed as 
+```julia
+julia> map(propname, decompose((@optic _.c.d) ∘ (@optic _.a.b))
+(:d, :c, :b, :a)
+```
+"""
+propname(::PropertyLens{name}) where {name} = name
+
+
+"""
+    normalise(optic)
+
+transforms the optic such that the `inner` lens contains always a the `PropertyLens`
+
+```julia 
+julia> optic = (@optic _.a) ∘ (@optic _.b.c)
+(@optic _.a) ∘ (@optic _.c) ∘ (@optic _.b)
+
+julia> optic.inner
+(@optic _.c) ∘ (@optic _.b)
+
+julia> optic.outer
+(@optic _.a)
+
+julia> normalise(optic).inner
+(@optic _.b)
+
+julia> normalise(optic).outer
+(@optic _.a) ∘ (@optic _.c)
+"""
+normalise(optic) = optic
+normalise(optic::ComposedOptic) = foldl(∘, decompose(optic))
