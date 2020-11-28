@@ -288,6 +288,7 @@ julia> decompose(@optic _.a.b.c.d)
 
 julia> decompose((@optic _.c.d) ∘ (@optic _.a.b))
 ((@optic _.d), (@optic _.c), (@optic _.b), (@optic _.a))
+```
 """
 decompose(optic) = (optic,)
 decompose(optic::ComposedOptic) = (decompose(optic.outer)..., decompose(optic.inner)...)
@@ -330,6 +331,7 @@ julia> normalise(optic).inner
 
 julia> normalise(optic).outer
 (@optic _.c) ∘ (@optic _.b)
+```
 """
 normalise(optic) = optic
 normalise(optic::ComposedOptic) = foldl(∘, decompose(optic))
