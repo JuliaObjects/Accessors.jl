@@ -47,7 +47,7 @@ set(o, l, 100)
 
 # Now we can implement the syntax macros
 
-using Accessors: setmacro, opticmacro
+using Accessors: setmacro, opticmacro, modifymacro
 
 macro myreset(ex)
     setmacro(Lens!, ex)
@@ -57,11 +57,20 @@ macro mylens!(ex)
     opticmacro(Lens!, ex)
 end
 
+macro mymodify!(f, ex)
+    modifymacro(Lens!, f, ex)
+end
+
 o = M(1,2)
 @myreset o.a = :hi
 @myreset o.b += 98
 @test o.a == :hi
 @test o.b == 100
+
+o = M(1,3)
+@mymodify!(x -> x+1, o.a)
+@test o.a === 2
+@test o.b === 3
 
 deep = [[[[1]]]]
 @myreset deep[1][1][1][1] = 2

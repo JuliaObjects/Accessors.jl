@@ -1,12 +1,15 @@
 module TestSetMacro
 
 module Clone
-    import Accessors: setmacro, opticmacro
+    import Accessors: setmacro, opticmacro, modifymacro
     macro optic(ex)
         opticmacro(identity, ex)
     end
     macro set(ex)
         setmacro(identity, ex)
+    end
+    macro modify(f, ex)
+        modifymacro(identity, f, ex)
     end
 end#module Clone
 
@@ -35,6 +38,8 @@ using StaticNumbers
     o = (a=1, b=2)
     @test Clone.@set(o.a = 2) === Accessors.@set(o.a = 2)
     @test Clone.@set(o.a += 2) === Accessors.@set(o.a += 2)
+
+    @test Clone.@modify(x -> x+1, o.a) === Accessors.@modify(x -> x+1, o.a)
 
     m = @SMatrix [0 0; 0 0]
     m2 = Clone.@set m[end-1, end] = 1

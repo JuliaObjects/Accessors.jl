@@ -1,4 +1,4 @@
-export @set, @optic, @reset
+export @set, @optic, @reset, @modify
 using MacroTools
 
 """
@@ -57,11 +57,48 @@ macro reset(ex)
     setmacro(identity, ex, overwrite=true)
 end
 
+"""
+
+    @modify(f, obj_optic)
+
+Define an optic and call [`modify`](@ref) on it.
+```jldoctest
+julia> using Accessors
+
+julia> xs = (1,2,3);
+
+julia> ys = @modify(xs |> Elements() |> If(isodd)) do x
+           x + 1
+       end
+(2, 2, 4)
+```
+Supports the same syntax as [`@optic`](@ref). See also [`@set`](@ref).
+"""
+macro modify(f, obj_optic)
+    modifymacro(identity, f, obj_optic)
+end
+
+"""
+    modifymacro(optictransform, f, obj_optic)
+
+This function can be used to create a customized variant of [`@modify`](@ref).
+See also [`opticmacro`](@ref), [`setmacro`](@ref).
+"""
+
+function modifymacro(optictransform, f, obj_optic)
+    f = esc(f)
+    obj, optic = parse_obj_optic(obj_optic)
+    :(let
+        optic = $(optictransform)($optic)
+        ($modify)($f, $obj, optic)
+    end)
+end
+
 foldtree(op, init, x) = op(init, x)
 foldtree(op, init, ex::Expr) =
     op(foldl((acc, x) -> foldtree(op, acc, x), ex.args; init=init), ex)
 
-need_dynamic_lens(ex) =
+need_dynamic_optic(ex) =
     foldtree(false, ex) do yes, x
         yes || x === :end || x === :_
     end
@@ -81,65 +118,65 @@ function lower_index(collection::Symbol, index, dim)
     return index
 end
 
-function parse_obj_lenses(ex)
+function parse_obj_optics(ex)
     if @capture(ex, (front_ |> back_))
-        obj, frontlens = parse_obj_lenses(front)
-        backlens = try
+        obj, frontoptic = parse_obj_optics(front)
+        backoptic = try
             # allow e.g. obj |> first |> _.a.b
-            obj_back, backlens = parse_obj_lenses(back)
+            obj_back, backoptic = parse_obj_optics(back)
             if obj_back == esc(:_)
-                backlens
+                backoptic
             else
                 (esc(back),)
             end
         catch ArgumentError
-            backlens = (esc(back),)
+            backoptic = (esc(back),)
         end
-        return obj, tuple(frontlens..., backlens...)
+        return obj, tuple(frontoptic..., backoptic...)
     elseif @capture(ex, front_[indices__])
-        obj, frontlens = parse_obj_lenses(front)
-        if any(need_dynamic_lens, indices)
+        obj, frontoptic = parse_obj_optics(front)
+        if any(need_dynamic_optic, indices)
             @gensym collection
             indices = replace_underscore.(indices, collection)
             dims = length(indices) == 1 ? nothing : 1:length(indices)
             lindices = esc.(lower_index.(collection, indices, dims))
-            lens = :($DynamicIndexLens($(esc(collection)) -> ($(lindices...),)))
+            optic = :($DynamicIndexLens($(esc(collection)) -> ($(lindices...),)))
         else
             index = esc(Expr(:tuple, indices...))
-            lens = :($IndexLens($index))
+            optic = :($IndexLens($index))
         end
     elseif @capture(ex, front_.property_)
         property isa Union{Symbol,String} || throw(ArgumentError(
             string("Error while parsing :($ex). Second argument to `getproperty` can only be",
                    "a `Symbol` or `String` literal, received `$property` instead.")
         ))
-        obj, frontlens = parse_obj_lenses(front)
-        lens = :($PropertyLens{$(QuoteNode(property))}())
+        obj, frontoptic = parse_obj_optics(front)
+        optic = :($PropertyLens{$(QuoteNode(property))}())
     elseif @capture(ex, f_(front_))
-        obj, frontlens = parse_obj_lenses(front)
-        lens = esc(f) # function lens
+        obj, frontoptic = parse_obj_optics(front)
+        optic = esc(f) # function optic
     else
         obj = esc(ex)
         return obj, ()
     end
-    return (obj, tuple(frontlens..., lens))
+    return (obj, tuple(frontoptic..., optic))
 end
 
 """
-    opticcompose([lens₁, [lens₂, [lens₃, ...]]])
+    opticcompose([optic₁, [optic₂, [optic₃, ...]]])
 
-Compose `lens₁`, `lens₂` etc. There is one subtle point here:
-While the two composition orders `(lens₁ ⨟ lens₂) ⨟ lens₃` and `lens₁ ⨟ (lens₂ ⨟ lens₃)` have equivalent semantics, their performance may not be the same.
+Compose `optic₁`, `optic₂` etc. There is one subtle point here:
+While the two composition orders `(optic₁ ⨟ optic₂) ⨟ optic₃` and `optic₁ ⨟ (optic₂ ⨟ optic₃)` have equivalent semantics, their performance may not be the same.
 
 The `opticcompose` function tries to use a composition order, that the compiler likes. The composition order is therefore not part of the stable API.
 """
 opticcompose() = identity
 opticcompose(args...) = opcompose(args...)
 
-function parse_obj_lens(ex)
-    obj, lenses = parse_obj_lenses(ex)
-    lens = Expr(:call, opticcompose, lenses...)
-    obj, lens
+function parse_obj_optic(ex)
+    obj, optics = parse_obj_optics(ex)
+    optic = Expr(:call, opticcompose, optics...)
+    obj, optic
 end
 
 function get_update_op(sym::Symbol)
@@ -163,10 +200,12 @@ end
     setmacro(optictransform, ex::Expr; overwrite::Bool=false)
 
 This function can be used to create a customized variant of [`@set`](@ref).
-It works by applying `optictransform` to the lens that is used in the customized `@set` macro
+It works by applying `optictransform` to the optic that is used in the customized `@set` macro
 at runtime.
+
+# Example
 ```julia
-function mytransform(lens::Lens)::Lens
+function mytransform(optic::Lens)::Lens
     ...
 end
 macro myset(ex)
@@ -179,20 +218,20 @@ function setmacro(optictransform, ex::Expr; overwrite::Bool=false)
     @assert ex.head isa Symbol
     @assert length(ex.args) == 2
     ref, val = ex.args
-    obj, lens = parse_obj_lens(ref)
+    obj, optic = parse_obj_optic(ref)
     dst = overwrite ? obj : gensym("_")
     val = esc(val)
     ret = if ex.head == :(=)
         quote
-            lens = ($optictransform)($lens)
-            $dst = $set($obj, lens, $val)
+            optic = ($optictransform)($optic)
+            $dst = $set($obj, optic, $val)
         end
     else
         op = get_update_op(ex.head)
         f = :($_UpdateOp($op,$val))
         quote
-            lens = ($optictransform)($lens)
-            $dst = $modify($f, $obj, lens)
+            optic = ($optictransform)($optic)
+            $dst = $modify($f, $obj, optic)
         end
     end
     ret
@@ -201,7 +240,7 @@ end
 """
     @optic
 
-Construct a lens from a field access.
+Construct an optic from property access and similar.
 
 # Example
 
@@ -240,38 +279,38 @@ end
     opticmacro(optictransform, ex::Expr)
 
 This function can be used to create a customized variant of [`@optic`](@ref).
-It works by applying `optictransform` to the created lens at runtime.
+It works by applying `optictransform` to the created optic at runtime.
 ```julia
-# new_lens = mytransform(lens)
-macro mylens(ex)
+# new_optic = mytransform(optic)
+macro myoptic(ex)
     opticmacro(mytransform, ex)
 end
 ```
 See also [`setmacro`](@ref).
 """
 function opticmacro(optictransform, ex)
-    obj, lens = parse_obj_lens(ex)
+    obj, optic = parse_obj_optic(ex)
     if obj != esc(:_)
-        msg = """Cannot parse lens $ex. Lens expressions must start with _, got $obj instead."""
+        msg = """Cannot parse optic $ex. Lens expressions must start with _, got $obj instead."""
         throw(ArgumentError(msg))
     end
-    :($(optictransform)($lens))
+    :($(optictransform)($optic))
 end
 
 
-_show(io::IO, lens::PropertyLens{field}) where {field} = print(io, "(@optic _.$field)")
-_show(io::IO, lens::IndexLens) = print(io, "(@optic _[", join(repr.(lens.indices), ", "), "])")
-Base.show(io::IO, lens::Union{IndexLens, PropertyLens}) = _show(io, lens)
-Base.show(io::IO, ::MIME"text/plain", lens::Union{IndexLens, PropertyLens}) = _show(io, lens)
+_show(io::IO, optic::PropertyLens{field}) where {field} = print(io, "(@optic _.$field)")
+_show(io::IO, optic::IndexLens) = print(io, "(@optic _[", join(repr.(optic.indices), ", "), "])")
+Base.show(io::IO, optic::Union{IndexLens, PropertyLens}) = _show(io, optic)
+Base.show(io::IO, ::MIME"text/plain", optic::Union{IndexLens, PropertyLens}) = _show(io, optic)
 
 # debugging
-show_composition_order(lens) = (show_composition_order(stdout, lens); println())
-show_composition_order(io::IO, lens) = show(io, lens)
-function show_composition_order(io::IO, lens::ComposedOptic)
+show_composition_order(optic) = (show_composition_order(stdout, optic); println())
+show_composition_order(io::IO, optic) = show(io, optic)
+function show_composition_order(io::IO, optic::ComposedOptic)
     print(io, "(")
-    show_composition_order(io, lens.outer)
+    show_composition_order(io, optic.outer)
     print(io, " ∘  ")
-    show_composition_order(io, lens.inner)
+    show_composition_order(io, optic.inner)
     print(io, ")")
 end
 
