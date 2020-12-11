@@ -65,14 +65,12 @@ Define an optic and call [`modify`](@ref) on it.
 ```jldoctest
 julia> using Accessors
 
-julia> xs = [1,2,3];
+julia> xs = (1,2,3);
 
 julia> ys = @modify(xs |> Elements() |> If(isodd)) do x
            x + 1
-       end;
-
-julia> ys === [2,2,4]
-true
+       end
+(2, 2, 4)
 ```
 Supports the same syntax as [`@optic`](@ref). See also [`@set`](@ref).
 """
