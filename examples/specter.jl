@@ -1,5 +1,7 @@
 # # Traversal
-# These examples are taken from the README.md of the specter clojure library.
+#
+# This code demonstrates how to use and extend advanced optics.
+# The examples are taken from the README.md of the specter clojure library.
 # Many of the features here are experimental, please consult the docstrings of the
 # involved optics.
 
@@ -9,29 +11,24 @@ using Accessors
 import Accessors: modify, OpticStyle
 using Accessors: ModifyBased, SetBased, setindex
 
+# ### Increment all even numbers
+# We have the following data and the goal is to increment all nested even numbers.
+data = (a = [(aa=1, bb=2), (cc=3,)], b = [(dd=4,)])
+# To acomplish this, we define a new optic `Vals`.
 function mapvals(f, d)
     Dict(k => f(v) for (k,v) in pairs(d))
 end
 
 mapvals(f, nt::NamedTuple) = map(f, nt)
-function mapkeys(f, d)
-    Dict(f(k) => v for (k,v) in pairs(d))
-end
-
-function mapkeys(f, nt::NamedTuple)
-    kw = map(pairs(nt)) do (key, val)
-        f(key) => val
-    end
-    (;kw...)
-end
-
-struct Keys end
-OpticStyle(::Type{Keys}) = ModifyBased()
-modify(f, obj, ::Keys) = mapkeys(f, obj)
 
 struct Vals end
 OpticStyle(::Type{Vals}) = ModifyBased()
 modify(f, obj, ::Vals) = mapvals(f, obj)
+
+# Now we can increment as follows:
+out = @set data |> Vals() |> Elements() |> Vals() |> If(iseven) += 1
+
+@test out == (a = [(aa = 1, bb = 3), (cc = 3,)], b = [(dd = 5,)])
 
 struct Filter{F}
     keep_condition::F
@@ -51,18 +48,10 @@ function modify(f, obj, optic::Filter)
     setindex(obj, vals, inds)
 end
 
-# ### Increment all even numbers
-data = (a = [(aa=1, bb=2), (cc=3,)], b = [(dd=4,)])
-
-out = @set data |> Vals() |> Elements() |> Vals() |> If(iseven) += 1
-
-@test out == (a = [(aa = 1, bb = 3), (cc = 3,)], b = [(dd = 5,)])
 
 # ### Append to nested vector
 data = (a = 1:3,)
-
-optic = @optic _.a
-out = modify(v -> vcat(v, [4,5]), data, optic)
+out = @modify(v -> vcat(v, [4,5]), data.a)
 
 @test out == (a = [1,2,3,4,5],)
 
