@@ -1,4 +1,4 @@
-export @set, @optic, @reset
+export @set, @optic, @reset, @modify
 using MacroTools
 
 """
@@ -55,6 +55,46 @@ Supports the same syntax as [`@optic`](@ref). See also [`@set`](@ref).
 """
 macro reset(ex)
     setmacro(identity, ex, overwrite=true)
+end
+
+"""
+
+    @modify(f, obj_optic)
+
+Define an optic and call [`modify`](@ref) on it.
+```jldoctest
+julia> using Accessors
+
+julia> xs = [1,2,3];
+
+julia> @modify(xs |> Elements() |> If(isodd)) do x
+           x + 1
+       end
+3-element Array{Int64,1}:
+ 2
+ 2
+ 4
+```
+Supports the same syntax as [`@optic`](@ref). See also [`@set`](@ref).
+"""
+macro modify(f, obj_optic)
+    modifymacro(identity, f, obj_optic)
+end
+
+"""
+    modifymacro(optictransform, f, obj_optic)
+
+This function can be used to create a customized variant of [`@modify`](@ref).
+See also [`opticmacro`](@ref), [`setmacro`](@ref).
+"""
+
+function modifymacro(optictransform, f, obj_optic)
+    f = esc(f)
+    obj, optic = parse_obj_lens(obj_optic)
+    :(let
+        optic = $(optictransform)($optic)
+        ($modify)($f, $obj, optic)
+    end)
 end
 
 foldtree(op, init, x) = op(init, x)
@@ -165,6 +205,8 @@ end
 This function can be used to create a customized variant of [`@set`](@ref).
 It works by applying `optictransform` to the lens that is used in the customized `@set` macro
 at runtime.
+
+# Example
 ```julia
 function mytransform(lens::Lens)::Lens
     ...
@@ -201,7 +243,7 @@ end
 """
     @optic
 
-Construct a lens from a field access.
+Construct an optic from property access and similar.
 
 # Example
 

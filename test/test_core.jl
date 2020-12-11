@@ -425,4 +425,19 @@ else
     end
 end
 
+@testset "@modify" begin
+    obj = (field=4,)
+    ret = @modify(obj.field) do x
+        x + 1
+    end
+    expected = (field=5,)
+    @test ret === expected
+    @test obj === (field = 4,)
+
+    @test expected === @modify(x -> x+1, obj.field)
+    f = x -> x+1
+    @test expected === @modify(f, obj.field)
+    @test expected === @modify f obj.field
+end
+
 end
