@@ -14,10 +14,10 @@ makedocs(
     modules = [Accessors],
     sitename = "Accessors.jl",
     pages = [
-        "Getting started" => "intro.md",
-        "Explanation" => "lenses.md",
-        "Reference" => "index.md",
-        "How to guides" => [
+        "Tutorials" => ["Getting started" => "getting_started.md",],
+        "Explanation" => ["Lenses" => "lenses.md",],
+        "Reference" => ["Docstrings" => "docstrings.md"],
+        "How-to guides" => [
             "Custom Optics" => "examples/custom_optics.md",
             "Custom Macros" => "examples/custom_macros.md",
         ],
