@@ -27,4 +27,7 @@ makedocs(
     strict = true,  # to exit with non-zero code on error
 )
 
-deploydocs(repo = "github.com/JuliaObjects/Accessors.jl.git")
+deploydocs(;
+    repo = "github.com/JuliaObjects/Accessors.jl.git",
+    push_preview=true
+)
