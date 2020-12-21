@@ -17,6 +17,6 @@ Updating immutable data was never easier:
 using Accessors
 @set obj.a.b.c = d
 ```
-For more information, see [the documentation](https://juliaobjects.github.io/Accessors.jl/dev/intro/) and/or watch this video:
+To get started, see [this tutorial](https://juliaobjects.github.io/Accessors.jl/stable/getting_started/) and/or watch this video:
 
 [![JuliaCon2020 Changing the immutable](https://img.youtube.com/vi/vkAOYeTpLg0/0.jpg)](https://youtu.be/vkAOYeTpLg0 "Changing the immutable")
