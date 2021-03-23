@@ -14,7 +14,8 @@ const EXPERIMENTAL = """This function/method/type is experimental. It can be cha
 """
     modify(f, obj, optic)
 
-Replace a deeply nested part `x` of `obj` by `f(x)`.
+Replace a part `x` of `obj` by `f(x)`. The `optic` argument selects
+which part to replace.
 
 ```jldoctest
 julia> using Accessors
@@ -29,9 +30,9 @@ See also [`set`](@ref).
 function modify end
 
 """
-    set(optic, obj, val)
+    set(obj, optic, val)
 
-Replace a deeply nested part of `obj` by `val`.
+Replace a part according to `optic` of `obj` by `val`.
 
 ```jldoctest
 julia> using Accessors
