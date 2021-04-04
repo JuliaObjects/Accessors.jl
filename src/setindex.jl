@@ -20,3 +20,9 @@ Base.@propagate_inbounds function setindex(d0::AbstractDict, v, k)
     d[k] = v
     return d
 end
+
+Base.@propagate_inbounds function setindex(ref::Base.RefValue{Tx}, val::Ty) where {Tx, Ty}
+    T = promote_type(Tx, Ty)
+    new_ref = Base.RefValue{T}(convert(T, val))
+    return new_ref
+end
