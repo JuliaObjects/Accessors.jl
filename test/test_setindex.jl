@@ -16,11 +16,10 @@ Check that _type_ and value of `x` and `y` are equal.
 end
 
 function ref_alloc_test()
-    ref = Ref((; a = 10, b = 0x0001, c = (; aa = 300)))
-    ref2 = Accessors.setindex(ref, (; a = 10, b = ref[].b - 1, c = (; aa = 300)))
-    ref3 = Accessors.setindex(ref, ref2[])
+    ref = Ref((UInt(10), 100))
+    ref2 = @set ref[][1] *= -1
 
-    ref3[]
+    ref2[]
 end
 
 @testset "setindex" begin
@@ -41,14 +40,20 @@ end
     @test Accessors.setindex(d, 30, "c") ==ₜ Dict(:a=>1, :b=>2, "c"=>30)
     @test Accessors.setindex(d, 10.0, :a) ==ₜ Dict(:a=>10.0, :b=>2.0)
     
-    ref = Ref((; a = 10, b = 0x0001, c = (; aa = 300)))
-    @test @set(ref[].a = 90)[] == Ref((; a = 90, b = 0x0001, c = (; aa = 300)))[]
-    @test @set(ref[].b = Bool(ref[].b))[] == Ref((; a = 10, b = true, c = (; aa = 300)))[]
-    @test @set(ref[].c.aa = 3)[] == Ref((; a = 10, b = 0x0001, c = (; aa = 3)))[]
+    ref = Ref((; a = 1, b = 2, c = (; aa = 3)))
+    @test @set(ref[].a = 90)[] == (; a = 90, b = 2, c = (; aa = 3))
+    @test @set(ref[].b = "2")[] ==ₜ (; a = 1, b = "2", c = (; aa = 3))
+    @test @set(ref[].c.aa += 2)[] == (; a = 1, b = 2, c = (; aa = 5))
 
-    local val
-    @test @allocated(val = ref_alloc_test()) == 0
-    @test val == (; a = 10, b = 0x0000, c = (; aa = 300))
+    ref = Ref(1::Int)
+    @set ref[] = "no mutation"
+    @test ref[] === 1
+    @test typeof(ref) == Base.RefValue{Int}
+
+    if VERSION >= v"1.5.0"
+        _ = ref_alloc_test()
+        @test @allocated(ref_alloc_test()) == 0
+    end
 end
 
 end
