@@ -2,6 +2,8 @@ Base.@propagate_inbounds function setindex(args...)
     Base.setindex(args...)
 end
 
+@inline setindex(::Base.RefValue, val) = Ref(val)
+
 Base.@propagate_inbounds function setindex(xs::AbstractArray, v, I...)
     T = promote_type(eltype(xs), typeof(v))
     ys = similar(xs, T)
@@ -20,3 +22,4 @@ Base.@propagate_inbounds function setindex(d0::AbstractDict, v, k)
     d[k] = v
     return d
 end
+

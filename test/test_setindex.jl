@@ -15,6 +15,13 @@ Check that _type_ and value of `x` and `y` are equal.
     @test !(1.0 ==ₜ 1)
 end
 
+function ref_alloc_test()
+    ref = Ref((UInt(10), 100))
+    ref2 = @set ref[][1] *= -1
+
+    ref2[]
+end
+
 @testset "setindex" begin
     arr = [1,2,3]
     @test_throws MethodError Base.setindex(arr, 10, 1)
@@ -32,6 +39,21 @@ end
     @test d == Dict(:a => 1, :b => 2)
     @test Accessors.setindex(d, 30, "c") ==ₜ Dict(:a=>1, :b=>2, "c"=>30)
     @test Accessors.setindex(d, 10.0, :a) ==ₜ Dict(:a=>10.0, :b=>2.0)
+    
+    ref = Ref((; a = 1, b = 2, c = (; aa = 3)))
+    @test @set(ref[].a = 90)[] == (; a = 90, b = 2, c = (; aa = 3))
+    @test @set(ref[].b = "2")[] ==ₜ (; a = 1, b = "2", c = (; aa = 3))
+    @test @set(ref[].c.aa += 2)[] == (; a = 1, b = 2, c = (; aa = 5))
+
+    ref = Ref(1::Int)
+    @set ref[] = "no mutation"
+    @test ref[] === 1
+    @test typeof(ref) == Base.RefValue{Int}
+
+    if VERSION >= v"1.5.0"
+        _ = ref_alloc_test()
+        @test @allocated(ref_alloc_test()) == 0
+    end
 end
 
 end

@@ -160,7 +160,7 @@ function _modify(f, obj, optic::ComposedOptic, ::ModifyBased)
     end
 end
 
-function _modify(f, obj, optic, ::SetBased)
+@inline function _modify(f, obj, optic, ::SetBased)
     set(obj, optic, f(optic(obj)))
 end
 
