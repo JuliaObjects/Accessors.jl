@@ -1,4 +1,4 @@
-export @set, @optic, @reset, @modify
+export @set, @optic, @reset, @modify, @getall, @setall
 using MacroTools
 
 """
@@ -84,11 +84,79 @@ end
 This function can be used to create a customized variant of [`@modify`](@ref).
 See also [`opticmacro`](@ref), [`setmacro`](@ref).
 """
-
 function modifymacro(optictransform, f, obj_optic)
     f = esc(f)
     obj, optic = parse_obj_optic(obj_optic)
     :(($modify)($f, $obj, $(optictransform)($optic)))
+end
+
+"""
+    @getall f(obj, arg...)
+    @setall [x for x in obs if x isa Number] = values
+
+@getall obj isa Number
+"""
+macro getall(ex)
+    getallmacro(ex)
+end
+macro getall(ex, descend)
+    getallmacro(ex; descend)
+end
+
+function getallmacro(ex; descend=true)
+    # Wrap descend in an anonoymous function
+    descend = :(descend -> $descend)
+    if @capture(ex, (lens_ for var_ in obj_ if select_))
+        select = _select(select, var)
+        optic =_optics(lens)
+        :(Query($select, $descend, $optic)($(esc(obj))))
+    elseif @capture(ex, [lens_ for var_ in obj_ if select_])
+        select = _select(select, var)
+        optic =_optics(lens)
+        :([Query($select, $descend, $optic)($(esc(obj)))...])
+    elseif @capture(ex, (lens_ for var_ in obj_))
+        select = _ -> false
+        optic = _optics(lens)
+        :(Query($select, $descend, $optic)($(esc(obj))))
+    elseif @capture(ex, [lens_ for var_ in obj_])
+        select = _ -> false
+        optic = _optics(lens)
+        :([Query($select, $descend, $optic)($(esc(obj)))...])
+    else 
+        error("@getall must be passed a generator")
+    end
+end
+
+# Turn this into an anonoymous function so it
+# doesn't matter which argument val is in
+_select(select, val) = :($(esc(val)) -> $(esc(select)))
+function _optics(ex)
+    obj, optic = parse_obj_optic(ex)
+    :($optic ∘ Fields())
+end
+
+
+"""
+    @setall f(obj, arg...) = values
+    
+    @setall [x for x in obs if x isa Number] = values
+
+"""
+macro setall(ex)
+    setallmacro(ex)
+end
+
+function setallmacro(ex)
+    if @capture(ex, ((lens_ for var_ in obj_ if select_) = vals_))
+        select = _select(select, var)
+        optic =_optics(lens)
+        :(set($(esc(obj)), Query(; select=$select, optic=$optic), $(esc(vals))))
+    elseif @capture(ex, ((lens_ for var_ in obj_) = vals_))
+        optic = _optics(lens)
+        :(set($(esc(obj)), Query(; optic=$optic), $(esc(vals))))
+    else 
+        error("@getall must be passed a generator")
+    end
 end
 
 foldtree(op, init, x) = op(init, x)

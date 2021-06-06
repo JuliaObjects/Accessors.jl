@@ -1,7 +1,7 @@
 export @optic
 export set, modify
 export ∘, opcompose, var"⨟"
-export Elements, Recursive, If, Properties
+export Elements, Recursive, Query, If, Properties
 export setproperties
 export constructorof
 using ConstructionBase
@@ -125,6 +125,7 @@ function _set(obj, optic, val, ::SetBased)
    )
 end
 
+<<<<<<< HEAD
 if VERSION < v"1.7"
     struct Returns{V}
         value::V
@@ -132,6 +133,32 @@ if VERSION < v"1.7"
     (o::Returns)(x) = o.value
 else
     using Base: Returns
+=======
+
+struct Changed end
+struct Unchanged end
+
+struct MaybeConstruct end
+_constructor(::MaybeConstruct, ::Type{T}) where T = constructorof(T)
+
+struct List end
+_constructor(::List, ::Type) = tuple
+
+struct Splat end
+_constructor(::Splat, ::Type) = _splat_all
+
+_splat_all(args...) = _splat_all(args)  
+@generated function _splat_all(args::A) where A<:Tuple  
+    exp = Expr(:tuple)
+    for i in fieldnames(A)
+        push!(exp.args, Expr(:..., :(args[$i])))
+    end
+    exp
+end
+
+
+struct Constant{V}
+    value::V
 end
 
 @inline function _set(obj, optic, val, ::ModifyBased)
@@ -189,9 +216,7 @@ $EXPERIMENTAL
 struct Elements end
 OpticStyle(::Type{<:Elements}) = ModifyBased()
 
-function modify(f, obj, ::Elements)
-    map(f, obj)
-end
+modify(f, obj, ::Elements) = map(f, obj)
 
 """
     If(modify_condition)
@@ -222,8 +247,36 @@ function modify(f, obj, w::If)
     end
 end
 
+abstract type ObjectMap end
+
+OpticStyle(::Type{<:ObjectMap}) = ModifyBased()
+modify(f, o, optic::ObjectMap) = mapobject(f, o, optic, Construct)
+
 """
-    mapproperties(f, obj)
+    Properties()
+
+Access all properties of an objects.
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = (a=1, b=2, c=3)
+(a = 1, b = 2, c = 3)
+
+julia> set(obj, Properties(), "hi")
+(a = "hi", b = "hi", c = "hi")
+
+julia> modify(x -> 2x, obj, Properties())
+(a = 2, b = 4, c = 6)
+```
+Based on [`mapobject`](@ref).
+
+$EXPERIMENTAL
+"""
+struct Properties <: ObjectMap end
+
+"""
+    mapobject(f, obj)
 
 Construct a copy of `obj`, with each property replaced by
 the result of applying `f` to it.
@@ -233,7 +286,7 @@ julia> using Accessors
 
 julia> obj = (a=1, b=2);
 
-julia> Accessors.mapproperties(x -> x+1, obj)
+julia> Accessors.mapobject(x -> x+1, obj)
 (a = 2, b = 3)
 ```
 
@@ -257,30 +310,19 @@ function mapproperties(f, obj)
     return setproperties(obj, patch)
 end
 
-"""
-    Properties()
+# Don't construct when we don't absolutely have to.
+# `constructorof` may not be defined for an object.
+@generated function _maybeconstruct(obj::O, props::P, handler::H) where {O,P,H}
+    ctr = _constructor(H(), O)
+    if Changed in map(last ∘ fieldtypes, fieldtypes(P))
+        :($ctr(map(first, props)...) => Changed())
+    else
+        :(obj => Unchanged())
+    end
+end
 
-Access all properties of an objects.
-
-```jldoctest
-julia> using Accessors
-
-julia> obj = (a=1, b=2, c=3)
-(a = 1, b = 2, c = 3)
-
-julia> set(obj, Properties(), "hi")
-(a = "hi", b = "hi", c = "hi")
-
-julia> modify(x -> 2x, obj, Properties())
-(a = 2, b = 4, c = 6)
-```
-Based on [`mapproperties`](@ref).
-
-$EXPERIMENTAL
-"""
-struct Properties end
-OpticStyle(::Type{<:Properties}) = ModifyBased()
-modify(f, o, ::Properties) = mapproperties(f, o)
+skip(::Splat) = true
+skip(x) = false
 
 """
     Recursive(descent_condition, optic)
@@ -317,6 +359,80 @@ function _modify(f, obj, r::Recursive, ::ModifyBased)
         end
     end
 end
+
+abstract type AbstractQuery end
+
+"""
+    Query(select, descend, optic)
+
+Query an object recursively, choosing fields when `select` 
+returns `true`, and descending when `descend`.
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = (a=missing, b=1, c=(d=missing, e=(f=missing, g=2)))
+(a = missing, b = 1, c = (d = missing, e = (f = missing, g = 2)))
+
+julia> set(obj, Query(ismissing), (1.0, 2.0, 3.0))
+(a = 1.0, b = 1, c = (d = 2.0, e = (f = 3.jjjjjjtk,rg, g = 2)))
+
+julia> obj = (1,2,(3,(4,5),6))
+(1, 2, (3, (4, 5), 6))
+
+julia> modify(x -> 100x, obj, Recursive(x -> (x isa Tuple), Elements()))
+(100, 200, (300, (400, 500), 600))
+```
+$EXPERIMENTAL
+"""
+struct Query{Select,Descend,Optic<:Union{ComposedOptic,Properties}} <: AbstractQuery
+    select_condition::Select
+    descent_condition::Descend
+    optic::Optic
+end
+Query(select, descend = x -> true) = Query(select, descend, Properties())
+Query(; select=Any, descend=x -> true, optic=Properties()) = Query(select, descend, optic)
+
+OpticStyle(::Type{<:AbstractQuery}) = SetBased()
+
+@inline function (q::AbstractQuery)(obj)
+    let obj=obj, q=q
+        mapobject(obj, _inner(q.optic), Splat()) do o
+            if q.select_condition(o)
+                (_getouter(o, q.optic),)
+            elseif q.descent_condition(o)
+                q(o) # also a tuple
+            else
+                ()
+            end
+        end
+    end
+end
+
+set(obj, q::AbstractQuery, vals) = _set(obj, q, (vals, 1))[1][1]
+
+@inline function _set(obj, q::AbstractQuery, (vals, itr))
+    let obj=obj, q=q, vals=vals, itr=itr
+        mapobject(obj, _inner(q.optic), MaybeConstruct(), itr) do o, itr::Int
+            if q.select_condition(o)
+                _setouter(o, q.optic, vals[itr]) => Changed(), itr + 1
+            elseif q.descent_condition(o)
+                _set(o, q, (vals, itr)) # Will be marked as Changed()/Unchanged()
+            else
+                o => Unchanged(), itr 
+            end
+        end
+    end
+end
+
+modify(f, obj, q::Query) = set(obj, q, map(f, q(obj)))
+
+@inline _inner(optic::ComposedOptic) = optic.inner
+@inline _inner(optic) = optic
+@inline _getouter(o, optic::ComposedOptic) = optic.outer(o)
+@inline _getouter(o, optic) = o
+@inline _setouter(o, optic::ComposedOptic, v) = set(o, optic.outer, v)
+@inline _setouter(o, optic, v) = v
 
 ################################################################################
 ##### Lenses

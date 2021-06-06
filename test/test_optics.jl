@@ -43,6 +43,8 @@ end
     pt = Point(1f0, 2e0, 3)
     pt2 = @inferred modify(x->2x, pt, Properties())
     @test pt2 === Point(2f0, 4e0, 6)
+    @test (x=0, y=1, z=2) === 
+    @set pt |> Properties(pt) -= 1
 end
 
 @testset "Elements" begin
