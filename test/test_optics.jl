@@ -15,6 +15,20 @@ import ConstructionBase
     end
     res = @inferred mapproperties(x->2x, S(1, 2.0))
     @test res === S(2, 4.0)
+
+    # overloading
+    struct AB
+        a::Int
+        b::Int
+        _checksum::UInt
+        AB(a,b) = new(a,b,hash(a,hash(b)))
+    end
+
+    ConstructionBase.getproperties(o::AB) = (a=o.a, b=o.b)
+    ConstructionBase.setproperties(o::AB, patch::NamedTuple) = AB(patch.a, patch.b)
+    ab = AB(1,2)
+    ab2 = @inferred mapproperties(x -> 2x, ab)
+    @test ab2 === AB(2,4)
 end
 
 @testset "Properties" begin
@@ -29,20 +43,6 @@ end
     pt = Point(1f0, 2e0, 3)
     pt2 = @inferred modify(x->2x, pt, Properties())
     @test pt2 === Point(2f0, 4e0, 6)
-
-    # overloading
-    struct AB
-        a::Int
-        b::Int
-        _checksum::Int
-        AB(a,b) = new(a,b,a+b)
-    end
-
-    ConstructionBase.getproperties(o::AB) = (a=o.a, b=o.b)
-    ConstructionBase.setproperties(o::AB, patch::NamedTuple) = AB(patch.a, patch.b)
-    ab = AB(1,2)
-    ab2 = @inferred mapproperties(x -> 2x, ab)
-    @test ab2 === AB(2,4)
 end
 
 @testset "Elements" begin
