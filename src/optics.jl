@@ -125,13 +125,17 @@ function _set(obj, optic, val, ::SetBased)
    )
 end
 
-struct Constant{V}
-    value::V
+if VERSION < v"1.7"
+    struct Returns{V}
+        value::V
+    end
+    (o::Returns)(x) = o.value
+else
+    using Base: Returns
 end
-(o::Constant)(x) = o.value
 
 @inline function _set(obj, optic, val, ::ModifyBased)
-    modify(Constant(val), obj, optic)
+    modify(Returns(val), obj, optic)
 end
 
 @inline function _set(obj, optic::ComposedOptic, val, ::SetBased)
