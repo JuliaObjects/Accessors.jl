@@ -232,21 +232,25 @@ julia> obj = (a=1, b=2);
 julia> Accessors.mapproperties(x -> x+1, obj)
 (a = 2, b = 3)
 ```
+
+# Implementation
+
+This function should not be overloaded directly. Instead both of
+* `ConstructionBase.getproperties`
+* `ConstructionBase.setproperties`
+should be overloaded.
 $EXPERIMENTAL
 """
+function mapproperties end
+
+function mapproperties(f, nt::NamedTuple)
+    map(f,nt)
+end
+
 function mapproperties(f, obj)
-    # TODO move this helper elsewhere?
-    # TODO should we use a generated function based on fieldnames?
-    pnames = propertynames(obj)
-    if isempty(pnames)
-        return obj
-    else
-        ctor = constructorof(typeof(obj))
-        new_props = map(pnames) do p
-            f(getproperty(obj, p))
-        end
-        return ctor(new_props...)
-    end
+    nt = getproperties(obj)
+    patch = mapproperties(f, nt)
+    return setproperties(obj, patch)
 end
 
 """
