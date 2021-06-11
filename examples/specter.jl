@@ -8,7 +8,7 @@
 using Test
 using Accessors
 
-import Accessors: modify, OpticStyle
+import Accessors: modify_stateful, OpticStyle
 using Accessors: ModifyBased, SetBased, setindex
 
 # ### Increment all even numbers
@@ -23,7 +23,14 @@ mapvals(f, nt::NamedTuple) = map(f, nt)
 
 struct Vals end
 OpticStyle(::Type{Vals}) = ModifyBased()
-modify(f, obj, ::Vals) = mapvals(f, obj)
+function modify_stateful(f, obj_state, ::Vals)
+    obj, state = obj_state
+    new_obj = mapvals(obj) do val
+        new_val, state = f((val, state))
+        new_val
+    end
+    new_obj, state
+end
 
 # Now we can increment as follows:
 out = @set data |> Vals() |> Elements() |> Vals() |> If(iseven) += 1
@@ -35,7 +42,8 @@ struct Filter{F}
 end
 OpticStyle(::Type{<:Filter}) = ModifyBased()
 (o::Filter)(x) = filter(o.keep_condition, x)
-function modify(f, obj, optic::Filter)
+function modify_stateful(f, obj_state, optic::Filter)
+    obj, state = obj_state
     I = eltype(eachindex(obj))
     inds = I[]
     for i in eachindex(obj)
@@ -44,8 +52,9 @@ function modify(f, obj, optic::Filter)
             push!(inds, i)
         end
     end
-    vals = f(obj[inds])
-    setindex(obj, vals, inds)
+    vals,new_state = f((obj[inds],state))
+    new_obj = setindex(obj, vals, inds)
+    new_obj, new_state
 end
 
 

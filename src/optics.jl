@@ -126,8 +126,9 @@ function _set(obj, optic, val, ::SetBased)
 end
 
 if VERSION < v"1.7"
-    struct Returns{V}
+    struct Returns{V} <: Function
         value::V
+        Returns(value) = new{Core.Typeof(value)}(value)
     end
     (o::Returns)(x) = o.value
 else
@@ -144,28 +145,53 @@ end
     set(obj, optic.inner, inner_val)
 end
 
-@inline function modify(f, obj, optic)
-    _modify(f, obj, optic, OpticStyle(optic))
+struct PreseveState{F}
+    f::F
+    PreseveState(f) = new{Core.Typeof(f)}(f)
+end
+function (o::PreseveState)((obj, state)::Tuple{Any,Any})
+    o.f(obj), state
 end
 
-function _modify(f, obj, optic, ::ModifyBased)
+@inline function modify(f::F, obj, optic) where {F}
+    ret, _ = modify_stateful(PreseveState(f), (obj, nothing), optic)
+    ret
+end
+
+function modify_stateful(f, obj_state, optic)
+    _modify_stateful(f, obj_state, optic, OpticStyle(optic))
+end
+
+function _modify_stateful(f, obj_state, optic, ::SetBased)
+    old_obj, old_state = obj_state
+    old_val = optic(old_obj)
+    new_val, new_state = f((old_val, old_state))
+    new_obj = set(old_obj, optic, new_val)
+    (new_obj, new_state)
+end
+
+function _modify_stateful(f, obj, optic, ::ModifyBased)
     Optic = typeof(optic)
     error("""
-          This should be unreachable. You probably need to overload:
-          `Accessors.modify(f, obj, ::$Optic)`
+          This should be unreachable. You might want to overload:
+          `Accessors.modify_stateful(f, obj_state, ::$Optic)`
           """)
 end
 
-function _modify(f, obj, optic::ComposedOptic, ::ModifyBased)
+function _modify_stateful(f::F, obj_state, optic::ComposedOptic, ::ModifyBased) where {F}
     otr = optic.outer
     inr = optic.inner
-    modify(obj, inr) do o1
-        modify(f, o1, otr)
+    modify_stateful(obj_state, inr) do os1
+        modify_stateful(f, os1, otr)
     end
 end
 
-@inline function _modify(f, obj, optic, ::SetBased)
-    set(obj, optic, f(optic(obj)))
+@inline function _modify(f, obj_state, optic, ::SetBased)
+    obj_old, state_old = obj_state
+    val_old = optic(obj_old)
+    val_new, state_new = f((val_old, state_old))
+    obj_new = set(obj_old, optic, val_new)
+    (obj_new, state_new)
 end
 
 """
@@ -193,6 +219,19 @@ function modify(f, obj, ::Elements)
     map(f, obj)
 end
 
+function modify_stateful(f, obj_state, ::Elements)
+    # TODO can we do better?
+    # this is will not infer
+    # could do special versions if obj isa Tuple or AbstractArray
+    # Seems to be quite a rabbit hole...
+    obj, state = obj_state
+    obj_new = map(obj) do val_old
+        val_new, state = f((val_old, state))
+        val_new
+    end
+    return (obj_new, state)
+end
+
 """
     If(modify_condition)
 
@@ -214,11 +253,12 @@ struct If{C}
 end
 OpticStyle(::Type{<:If}) = ModifyBased()
 
-function modify(f, obj, w::If)
+function modify_stateful(f, obj_state, w::If)
+    obj, state = obj_state
     if w.modify_condition(obj)
-        f(obj)
+        f(obj_state)
     else
-        obj
+        obj_state
     end
 end
 
@@ -257,6 +297,51 @@ function mapproperties(f, obj)
     return setproperties(obj, patch)
 end
 
+function mapproperties_stateful(f::F, obj_state) where {F}
+    obj, state = obj_state
+    _mapproperties_stateful(f, obj, state)
+end
+
+function expr_mapproperties_stateful(f, nt::Type, state)
+    # Generates code like this:
+    # ret = quote
+    #     state0 = state
+    #     (val1, state1) = f((nt.a, state0))
+    #     (val2, state2) = f((nt.b, state1))
+    #     (val3, state3) = f((nt.c, state2))
+    #     new_nt = (a = val1, b = val2, c = val3)
+    #     (new_nt, state3)
+    # end
+    fields = Tuple(fieldnames(nt))
+    nfields = length(fields)
+    if (nfields == 0)
+        return :((nt, state))
+    end
+    vals = [Symbol("val$i") for i in 1:nfields]
+    states = [Symbol("state$i") for i in 1:nfields]
+    lhs = [:(($(vals[i]), $(states[i]))) for i in 1:nfields]
+    _getproperty(field) = Expr(Symbol("."), :nt, QuoteNode(field::Symbol))
+    rhs = [:(f(($(_getproperty(fields[i])), $(Symbol("state$(i-1)"))))) for i in 1:nfields]
+    expr_vals = [:($(lhs[i]) = $(rhs[i])) for i in 1:nfields]
+    expr_new_nt = Expr(:tuple, [:($(fields[i]) = $(vals[i])) for i in 1:nfields]...)
+    ret = Expr(:block,
+        :(state0 = state),
+        expr_vals...,
+        :(new_nt = $expr_new_nt),
+        :((new_nt, $(last(states))))
+    )
+end
+
+@generated function _mapproperties_stateful(f, nt::NamedTuple, state)
+    expr_mapproperties_stateful(f, nt, state)
+end
+function _mapproperties_stateful(f, obj, state)
+    nt = getproperties(obj)
+    patch, new_state = _mapproperties_stateful(f, nt, state)
+    new_obj = setproperties(obj, patch)
+    return (new_obj, new_state)
+end
+
 """
     Properties()
 
@@ -280,7 +365,7 @@ $EXPERIMENTAL
 """
 struct Properties end
 OpticStyle(::Type{<:Properties}) = ModifyBased()
-modify(f, o, ::Properties) = mapproperties(f, o)
+modify_stateful(f, obj_state, ::Properties) = mapproperties_stateful(f, obj_state)
 
 """
     Recursive(descent_condition, optic)
@@ -308,12 +393,13 @@ struct Recursive{Descent, Optic}
 end
 OpticStyle(::Type{Recursive{D,O}}) where {D,O} = ModifyBased() # Is this a good idea?
 
-function _modify(f, obj, r::Recursive, ::ModifyBased)
-    modify(obj, r.optic) do o
+function _modify_stateful(f, obj_state, r::Recursive, ::ModifyBased)
+    modify_stateful(obj_state, r.optic) do os
+        o,s = os
         if r.descent_condition(o)
-            modify(f, o, r)
+            modify_stateful(f, os, r)
         else
-            f(o)
+            f(os)
         end
     end
 end

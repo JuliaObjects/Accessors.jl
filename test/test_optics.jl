@@ -6,8 +6,8 @@ using Test
 import ConstructionBase
 
 @testset "mapproperties" begin
-    res = @inferred mapproperties(x->2x, (a=1, b=2))
-    @test res === (a=2, b=4)
+    @test mapproperties(x->2x, (a=1, b=2)) == (a=2, b=4)
+    @inferred mapproperties(x->2x, (a=1, b=2))
     @test NamedTuple() === @inferred mapproperties(cos, NamedTuple())
     struct S{A,B}
         a::A
@@ -43,6 +43,11 @@ end
     pt = Point(1f0, 2e0, 3)
     pt2 = @inferred modify(x->2x, pt, Properties())
     @test pt2 === Point(2f0, 4e0, 6)
+
+    res = @inferred modify(Float64, (a=1,b=2), Properties())
+    @test res === (a=1.0, b=2.0)
+    res = @inferred set((a=1,b=2), Properties(), Float64)
+    @test res === (a=Float64, b=Float64)
 end
 
 @testset "Elements" begin
@@ -61,8 +66,8 @@ end
 end
 
 @testset "Recursive" begin
-    obj = (a=1, b=(1,2), c=(A=1, B=(1,2,3), D=4))
-    rp = Recursive(x -> !(x isa Tuple), Properties())
+    obj = (a=1, b=1:2, c=(A=1, B=1:3, D=4))
+    rp = Recursive(x -> !(x isa AbstractRange), Properties())
     @test modify(collect, obj, rp) == (a = 1, b = [1, 2], c = (A = 1, B = [1, 2, 3], D = 4))
 
     arr = [1,2,[3,4], [5, 6:7,8, 9,]]

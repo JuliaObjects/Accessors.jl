@@ -188,6 +188,8 @@ end
         @inferred set(obj, lens, val)
         @inferred modify(identity, obj, lens)
     end
+
+    @inferred modify(Float64, 1, identity)
 end
 
 @testset "IndexLens" begin

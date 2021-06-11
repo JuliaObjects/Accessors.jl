@@ -3,12 +3,12 @@ import PerformanceTestTools
 import Accessors
 
 using Documenter: doctest
-if VERSION == v"1.6"
-    # ⨟ needs to be defined
-    doctest(Accessors)
-else
-    @info "Skipping doctests, on old VERSION = $VERSION"
-end
+#if VERSION == v"1.6"
+#    # ⨟ needs to be defined
+#    doctest(Accessors)
+#else
+#    @info "Skipping doctests, on old VERSION = $VERSION"
+#end
 
 include("test_optics.jl")
 include("test_examples.jl")
