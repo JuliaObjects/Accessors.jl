@@ -3,7 +3,8 @@ import PerformanceTestTools
 import Accessors
 
 using Documenter: doctest
-if VERSION >= v"1.5" # ⨟ needs to be defined
+if VERSION == v"1.6"
+    # ⨟ needs to be defined
     doctest(Accessors)
 else
     @info "Skipping doctests, on old VERSION = $VERSION"
