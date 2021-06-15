@@ -2,6 +2,10 @@ Base.@propagate_inbounds function setindex(args...)
     Base.setindex(args...)
 end
 
+Base.@propagate_inbounds function setindex(xs::NamedTuple{K}, v, i::Int) where K
+    Base.setindex(xs, v, K[i])
+end
+
 @inline setindex(::Base.RefValue, val) = Ref(val)
 
 Base.@propagate_inbounds function setindex(xs::AbstractArray, v, I...)

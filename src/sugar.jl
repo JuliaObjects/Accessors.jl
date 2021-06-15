@@ -132,7 +132,7 @@ end
 _select(select, val) = :($(esc(val)) -> $(esc(select)))
 function _optics(ex)
     obj, optic = parse_obj_optic(ex)
-    :($optic ∘ Fields())
+    :($optic ∘ Properties())
 end
 
 
@@ -150,10 +150,10 @@ function setallmacro(ex)
     if @capture(ex, ((lens_ for var_ in obj_ if select_) = vals_))
         select = _select(select, var)
         optic =_optics(lens)
-        :(set($(esc(obj)), Query(; select=$select, optic=$optic), $(esc(vals))))
+        :(setall($(esc(obj)), Query(; select=$select, optic=$optic), $(esc(vals))))
     elseif @capture(ex, ((lens_ for var_ in obj_) = vals_))
         optic = _optics(lens)
-        :(set($(esc(obj)), Query(; optic=$optic), $(esc(vals))))
+        :(setall($(esc(obj)), Query(; optic=$optic), $(esc(vals))))
     else 
         error("@getall must be passed a generator")
     end
