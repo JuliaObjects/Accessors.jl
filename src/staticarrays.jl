@@ -1,4 +1,4 @@
-import StaticArrays as SA
+import StaticArrays; const SA = StaticArrays
 setindex(a::SA.StaticArray, args...) = Base.setindex(a, args...)
 
 set(arr, ::typeof(SA.normalize), val) = SA.norm(arr) * val
