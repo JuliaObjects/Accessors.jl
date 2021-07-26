@@ -250,7 +250,10 @@ end
 abstract type ObjectMap end
 
 OpticStyle(::Type{<:ObjectMap}) = ModifyBased()
-modify(f, o, optic::ObjectMap) = mapobject(f, o, optic, Construct)
+function modify(f, o, optic::ObjectMap) 
+    obj, state = modify_stateful(f, (o, nothing), optic)
+    return obj
+end
 
 """
     Properties()
@@ -269,7 +272,7 @@ julia> set(obj, Properties(), "hi")
 julia> modify(x -> 2x, obj, Properties())
 (a = 2, b = 4, c = 6)
 ```
-Based on [`mapobject`](@ref).
+Based on [`modify_stateful`](@ref).
 
 $EXPERIMENTAL
 """
