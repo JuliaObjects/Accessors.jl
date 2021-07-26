@@ -37,5 +37,9 @@ using StaticNumbers
         @test l1(obj) === l2(obj) === 30
         @test set(obj, l1, 3000) === set(obj, l2, 3000) === (a=m_mod, b=4)
     end
+
+    v = @set StaticArrays.normalize(@SVector [10, 0,0]) = @SVector[0,1,0]
+    @test v ≈ @SVector[0,10,0]
+    @test @set(StaticArrays.norm([1,0]) = 20) ≈ [20, 0]
 end
 end
