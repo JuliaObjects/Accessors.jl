@@ -7,7 +7,7 @@ if VERSION == v"1.6"
     # ⨟ needs to be defined
     doctest(Accessors)
 else
-    @info "Skipping doctests, on old VERSION = $VERSION"
+    @info "Skipping doctests, on VERSION = $VERSION"
 end
 
 include("test_optics.jl")
