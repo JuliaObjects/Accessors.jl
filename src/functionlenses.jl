@@ -37,4 +37,4 @@ set(x,       ::typeof(real), y) = y + im*imag(x)
 set(x,       ::typeof(imag), y) = real(x) + im*y
 
 set(arr, ::typeof(normalize), val) = norm(arr) * val
-set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # shoud we check val is positive?
+set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # should we check val is positive?
