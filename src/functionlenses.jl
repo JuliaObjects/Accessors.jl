@@ -1,3 +1,4 @@
+using LinearAlgebra: norm, normalize
 set(obj, ::typeof(last), val) = @set obj[lastindex(obj)] = val
 set(obj, ::typeof(first), val) = @set obj[firstindex(obj)] = val
 set(obj, ::typeof(identity), val) = val
@@ -34,3 +35,6 @@ set(path, ::typeof(basename), new_name)        = @set splitdir(path)[2] = new_na
 set(x::Real, ::typeof(real), y) = y
 set(x,       ::typeof(real), y) = y + im*imag(x)
 set(x,       ::typeof(imag), y) = real(x) + im*y
+
+set(arr, ::typeof(normalize), val) = norm(arr) * val
+set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # shoud we check val is positive?
