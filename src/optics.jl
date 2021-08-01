@@ -42,7 +42,8 @@ julia> obj = (a=1, b=2); lens=@optic _.a; val = 100;
 
 julia> set(obj, lens, val)
 (a = 100, b = 2)
-``` See also [`modify`](@ref).
+```
+See also [`modify`](@ref).
 """
 function set end
 
@@ -134,32 +135,9 @@ else
     using Base: Returns
 end
 
-
 struct Changed end
 struct Unchanged end
 
-struct MaybeConstruct end
-_constructor(::MaybeConstruct, ::Type{T}) where T = constructorof(T)
-
-struct List end
-_constructor(::List, ::Type) = tuple
-
-struct Splat end
-_constructor(::Splat, ::Type) = _splat_all
-
-_splat_all(args...) = _splat_all(args)  
-@generated function _splat_all(args::A) where A<:Tuple  
-    exp = Expr(:tuple)
-    for i in fieldnames(A)
-        push!(exp.args, Expr(:..., :(args[$i])))
-    end
-    exp
-end
-
-
-struct Constant{V}
-    value::V
-end
 
 @inline function _set(obj, optic, val, ::ModifyBased)
     modify(Returns(val), obj, optic)
@@ -216,7 +194,9 @@ $EXPERIMENTAL
 struct Elements end
 OpticStyle(::Type{<:Elements}) = ModifyBased()
 
-modify(f, obj, ::Elements) = map(f, obj)
+function modify(f, obj, ::Elements)
+    map(f, obj)
+end
 
 """
     If(modify_condition)
@@ -247,12 +227,39 @@ function modify(f, obj, w::If)
     end
 end
 
-abstract type ObjectMap end
+"""
+    mapproperties(f, obj)
 
-OpticStyle(::Type{<:ObjectMap}) = ModifyBased()
-function modify(f, o, optic::ObjectMap) 
-    obj, state = modify_stateful(f, (o, nothing), optic)
-    return obj
+Construct a copy of `obj`, with each property replaced by
+the result of applying `f` to it.
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = (a=1, b=2);
+
+julia> Accessors.mapproperties(x -> x+1, obj)
+(a = 2, b = 3)
+```
+
+# Implementation
+
+This function should not be overloaded directly. Instead both of
+* `ConstructionBase.getproperties`
+* `ConstructionBase.setproperties`
+should be overloaded.
+$EXPERIMENTAL
+"""
+function mapproperties end
+
+function mapproperties(f, nt::NamedTuple)
+    map(f,nt)
+end
+
+function mapproperties(f, obj)
+    nt = getproperties(obj)
+    patch = mapproperties(f, nt)
+    return setproperties(obj, patch)
 end
 
 """
@@ -272,37 +279,13 @@ julia> set(obj, Properties(), "hi")
 julia> modify(x -> 2x, obj, Properties())
 (a = 2, b = 4, c = 6)
 ```
-Based on [`modify_stateful`](@ref).
+Based on [`mapproperties`](@ref).
 
 $EXPERIMENTAL
 """
-struct Properties <: ObjectMap end
-
-"""
-    maproperties()
-
-# Implementation
-
-This function should not be overloaded directly. Instead both of
-* `ConstructionBase.getproperties`
-* `ConstructionBase.setproperties`
-should be overloaded.
-$EXPERIMENTAL
-"""
-function mapproperties end
-
-function mapproperties(f, nt::Union{Tuple,NamedTuple})
-    map(f, nt)
-end
-
-function mapproperties(f, obj)
-    nt = getproperties(obj)
-    patch = mapproperties(f, nt)
-    return setproperties(obj, patch)
-end
-
-skip(::Splat) = true
-skip(x) = false
+struct Properties end
+OpticStyle(::Type{<:Properties}) = ModifyBased()
+modify(f, o, ::Properties) = mapproperties(f, o)
 
 """
     Recursive(descent_condition, optic)
@@ -341,10 +324,9 @@ function _modify(f, obj, r::Recursive, ::ModifyBased)
 end
 
 """
+    modify_stateful(f, (obj,state), optic) => Tuple{NewValue,NewState}
 
-    new_obj, new_state = modify_stateful(f, (obj,state), optic)
-
-Here `f` has signature `f(::Value, ::State) -> Tuple{NewValue, NewState}`.
+Here `f` has signature `f(::Value, ::State) => Tuple{NewValue,NewState}`.
 """
 function modify_stateful end
 
@@ -399,8 +381,8 @@ julia> using Accessors
 julia> obj = (a=missing, b=1, c=(d=missing, e=(f=missing, g=2)))
 (a = missing, b = 1, c = (d = missing, e = (f = missing, g = 2)))
 
-julia> set(obj, Query(ismissing), (1.0, 2.0, 3.0))
-(a = 1.0, b = 1, c = (d = 2.0, e = (f = 3.jjjjjjtk,rg, g = 2)))
+julia> 
+
 
 julia> obj = (1,2,(3,(4,5),6))
 (1, 2, (3, (4, 5), 6))
@@ -441,9 +423,8 @@ const GetStates = Union{GetAllState,ContextState}
 @inline push(x::GetAllState, val) = GetAllState(push(x.vals, val))
 @inline push(x::ContextState, val) = ContextState(push(x.vals, val), nothing, nothing)
 
-(q::Query)(obj) = getall(obj, q)
+(q::Query)(obj) = _getall(obj, q)
 
-getall(obj, q) = _getall(obj, q).vals
 function _getall(obj, q::Q) where Q<:Query
     initial_state = GetAllState(())
     _, final_state = let q=q
@@ -452,10 +433,10 @@ function _getall(obj, q::Q) where Q<:Query
             o, new_state
         end
     end
-    final_state
+    final_state.vals
 end
 
-function setall(obj, q::Q, vals) where Q<:Query
+function set(obj, q::Q, vals) where Q<:Query
     initial_state = SetAllState(Unchanged(), vals, 1)
     final_obj, _ = let obj=obj, q=q, initial_state=initial_state
         modify_stateful((obj, initial_state), q) do o, s
@@ -478,7 +459,7 @@ function context(f::F, obj, q::Q) where {F,Q<:Query}
     return final_state.vals
 end
 
-modify(f, obj, q::Query) = setall(obj, q, map(f, getall(obj, q)))
+modify(f, obj, q::Query) = set(obj, q, map(f, q(obj)))
 
 @inline function modify_stateful(f::F, (obj, state), q::Q) where {F,Q<:Query}
     let f=f, q=q
@@ -533,7 +514,7 @@ function (l::PropertyLens{field})(obj) where {field}
 end
 
 @inline function set(obj, l::PropertyLens{field}, val) where {field}
-    patch = (; field => val)
+    patch = (;field => val)
     setproperties(obj, patch)
 end
 

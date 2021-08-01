@@ -91,10 +91,21 @@ function modifymacro(optictransform, f, obj_optic)
 end
 
 """
-    @getall f(obj, arg...)
-    @setall [x for x in obs if x isa Number] = values
+    @getall [x for x in obs if f(x)]
 
-@getall obj isa Number
+Get each `x` in `obj` that matches the condition `f`.
+
+This can be combined with other optics, e.g. 
+
+```julia
+julia> using Accessors
+
+julia> obj = ("1", 2, 3, (a=4, b="5"))
+("1", 2, 3, (a = 4, b = "5"))
+
+julia> @getall (x for x in obj if x isa Number && iseven(x))
+(2, 4)
+```
 """
 macro getall(ex)
     getallmacro(ex)
@@ -135,12 +146,26 @@ function _optics(ex)
     :($optic ∘ Properties())
 end
 
-
 """
-    @setall f(obj, arg...) = values
-    
-    @setall [x for x in obs if x isa Number] = values
+    @setall [x for x in obs if f(x)] = values
 
+Set each `x` in `obj` matching the condition `f` 
+to values from the `Tuple` or vector `values`.
+
+# Example
+
+Used combination with lenses to set the `b` field of the
+second item of all `Tuple`:
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = ("x", (1, (a = missing, b = :y), (2, (a = missing, b = :b))))
+("x", (1, (a = missing, b = :y), (2, (a = missing, b = :b))))
+
+julia> @setall (x[2].b for x in obj if x isa Tuple) = (:x, :a)
+("x", (1, (a = missing, b = :x), (2, (a = missing, b = :b))))
+```
 """
 macro setall(ex)
     setallmacro(ex)
@@ -150,12 +175,12 @@ function setallmacro(ex)
     if @capture(ex, ((lens_ for var_ in obj_ if select_) = vals_))
         select = _select(select, var)
         optic =_optics(lens)
-        :(setall($(esc(obj)), Query(; select=$select, optic=$optic), $(esc(vals))))
+        :(set($(esc(obj)), Query(; select=$select, optic=$optic), $(esc(vals))))
     elseif @capture(ex, ((lens_ for var_ in obj_) = vals_))
         optic = _optics(lens)
-        :(setall($(esc(obj)), Query(; optic=$optic), $(esc(vals))))
+        :(set($(esc(obj)), Query(; optic=$optic), $(esc(vals))))
     else 
-        error("@getall must be passed a generator")
+        error("@setall must be passed a generator")
     end
 end
 
