@@ -61,5 +61,6 @@ obj2 = (1.0, :a, (b=2, c=2))
 @test (@getall (x for x in missings_obj if x isa Number)) == (1, 2)
 expected = (a=missing, b=5, c=(d=missing, e=(f=missing, g=6)))
 @test (@setall (x for x in missings_obj if x isa Number) = (5, 6)) === expected
-@getall (x[2].g for x in missings_obj if x isa NamedTuple)
-@setall (x[2].g for x in missings_obj if x isa NamedTuple) = (5, 6)
+@test (@getall (x[2].g for x in missings_obj if x isa NamedTuple)) == (2,)
+@test (@setall (x[2].g for x in missings_obj if x isa NamedTuple) = 5) ==
+    (a=missing, b=1, c=(d=missing, e=(f=missing, g=5)))
