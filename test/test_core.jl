@@ -235,6 +235,32 @@ end
     obj = (a=(1, (a=10, b=20), 3), b=4)
     @test l(obj) == 20
     @test set(obj, l, true) == (a=(1, (a=10, b=true), 3), b=4)
+    if VERSION ≥ v"1.5.0-DEV.666"
+        # parser is confused by x[begin] on older julia versions
+        l = eval(Meta.parse("@optic _[begin]"))
+        @test l isa Accessors.DynamicIndexLens
+        obj = (1,2,3)
+        @test l(obj) == 1
+        @test set(obj, l, true) == (true,2,3)
+
+        l = eval(Meta.parse("@optic _[2*begin]"))
+        @test l isa Accessors.DynamicIndexLens
+        obj = (1,2,3)
+        @test l(obj) == 2
+        @test set(obj, l, true) == (1,true,3)
+
+        l = eval(Meta.parse(
+        """
+        let
+            one = 1
+            plustwo(x) = x + 2
+            @optic _.a[plustwo(begin) - one].b
+        end
+        """))
+        obj = (a=(1, (a=10, b=20), 3), b=4)
+        @test l(obj) == 20
+        @test set(obj, l, true) == (a=(1, (a=10, b=true), 3), b=4)
+    end
 end
 
 @testset "StaticNumbers" begin
