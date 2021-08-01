@@ -88,10 +88,7 @@ See also [`opticmacro`](@ref), [`setmacro`](@ref).
 function modifymacro(optictransform, f, obj_optic)
     f = esc(f)
     obj, optic = parse_obj_optic(obj_optic)
-    :(let
-        optic = $(optictransform)($optic)
-        ($modify)($f, $obj, optic)
-    end)
+    :(($modify)($f, $obj, $(optictransform)($optic)))
 end
 
 foldtree(op, init, x) = op(init, x)
@@ -228,17 +225,11 @@ function setmacro(optictransform, ex::Expr; overwrite::Bool=false)
     dst = overwrite ? obj : gensym("_")
     val = esc(val)
     ret = if ex.head == :(=)
-        quote
-            optic = ($optictransform)($optic)
-            $dst = $set($obj, optic, $val)
-        end
+        :($dst = $set($obj, ($optictransform)($optic), $val))
     else
         op = get_update_op(ex.head)
         f = :($_UpdateOp($op,$val))
-        quote
-            optic = ($optictransform)($optic)
-            $dst = $modify($f, $obj, optic)
-        end
+        :($dst = $modify($f, $obj, ($optictransform)($optic)))
     end
     ret
 end

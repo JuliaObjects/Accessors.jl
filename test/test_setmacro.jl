@@ -48,4 +48,35 @@ using StaticNumbers
     @test m3 === @SMatrix[1 0; 0 0]
 end
 
+# inference
+
+macro setfield156(expr)
+    # Example of macro that caused inference issues,
+    # see https://github.com/jw3126/Setfield.jl/pull/156
+    quote
+        function f($(esc(:x)))
+            $(Accessors.setmacro(identity, expr, overwrite=true))
+            $(Accessors.setmacro(identity, expr, overwrite=true))
+            $(Accessors.setmacro(identity, expr, overwrite=true))
+            $(Accessors.setmacro(identity, expr, overwrite=true))
+            $(Accessors.setmacro(identity, expr, overwrite=true))
+            return $(esc(:x))
+        end
+    end
+end
+
+function test_all_inferrable(f, argtypes)
+    # hacky, maybe JETTest can help?
+    # * JETTest.@test_nodispatch does not detect the problem
+    typed = first(code_typed(f, argtypes))
+    code = typed.first
+    @test all(T -> !(T isa UnionAll || T === Any), code.slottypes)
+end
+
+@testset "setmacro multiple usage" begin
+    let f = @setfield156(x[end] = 1)
+        test_all_inferrable(f, (Vector{Float64}, ))
+    end
+end
+
 end#module
