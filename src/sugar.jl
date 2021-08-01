@@ -100,7 +100,7 @@ foldtree(op, init, ex::Expr) =
 
 need_dynamic_optic(ex) =
     foldtree(false, ex) do yes, x
-        yes || x === :end || x === :_
+        yes || x === :end || (x === :begin) || x === :_
     end
 
 replace_underscore(ex, to) = postwalk(x -> x === :_ ? to : x, ex)
@@ -113,6 +113,12 @@ function lower_index(collection::Symbol, index, dim)
             return :($(Base.lastindex)($collection))
         else
             return :($(Base.lastindex)($collection, $dim))
+        end
+    elseif (index === :begin)
+        if dim === nothing
+            return :($(Base.firstindex)($collection))
+        else
+            return :($(Base.firstindex)($collection, $dim))
         end
     end
     return index

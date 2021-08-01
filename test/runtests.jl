@@ -2,6 +2,15 @@ module TestAccessors
 import PerformanceTestTools
 import Accessors
 
+include("test_core.jl")
+include("test_optics.jl")
+include("test_examples.jl")
+include("test_staticarrays.jl")
+include("test_quicktypes.jl")
+include("test_setmacro.jl")
+include("test_setindex.jl")
+include("test_functionlenses.jl")
+
 using Documenter: doctest
 if VERSION == v"1.6"
     # ⨟ needs to be defined
@@ -9,15 +18,6 @@ if VERSION == v"1.6"
 else
     @info "Skipping doctests, on VERSION = $VERSION"
 end
-
-include("test_optics.jl")
-include("test_examples.jl")
-include("test_staticarrays.jl")
-include("test_quicktypes.jl")
-include("test_setmacro.jl")
-include("test_setindex.jl")
-include("test_core.jl")
-include("test_functionlenses.jl")
 PerformanceTestTools.@include("perf.jl")
 
 
