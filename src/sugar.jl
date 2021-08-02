@@ -111,7 +111,7 @@ macro getall(ex)
     getallmacro(ex)
 end
 macro getall(ex, descend)
-    getallmacro(ex; descend)
+    getallmacro(ex; descend=descend)
 end
 
 function getallmacro(ex; descend=true)
