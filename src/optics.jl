@@ -371,24 +371,22 @@ abstract type AbstractQuery end
 
 """
     Query(select, descend, optic)
+    Query(; select=Any, descend=x -> true, optic=Properties())
 
-Query an object recursively, choosing fields when `select` 
-returns `true`, and descending when `descend`.
+Query an object recursively, choosing fields where `select` 
+returns `true`, and descending when `descend` returns `true`.
 
 ```jldoctest
 julia> using Accessors
 
-julia> obj = (a=missing, b=1, c=(d=missing, e=(f=missing, g=2)))
-(a = missing, b = 1, c = (d = missing, e = (f = missing, g = 2)))
+julia> q = Query(; select=x -> x isa Int, descend=x -> x isa Tuple)
+Query{var"#5#7", var"#6#8", Properties}(var"#5#7"(), var"#6#8"(), Properties())
 
-julia> 
+julia> obj = (7, (a=17.0, b=2.0f0), ("3", 4, 5.0), ((x=19, a=6.0,)), [1])
+(7, (a = 17.0, b = 2.0f0), ("3", 4, 5.0), (x = 19, a = 6.0), [1])
 
-
-julia> obj = (1,2,(3,(4,5),6))
-(1, 2, (3, (4, 5), 6))
-
-julia> modify(x -> 100x, obj, Recursive(x -> (x isa Tuple), Elements()))
-(100, 200, (300, (400, 500), 600))
+julia> q(obj)
+(7, 4)
 ```
 $EXPERIMENTAL
 """
@@ -397,7 +395,7 @@ struct Query{Select,Descend,Optic<:Union{ComposedOptic,Properties}} <: AbstractQ
     descent_condition::Descend
     optic::Optic
 end
-Query(select, descend = x -> true) = Query(select, descend, Properties())
+Query(select, descend=x -> true) = Query(select, descend, Properties())
 Query(; select=Any, descend=x -> true, optic=Properties()) = Query(select, descend, optic)
 
 OpticStyle(::Type{<:AbstractQuery}) = SetBased()
