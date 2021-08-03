@@ -134,7 +134,7 @@ function getallmacro(ex; descend=true)
         optic = _optics(lens)
         :([Query($select, $descend, $optic)($(esc(obj)))...])
     else 
-        error("@getall must be passed a generator")
+        error("@getall must be passed a generator or array comprehension")
     end
 end
 
@@ -403,4 +403,3 @@ function show_composition_order(io::IO, optic::ComposedOptic)
     show_composition_order(io, optic.inner)
     print(io, ")")
 end
-
