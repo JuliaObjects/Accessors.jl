@@ -466,4 +466,51 @@ end
     @test expected === @modify f obj.field
 end
 
+@testset "equality & hashing" begin
+    # singletons (identity and property optic) are egal
+    for (l1, l2) ∈ [
+        @optic(_) => @optic(_),
+        @optic(_.a) => @optic(_.a)
+    ]
+        @test l1 === l2
+        @test l1 == l2
+        @test hash(l1) == hash(l2)
+    end
+
+    # composite and index optices are structurally equal
+    for (l1, l2) ∈ [
+        @optic(_[1]) => @optic(_[1])
+        @optic(_.a[2]) => @optic(_.a[2])
+        @optic(_.a.b[3]) => @optic(_.a.b[3])
+    ]
+        @test l1 == l2
+        @test hash(l1) == hash(l2)
+    end
+
+    # inequality
+    for (l1, l2) ∈ [
+        @optic(_[1]) => @optic(_[2])
+        @optic(_.a[1]) => @optic(_.a[2])
+        @optic(_.a[1]) => @optic(_.b[1])
+    ]
+        @test l1 != l2
+    end
+
+    # Hash property: equality implies equal hashes, or in other terms:
+    # optices either have equal hashes or are unequal
+    # Because collisions can occur theoretically (though unlikely), this is a property test,
+    # not a unit test.
+    random_optices = (@optic(_.a[rand(Int)]) for _ in 1:1000)
+    @test all((hash(l2) == hash(l1)) || (l1 != l2)
+              for (l1, l2) in zip(random_optices, random_optices))
+
+    # Lenses should hash differently from the underlying tuples, to avoid confusion.
+    # To account for potential collisions, we check that the property holds with high
+    # probability.
+    @test count(hash(@optic(_[i])) != hash((i,)) for i = 1:1000) > 900
+
+    # Same for tuples of tuples (√(1000) ≈ 32).
+    @test count(hash(@optic(_[i][j])) != hash(((i,), (j,))) for i = 1:32, j = 1:32) > 900
+end
+
 end

@@ -354,3 +354,14 @@ end
 Base.@propagate_inbounds function set(obj, lens::DynamicIndexLens, val)
     return setindex(obj, val, lens.f(obj)...)
 end
+
+function make_salt(s64::UInt64)::UInt
+    # used for faster hashes. See https://github.com/jw3126/Setfield.jl/pull/162
+    if UInt === UInt64
+        return s64
+    else
+        return UInt32(s64 >> 32) ^ UInt32(s64 & 0x00000000ffffffff)
+    end
+end
+const SALT_INDEXLENS = make_salt(0x8b4fd6f97c6aeed6)
+Base.hash(l::IndexLens, h::UInt) = hash(l.indices, SALT_INDEXLENS + h)
