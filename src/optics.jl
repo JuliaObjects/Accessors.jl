@@ -1,11 +1,12 @@
 export @optic
 export set, modify
 export ∘, opcompose, var"⨟"
-export Elements, Recursive, If, Properties
+export Elements, Recursive, Query, If, Properties
 export setproperties
 export constructorof
 using ConstructionBase
 using CompositionsBase
+using Static
 using Base: getproperty
 using Base
 
@@ -133,6 +134,10 @@ if VERSION < v"1.7"
 else
     using Base: Returns
 end
+
+struct Changed end
+struct Unchanged end
+
 
 @inline function _set(obj, optic, val, ::ModifyBased)
     modify(Returns(val), obj, optic)
@@ -317,6 +322,185 @@ function _modify(f, obj, r::Recursive, ::ModifyBased)
         end
     end
 end
+
+"""
+    modify_stateful(f, (obj,state), optic) => Tuple{NewValue,NewState}
+
+Here `f` has signature `f(::Value, ::State) => Tuple{NewValue,NewState}`.
+"""
+function modify_stateful end
+
+@generated function modify_stateful(f::F, (obj, state)::T, optic::Properties) where {T,F}
+    _modify_stateful_inner(T)
+end
+
+# Separated for testing object/state combinations without restarts
+function _modify_stateful_inner(::Type{<:Tuple{O,S}}) where {O,S}
+    modifications = []
+    vals = Expr(:tuple)
+    fns = fieldnames(O)
+    for (i, fn) in enumerate(fns)
+        v = Symbol("val$i")
+        st = if S <: ContextState 
+            if O <: Tuple 
+                :(ContextState(state.vals, obj, StaticInt{$(QuoteNode(fn))}()))
+            else
+                :(ContextState(state.vals, obj, StaticSymbol{$(QuoteNode(fn))}()))
+            end
+        else
+            :state
+        end
+        ms = :(($v, state) = f(getfield(props, $(QuoteNode(fn))), $st))
+        push!(modifications, ms)
+        push!(vals.args, v)
+    end
+    patch = O <: Tuple ? vals : :(NamedTuple{$fns}($vals))
+    start = :(props = getproperties(obj))
+    rest = MacroTools.@q begin
+        patch = $patch
+        new_obj = maybesetproperties(state, obj, patch)
+        return (new_obj, state)
+    end
+    Expr(:block, start, modifications..., rest) 
+end
+
+maybesetproperties(state, obj, patch) = setproperties(obj, patch)
+maybesetstate(state, obj, patch) = state
+
+abstract type AbstractQuery end
+
+"""
+    Query(select, descend, optic)
+    Query(; select=Any, descend=x -> true, optic=Properties())
+
+Query an object recursively, choosing fields where `select` 
+returns `true`, and descending when `descend` returns `true`.
+
+```jldoctest
+julia> using Accessors
+
+julia> q = Query(; select=x -> x isa Int, descend=x -> x isa Tuple)
+Query{var"#5#7", var"#6#8", Properties}(var"#5#7"(), var"#6#8"(), Properties())
+
+julia> obj = (7, (a=17.0, b=2.0f0), ("3", 4, 5.0), ((x=19, a=6.0,)), [1])
+(7, (a = 17.0, b = 2.0f0), ("3", 4, 5.0), (x = 19, a = 6.0), [1])
+
+julia> q(obj)
+(7, 4)
+```
+$EXPERIMENTAL
+"""
+struct Query{Select,Descend,Optic<:Union{ComposedOptic,Properties}} <: AbstractQuery
+    select_condition::Select
+    descent_condition::Descend
+    optic::Optic
+end
+Query(select, descend=x -> true) = Query(select, descend, Properties())
+Query(; select=Any, descend=x -> true, optic=Properties()) = Query(select, descend, optic)
+
+OpticStyle(::Type{<:AbstractQuery}) = SetBased()
+
+struct ContextState{V,O,FN}
+    vals::V
+    obj::O
+    fn::FN
+end
+struct GetAllState{V}
+    vals::V
+end
+struct SetAllState{C,V,I}
+    change::C
+    vals::V
+    itr::I
+end
+
+const GetStates = Union{GetAllState,ContextState}
+
+@inline pop(x) = first(x), Base.tail(x)
+@inline push(x, val) = (x..., val)
+@inline push(x::GetAllState, val) = GetAllState(push(x.vals, val))
+@inline push(x::ContextState, val) = ContextState(push(x.vals, val), nothing, nothing)
+
+(q::Query)(obj) = _getall(obj, q)
+
+function _getall(obj, q::Q) where Q<:Query
+    initial_state = GetAllState(())
+    _, final_state = let q=q
+        modify_stateful((obj, initial_state), q) do o, s
+            new_state = push(s, outer(q.optic, o, s))
+            o, new_state
+        end
+    end
+    final_state.vals
+end
+
+function set(obj, q::Q, vals) where Q<:Query
+    initial_state = SetAllState(Unchanged(), vals, 1)
+    final_obj, _ = let obj=obj, q=q, initial_state=initial_state
+        modify_stateful((obj, initial_state), q) do o, s
+            new_output = outer(q.optic, o, s)
+            new_state = SetAllState(Changed(), s.vals, s.itr + 1)
+            new_output, new_state
+        end
+    end
+    return final_obj
+end
+
+function context(f::F, obj, q::Q) where {F,Q<:Query}
+    initial_state = ContextState((), nothing, nothing)
+    _, final_state = let f=f
+        modify_stateful((obj, initial_state), q) do o, s
+            new_state = push(s, f(s.obj, known(s.fn)))
+            o, new_state
+        end
+    end
+    return final_state.vals
+end
+
+modify(f, obj, q::Query) = set(obj, q, map(f, q(obj)))
+
+@inline function modify_stateful(f::F, (obj, state), q::Q) where {F,Q<:Query}
+    let f=f, q=q
+        modify_stateful((obj, state), inner(q.optic)) do o, s
+            if (q::Q).select_condition(o)
+                (f::F)(o, s)
+            elseif (q::Q).descent_condition(o)
+                ds = descent_state(s)
+                o, ns = modify_stateful(f::F, (o, ds), q::Q)
+                o, merge_state(ds, ns)
+            else
+                o, s
+            end
+        end
+    end
+end
+
+maybesetproperties(state::GetStates, obj, patch) = obj
+maybesetproperties(state::SetAllState, obj, patch) =
+    maybesetproperties(state.change, state, obj, patch)
+maybesetproperties(::Changed, state::SetAllState, obj, patch) = setproperties(obj, patch)
+maybesetproperties(::Unchanged, state::SetAllState, obj, patch) = obj
+
+descent_state(state::SetAllState) = SetAllState(Unchanged(), state.vals, state.itr)
+descent_state(state) = state
+
+merge_state(s1::SetAllState, s2) = SetAllState(anychanged(s1, s2), s2.vals, s2.itr)
+merge_state(s1, s2) = s2
+
+anychanged(s1, s2) = anychanged(s1.change, s2.change)
+anychanged(::Unchanged, ::Unchanged) = Unchanged()
+anychanged(::Unchanged, ::Changed) = Changed()
+anychanged(::Changed, ::Unchanged) = Changed()
+anychanged(::Changed, ::Changed) = Changed()
+
+inner(optic) = optic
+inner(optic::ComposedOptic) = optic.inner
+
+outer(optic, o, state::GetStates) = o
+outer(optic::ComposedOptic, o, state::GetStates) = optic.outer(o)
+outer(optic::ComposedOptic, o, state::SetAllState) = set(o, optic.outer, state.vals[state.itr])
+outer(optic, o, state::SetAllState) = state.vals[state.itr]
+
 
 ################################################################################
 ##### Lenses

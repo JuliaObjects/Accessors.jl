@@ -1,4 +1,4 @@
-export @set, @optic, @reset, @modify
+export @set, @optic, @reset, @modify, @getall, @setall
 using MacroTools
 
 """
@@ -84,11 +84,104 @@ end
 This function can be used to create a customized variant of [`@modify`](@ref).
 See also [`opticmacro`](@ref), [`setmacro`](@ref).
 """
-
 function modifymacro(optictransform, f, obj_optic)
     f = esc(f)
     obj, optic = parse_obj_optic(obj_optic)
     :(($modify)($f, $obj, $(optictransform)($optic)))
+end
+
+"""
+    @getall [x for x in obs if f(x)]
+
+Get each `x` in `obj` that matches the condition `f`.
+
+This can be combined with other optics, e.g. 
+
+```julia
+julia> using Accessors
+
+julia> obj = ("1", 2, 3, (a=4, b="5"))
+("1", 2, 3, (a = 4, b = "5"))
+
+julia> @getall (x for x in obj if x isa Number && iseven(x))
+(2, 4)
+```
+"""
+macro getall(ex)
+    getallmacro(ex)
+end
+macro getall(ex, descend)
+    getallmacro(ex; descend=descend)
+end
+
+function getallmacro(ex; descend=true)
+    # Wrap descend in an anonoymous function
+    descend = :(descend -> $descend)
+    if @capture(ex, (lens_ for var_ in obj_ if select_))
+        select = _select(select, var)
+        optic =_optics(lens)
+        :(Query($select, $descend, $optic)($(esc(obj))))
+    elseif @capture(ex, [lens_ for var_ in obj_ if select_])
+        select = _select(select, var)
+        optic =_optics(lens)
+        :([Query($select, $descend, $optic)($(esc(obj)))...])
+    elseif @capture(ex, (lens_ for var_ in obj_))
+        select = _ -> false
+        optic = _optics(lens)
+        :(Query($select, $descend, $optic)($(esc(obj))))
+    elseif @capture(ex, [lens_ for var_ in obj_])
+        select = _ -> false
+        optic = _optics(lens)
+        :([Query($select, $descend, $optic)($(esc(obj)))...])
+    else 
+        error("@getall must be passed a generator or array comprehension")
+    end
+end
+
+# Turn this into an anonoymous function so it
+# doesn't matter which argument val is in
+_select(select, val) = :($(esc(val)) -> $(esc(select)))
+function _optics(ex)
+    obj, optic = parse_obj_optic(ex)
+    :($optic ∘ Properties())
+end
+
+"""
+    @setall [x for x in obs if f(x)] = values
+
+Set each `x` in `obj` matching the condition `f` 
+to values from the `Tuple` or vector `values`.
+
+# Example
+
+Used combination with lenses to set the `b` field of the
+second item of all `Tuple`:
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = ("x", (1, (a = missing, b = :y), (2, (a = missing, b = :b))))
+("x", (1, (a = missing, b = :y), (2, (a = missing, b = :b))))
+
+julia> @setall (x[2].b for x in obj if x isa Tuple) = (:x, :a)
+("x", (1, (a = missing, b = :x), (2, (a = missing, b = :b))))
+```
+"""
+macro setall(ex)
+    setallmacro(ex)
+end
+
+function setallmacro(ex)
+    if @capture(ex, ((lens_ for var_ in obj_ if select_) = vals_))
+        select = _select(select, var)
+        optic =_optics(lens)
+        :(set($(esc(obj)), Query(; select=$select, optic=$optic), $(esc(vals))))
+    elseif @capture(ex, ((lens_ for var_ in obj_) = vals_))
+        optic = _optics(lens)
+        :(set($(esc(obj)), Query(; optic=$optic), $(esc(vals))))
+    else 
+        error("@setall must be passed a generator")
+    end
 end
 
 foldtree(op, init, x) = op(init, x)
@@ -310,4 +403,3 @@ function show_composition_order(io::IO, optic::ComposedOptic)
     show_composition_order(io, optic.inner)
     print(io, ")")
 end
-
