@@ -4,6 +4,7 @@ import Accessors
 
 include("test_core.jl")
 include("test_optics.jl")
+include("test_delete.jl")
 include("test_examples.jl")
 include("test_staticarrays.jl")
 include("test_quicktypes.jl")

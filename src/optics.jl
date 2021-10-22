@@ -1,5 +1,5 @@
 export @optic
-export set, modify
+export set, modify, delete
 export ∘, opcompose, var"⨟"
 export Elements, Recursive, If, Properties
 export setproperties
@@ -45,6 +45,22 @@ julia> set(obj, lens, val)
 See also [`modify`](@ref).
 """
 function set end
+
+"""
+    delete(obj, optic)
+
+Delete a part according to `optic` of `obj`.
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = (a=1, b=2); lens=@optic _.a;
+
+julia> delete(obj, lens)
+(b = 2,)
+```
+"""
+function delete end
 
 """
     optic₁ ⨟ optic₂
@@ -166,6 +182,12 @@ end
 
 @inline function _modify(f, obj, optic, ::SetBased)
     set(obj, optic, f(optic(obj)))
+end
+
+function delete(obj, optic::ComposedOptic)
+	inner_obj = optic.inner(obj)
+	inner_val = delete(inner_obj, optic.outer)
+	set(obj, optic.inner, inner_val)
 end
 
 """
@@ -332,6 +354,10 @@ end
     setproperties(obj, patch)
 end
 
+@inline function delete(obj::NamedTuple, l::PropertyLens{field}) where {field}
+	Base.structdiff(obj, NamedTuple{(field,)})
+end
+
 struct IndexLens{I <: Tuple}
     indices::I
 end
@@ -341,6 +367,16 @@ Base.@propagate_inbounds function (lens::IndexLens)(obj)
 end
 Base.@propagate_inbounds function set(obj, lens::IndexLens, val)
     setindex(obj, val, lens.indices...)
+end
+
+@inline function delete(obj::Tuple, l::IndexLens)
+	i = only(l.indices)
+	(obj[begin:i-1]..., obj[i+1:end]...)
+end
+
+@inline function delete(obj::Vector, l::IndexLens)
+	i = only(l.indices)
+	[obj[begin:i-1]..., obj[i+1:end]...]
 end
 
 struct DynamicIndexLens{F}
