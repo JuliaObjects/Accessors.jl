@@ -379,6 +379,12 @@ end
 	vcat(obj[begin:i-1], obj[i+1:end])
 end
 
+@inline function delete(obj::AbstractDict, l::IndexLens)
+	i = only(l.indices)
+    res = copy(obj)
+    delete!(res, i)
+end
+
 struct DynamicIndexLens{F}
     f::F
 end
