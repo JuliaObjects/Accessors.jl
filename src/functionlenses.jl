@@ -41,9 +41,6 @@ delete(path, ::typeof(dirname)) = basename(path)
 set(x::Real, ::typeof(real), y) = y
 set(x,       ::typeof(real), y) = y + im*imag(x)
 set(x,       ::typeof(imag), y) = real(x) + im*y
-delete(x::Real, ::typeof(real)) = zero(x)
-delete(x,       ::typeof(real)) = im*imag(x)
-delete(x,       ::typeof(imag)) = real(x)
 
 set(arr, ::typeof(normalize), val) = norm(arr) * val
 set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # should we check val is positive?
