@@ -376,7 +376,7 @@ end
 
 @inline function delete(obj::Vector, l::IndexLens)
 	i = only(l.indices)
-	[obj[begin:i-1]..., obj[i+1:end]...]
+	vcat(obj[begin:i-1], obj[i+1:end])
 end
 
 struct DynamicIndexLens{F}
