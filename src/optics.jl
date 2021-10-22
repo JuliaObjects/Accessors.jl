@@ -397,6 +397,10 @@ Base.@propagate_inbounds function set(obj, lens::DynamicIndexLens, val)
     return setindex(obj, val, lens.f(obj)...)
 end
 
+@inline function delete(obj, lens::DynamicIndexLens)
+	delete(obj, IndexLens(lens.f(obj)))
+end
+
 function make_salt(s64::UInt64)::UInt
     # used for faster hashes. See https://github.com/jw3126/Setfield.jl/pull/162
     if UInt === UInt64
