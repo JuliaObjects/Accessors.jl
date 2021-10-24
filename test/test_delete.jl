@@ -9,6 +9,7 @@ using Accessors
     @test delete( (1,2,3), @optic(last(_)) ) == (1, 2)
     let A = [1,2,3]
         @test delete(A, @optic(_[2])) == [1, 3]
+        VERSION >= v"1.4" && @test_throws Exception delete(A, @optic(_[2, 2]))
         @test_throws BoundsError delete(A, @optic(_[10]))
         @test delete(A, @optic(_[end])) == [1, 2]
         @test A == [1, 2, 3]  # not changed
