@@ -1,4 +1,4 @@
-export @set, @optic, @reset, @modify
+export @set, @optic, @reset, @modify, @delete
 using MacroTools
 
 """
@@ -76,6 +76,26 @@ Supports the same syntax as [`@optic`](@ref). See also [`@set`](@ref).
 """
 macro modify(f, obj_optic)
     modifymacro(identity, f, obj_optic)
+end
+
+"""
+
+    @delete obj_optic
+
+Define an optic and call [`delete`](@ref) on it.
+```jldoctest
+julia> using Accessors
+
+julia> xs = (1,2,3);
+
+julia> ys = @delete xs[2]
+(1, 3)
+```
+Supports the same syntax as [`@optic`](@ref). See also [`@set`](@ref).
+"""
+macro delete(ex)
+    obj, optic = parse_obj_optic(ex)
+    Expr(:call, delete, obj, optic)
 end
 
 """
