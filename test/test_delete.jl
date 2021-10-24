@@ -1,12 +1,14 @@
 module TestDelete
 using Test
 using Accessors
+using StaticArrays
 
 @testset "test delete" begin
     @test delete( (a=1, b=2, c=3), @optic(_.a) ) == (b=2, c=3)
     @test delete( (a=1, b=2, c=3), @optic(_.xxxx) ) == (a=1, b=2, c=3)
     @test delete( (a=1, b=(c=2, d=3)), @optic(_.b.c) ) == (a=1, b=(d=3,))
     @test delete( (1,2,3), @optic(last(_)) ) == (1, 2)
+    @test delete( SVector(1,2,3), @optic(last(_)) ) === SVector(1, 2)
     let A = [1,2,3]
         @test delete(A, @optic(_[2])) == [1, 3]
         VERSION >= v"1.4" && @test_throws Exception delete(A, @optic(_[2, 2]))
