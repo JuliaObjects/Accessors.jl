@@ -1,5 +1,5 @@
 export @optic
-export set, modify, delete
+export set, modify, delete, insert
 export ∘, opcompose, var"⨟"
 export Elements, Recursive, If, Properties
 export setproperties
@@ -61,6 +61,23 @@ julia> delete(obj, lens)
 ```
 """
 function delete end
+
+"""
+    insert(obj, optic, val)
+
+Insert a part according to `optic` into `obj` with the value `val`.
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = (a=1, b=2); lens=@optic _.c; val = 100;
+
+julia> insert(obj, lens, val)
+(a = 1, b = 2, c = 100)
+```
+See also [`set`](@ref).
+"""
+function insert end
 
 """
     optic₁ ⨟ optic₂
@@ -187,6 +204,12 @@ function delete(obj, optic::ComposedOptic)
     inner_obj = optic.inner(obj)
     inner_val = delete(inner_obj, optic.outer)
     set(obj, optic.inner, inner_val)
+end
+
+function insert(obj, optic::ComposedOptic, val)
+	inner_obj = optic.inner(obj)
+	inner_val = insert(inner_obj, optic.outer, val)
+	set(obj, optic.inner, inner_val)
 end
 
 """
@@ -357,6 +380,10 @@ end
     Base.structdiff(obj, NamedTuple{(field,)})
 end
 
+@inline function insert(obj::NamedTuple, l::PropertyLens{field}, val) where {field}
+	(; obj..., (;field => val)...)
+end
+
 struct IndexLens{I<:Tuple}
     indices::I
 end
@@ -382,6 +409,24 @@ end
     i = only(l.indices)
     res = copy(obj)
     delete!(res, i)
+end
+
+function insert(obj::Tuple, l::IndexLens, val)
+	i = only(l.indices)
+	(obj[1:i-1]..., val, obj[i:end]...)
+end
+
+function insert(obj::Vector, l::IndexLens, val)
+	i = only(l.indices)
+    res = copy(obj)
+    insert!(res, i, val)
+end
+
+function insert(obj::AbstractDict, l::IndexLens, val)
+    i = only(l.indices)
+    res = copy(obj)
+    res[i] = val
+    res
 end
 
 struct DynamicIndexLens{F}
