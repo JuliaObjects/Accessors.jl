@@ -6,7 +6,7 @@ using StaticArrays
 @testset "test delete" begin
     @testset "function" begin
         @test delete( (a=1, b=2, c=3), @optic(_.a) ) == (b=2, c=3)
-        @test_throws Exception delete( (a=1, b=2, c=3), @optic(_.xxxx) ) == (a=1, b=2, c=3)
+        @test delete( (a=1, b=2, c=3), @optic(_.xxxx) ) === (a=1, b=2, c=3)
         @test delete( (a=1, b=(c=2, d=3)), @optic(_.b.c) ) == (a=1, b=(d=3,))
         @test delete( (1,2,3), @optic(last(_)) ) == (1, 2)
         @test delete( SVector(1,2,3), @optic(last(_)) ) === SVector(1, 2)

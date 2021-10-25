@@ -354,7 +354,6 @@ end
 end
 
 @inline function delete(obj::NamedTuple, l::PropertyLens{field}) where {field}
-    l(obj) # test that field is actually present
     Base.structdiff(obj, NamedTuple{(field,)})
 end
 
