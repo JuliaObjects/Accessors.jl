@@ -104,9 +104,9 @@ if !BASE_COMPOSED_FUNCTION_HAS_SHOW
     end
 end
 
-const ComposedOptic{Outer, Inner} = ComposedFunction{Outer, Inner}
-outertype(::Type{ComposedOptic{Outer, Inner}}) where {Outer, Inner} = Outer
-innertype(::Type{ComposedOptic{Outer, Inner}}) where {Outer, Inner} = Inner
+const ComposedOptic{Outer,Inner}                                        = ComposedFunction{Outer,Inner}
+outertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Outer
+innertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Inner
 
 # TODO better name
 # also better way to organize traits will
@@ -137,8 +137,7 @@ function _set(obj, optic, val, ::SetBased)
     error("""
     This should be unreachable. You probably need to overload
     `Accessors.set(obj, ::$Optic, val)
-    """
-   )
+    """)
 end
 
 if VERSION < v"1.7"
@@ -185,9 +184,9 @@ end
 end
 
 function delete(obj, optic::ComposedOptic)
-	inner_obj = optic.inner(obj)
-	inner_val = delete(inner_obj, optic.outer)
-	set(obj, optic.inner, inner_val)
+    inner_obj = optic.inner(obj)
+    inner_val = delete(inner_obj, optic.outer)
+    set(obj, optic.inner, inner_val)
 end
 
 """
@@ -270,7 +269,7 @@ $EXPERIMENTAL
 function mapproperties end
 
 function mapproperties(f, nt::NamedTuple)
-    map(f,nt)
+    map(f, nt)
 end
 
 function mapproperties(f, obj)
@@ -324,7 +323,7 @@ julia> modify(x -> 100x, obj, Recursive(x -> (x isa Tuple), Elements()))
 (100, 200, (300, (400, 500), 600))
 ```
 """
-struct Recursive{Descent, Optic}
+struct Recursive{Descent,Optic}
     descent_condition::Descent
     optic::Optic
 end
@@ -350,15 +349,16 @@ function (l::PropertyLens{field})(obj) where {field}
 end
 
 @inline function set(obj, l::PropertyLens{field}, val) where {field}
-    patch = (;field => val)
+    patch = (; field => val)
     setproperties(obj, patch)
 end
 
 @inline function delete(obj::NamedTuple, l::PropertyLens{field}) where {field}
-	Base.structdiff(obj, NamedTuple{(field,)})
+    l(obj) # test that field is actually present
+    Base.structdiff(obj, NamedTuple{(field,)})
 end
 
-struct IndexLens{I <: Tuple}
+struct IndexLens{I<:Tuple}
     indices::I
 end
 
@@ -370,17 +370,17 @@ Base.@propagate_inbounds function set(obj, lens::IndexLens, val)
 end
 
 @inline function delete(obj::Tuple, l::IndexLens)
-	i = only(l.indices)
-	(obj[1:i-1]..., obj[i+1:end]...)
+    i = only(l.indices)
+    (obj[1:(i - 1)]..., obj[(i + 1):end]...)
 end
 
 @inline function delete(obj::Vector, l::IndexLens)
-	i = only(l.indices)
-	vcat(obj[1:i-1], obj[i+1:end])
+    i = only(l.indices)
+    vcat(obj[1:(i - 1)], obj[(i + 1):end])
 end
 
 @inline function delete(obj::AbstractDict, l::IndexLens)
-	i = only(l.indices)
+    i = only(l.indices)
     res = copy(obj)
     delete!(res, i)
 end
@@ -398,7 +398,7 @@ Base.@propagate_inbounds function set(obj, lens::DynamicIndexLens, val)
 end
 
 @inline function delete(obj, lens::DynamicIndexLens)
-	delete(obj, IndexLens(lens.f(obj)))
+    delete(obj, IndexLens(lens.f(obj)))
 end
 
 function make_salt(s64::UInt64)::UInt
@@ -406,7 +406,7 @@ function make_salt(s64::UInt64)::UInt
     if UInt === UInt64
         return s64
     else
-        return UInt32(s64 >> 32) ^ UInt32(s64 & 0x00000000ffffffff)
+        return UInt32(s64 >> 32)^UInt32(s64 & 0x00000000ffffffff)
     end
 end
 const SALT_INDEXLENS = make_salt(0x8b4fd6f97c6aeed6)
