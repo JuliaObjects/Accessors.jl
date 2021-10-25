@@ -13,7 +13,7 @@ include("test_setindex.jl")
 include("test_functionlenses.jl")
 
 using Documenter: doctest
-if VERSION == v"1.6"
+if Base.thisminor(VERSION) == v"1.6"
     # ⨟ needs to be defined
     doctest(Accessors)
 else
