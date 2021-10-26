@@ -12,7 +12,10 @@ include("testing.jl")
 
 if !isdefined(Base, :only)
     # Julia pre-1.4
-    const only = first
+    function only(x)
+        length(x) == 1 || throw(ArgumentError("Collection contains $(length(x)) elements, must contain exactly 1 element"))
+        first(x)
+    end
 end
 
 function __init__()

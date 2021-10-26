@@ -10,7 +10,7 @@ using Accessors: insert
         let A = [1, 2]
             @test insert(A, @optic(_[2]), 3) == [1, 3, 2]
             @test_throws BoundsError insert(A, @optic(_[4]), 3)
-            VERSION >= v"1.4" && @test_throws Exception insert(A, @optic(_[1, 3]), 3)
+            @test_throws Exception insert(A, @optic(_[1, 3]), 3)
             @test insert(A, first, 3) == [3, 1, 2]
             @test A == [1, 2]  # not changed
         end
