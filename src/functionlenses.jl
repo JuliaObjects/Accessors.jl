@@ -4,6 +4,8 @@ set(obj, ::typeof(last), val) = @set obj[lastindex(obj)] = val
 set(obj, ::typeof(first), val) = @set obj[firstindex(obj)] = val
 delete(obj, ::typeof(last)) = delete(obj, IndexLens((lastindex(obj),)))
 delete(obj, ::typeof(first)) = delete(obj, IndexLens((firstindex(obj),)))
+insert(obj, ::typeof(last), val) = insert(obj, IndexLens((lastindex(obj) + 1,)), val)
+insert(obj, ::typeof(first), val) = insert(obj, IndexLens((firstindex(obj),)), val)
 
 set(obj, ::typeof(identity), val) = val
 set(obj, ::typeof(inv), new_inv) = inv(new_inv)

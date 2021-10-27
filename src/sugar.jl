@@ -1,4 +1,4 @@
-export @set, @optic, @reset, @modify, @delete
+export @set, @optic, @reset, @modify, @delete, @insert
 using MacroTools
 
 """
@@ -96,6 +96,30 @@ Supports the same syntax as [`@optic`](@ref). See also [`@set`](@ref).
 macro delete(ex)
     obj, optic = parse_obj_optic(ex)
     Expr(:call, delete, obj, optic)
+end
+
+"""
+    @insert assignment
+
+Return a modified copy of deeply nested objects.
+
+# Example
+```jldoctest
+julia> using Accessors
+
+julia> t = (a=1, b=2);
+
+julia> @insert t.c = 5
+(a = 1, b = 2, c = 5)
+
+julia> t
+(a = 1, b = 2)
+```
+
+Supports the same syntax as [`@optic`](@ref). See also [`@set`](@ref).
+"""
+macro insert(ex)
+    insertmacro(identity, ex, overwrite=false)
 end
 
 """
@@ -252,6 +276,34 @@ function setmacro(optictransform, ex::Expr; overwrite::Bool=false)
         :($dst = $modify($f, $obj, ($optictransform)($optic)))
     end
     ret
+end
+
+"""
+    insertmacro(optictransform, ex::Expr; overwrite::Bool=false)
+
+This function can be used to create a customized variant of [`@insert`](@ref).
+It works by applying `optictransform` to the optic that is used in the customized `@insert` macro at runtime.
+
+# Example
+```julia
+function mytransform(optic::Lens)::Lens
+    ...
+end
+macro myinsert(ex)
+    insertmacro(mytransform, ex)
+end
+```
+See also [`opticmacro`](@ref),  [`setmacro`](@ref).
+"""
+function insertmacro(optictransform, ex::Expr; overwrite::Bool=false)
+    @assert ex.head isa Symbol
+    @assert length(ex.args) == 2
+    @assert ex.head == :(=)
+    ref, val = ex.args
+    obj, optic = parse_obj_optic(ref)
+    dst = overwrite ? obj : gensym("_")
+    val = esc(val)
+    :($dst = $insert($obj, ($optictransform)($optic), $val))
 end
 
 """

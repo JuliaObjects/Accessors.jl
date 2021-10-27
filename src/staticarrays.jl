@@ -5,3 +5,8 @@ Accessors.setindex(a::StaticArrays.StaticArray, args...) = Base.setindex(a, args
 	i = only(l.indices)
     StaticArrays.deleteat(obj, i)
 end
+
+@inline function insert(obj::StaticArrays.SVector, l::IndexLens, val)
+	i = only(l.indices)
+    StaticArrays.insert(obj, i, val)
+end
