@@ -126,6 +126,9 @@ end
 
     t = (1, 2)
     @test (@set t |> first = 10) === (10, 2)
+
+    @test @set(only((1,)) = 2 ) === (2,)
+    @test_throws ArgumentError @set(only((1,2)) = 2 )
 end
 
 
