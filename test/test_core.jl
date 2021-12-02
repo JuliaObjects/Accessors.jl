@@ -5,6 +5,9 @@ using Accessors: test_getset_laws, test_modify_law
 using Accessors: compose, get_update_op
 using ConstructionBase: ConstructionBase
 using StaticNumbers: StaticNumbers, static
+if !isdefined(Base, :only)
+    using Accessors: only
+end
 
 struct T
     a
