@@ -23,3 +23,7 @@ Base.@propagate_inbounds function setindex(d0::AbstractDict, v, k)
     return d
 end
 
+@inline setindex(x::NamedTuple{names}, v, i::Int) where {names} = NamedTuple{names}(setindex(values(x), v, i))
+
+# copied from Base: this method doesn't exist in Julia 1.3
+@inline setindex(nt::NamedTuple, v, idx::Symbol) = merge(nt, (; idx => v))

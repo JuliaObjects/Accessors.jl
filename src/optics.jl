@@ -429,6 +429,10 @@ function insert(obj::AbstractDict, l::IndexLens, val)
     res
 end
 
+@inline delete(obj::NamedTuple, l::IndexLens{Tuple{Symbol}}) = delete(obj, PropertyLens{only(l.indices)}())
+@inline delete(obj::NamedTuple, l::IndexLens{Tuple{Int}}) = delete(obj, PropertyLens{keys(obj)[only(l.indices)]}())
+@inline insert(obj::NamedTuple, l::IndexLens{Tuple{Symbol}}, val) = insert(obj, PropertyLens{only(l.indices)}(), val)
+
 struct DynamicIndexLens{F}
     f::F
 end
