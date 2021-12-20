@@ -39,6 +39,10 @@ end
     @test d == Dict(:a => 1, :b => 2)
     @test Accessors.setindex(d, 30, "c") ==ₜ Dict(:a=>1, :b=>2, "c"=>30)
     @test Accessors.setindex(d, 10.0, :a) ==ₜ Dict(:a=>10.0, :b=>2.0)
+
+    nt = (a=1, b='2')
+    @test @set(nt[:a] = "abc") == (a="abc", b='2')
+    @test @set(nt[1] = "abc") == (a="abc", b='2')
     
     ref = Ref((; a = 1, b = 2, c = (; aa = 3)))
     @test @set(ref[].a = 90)[] == (; a = 90, b = 2, c = (; aa = 3))

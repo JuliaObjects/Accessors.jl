@@ -29,6 +29,8 @@ end
 
     obj2 = (a=((b=1,), 2), c=3)
     @test (@set first(obj2.a).b = '1') === (a=((b='1',), 2), c=3)
+    @test (@set first(obj2) = '1') === (a='1', c=3)
+    @test @inferred(set(obj2, first, '1')) === (a='1', c=3)
 end
 
 @testset "last" begin
