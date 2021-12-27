@@ -214,6 +214,13 @@ end
     l = @optic _[1:3]
     @test l isa Accessors.IndexLens
     @test l([4,5,6,7]) == [4,5,6]
+
+    nt = (a=1, b=2, c=3)
+    l = @optic _[(:a, :c)]
+    @test l isa Accessors.IndexLens
+    VERSION >= v"1.7" && @test l(nt) === (a=1, c=3)
+    @test set(nt, l, ('1', '2')) === (a='1', b=2, c='2')
+    @test set(nt, l, (c='2', a='1')) === (a='1', b=2, c='2')
 end
 
 @testset "DynamicIndexLens" begin

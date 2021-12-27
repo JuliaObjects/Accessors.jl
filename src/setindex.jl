@@ -27,3 +27,5 @@ end
 
 # copied from Base: this method doesn't exist in Julia 1.3
 @inline setindex(nt::NamedTuple, v, idx::Symbol) = merge(nt, (; idx => v))
+
+@inline setindex(nt::NamedTuple, v, idx::Tuple{Vararg{Symbol}}) = merge(nt, NamedTuple{idx}(v))
