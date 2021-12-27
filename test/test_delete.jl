@@ -31,9 +31,12 @@ using StaticArrays
 
     @testset "macro" begin
         x = (a=1, b=2, c=3)
-        @test @delete(x.c) == (a=1, b=2)
+        @test @delete(x.c) === (a=1, b=2)
+        @test @delete(x[(:a, :c)]) === (b=2,)
+        @test @delete(x[(2, 3)]) === (a=1,)
         x = (a=1, b=(c=2, d=3))
-        @test @delete(x.b.c) == (a=1, b=(d=3,))
+        @test @delete(x.b.c) === (a=1, b=(d=3,))
+        @test @delete(x.b[(:c,)]) === (a=1, b=(d=3,))
         x = [1, 2, 3]
         @test @delete(x[2]) == [1, 3]
         @test_throws BoundsError @delete(x[10])

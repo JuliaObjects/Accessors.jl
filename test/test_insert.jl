@@ -28,23 +28,27 @@ using Accessors: insert
             @inferred insert((a=1, b=(2, 3)), @optic(_.b[2]), "xxx")
             true
         end
+    end
+
+    @testset "macro" begin
+        x = (b=2, c=3)
+        @test @insert(x.a = 1) === (b=2, c=3, a=1)
+        @test @insert(x[(:a, :x)] = (1, :xyz)) === (b=2, c=3, a=1, x=:xyz)
+        @test @insert(x[(:a, :x)] = (x=:xyz, a=1)) === (b=2, c=3, a=1, x=:xyz)
+        x = [1, 2]
+        @test @insert(x[3] = 3) == [1, 2, 3]
+        x = (a=(b=(1, 2),), c=1)
+        @test @insert(x.a.b[1] = 0) == (a=(b=(0, 1, 2),), c=1)
 
         # inferred & constant-propagated:
         function doit(nt)
             nt = @delete nt[1]
             nt = @insert nt[:a] =1
+            nt = @delete nt[(:a, :c)]
+            nt = @insert nt[(:x, :y)] = ("def", :abc)
             return nt
         end
-        @test @inferred(doit((a='3', b=2, c="1"))) === (b=2, c="1", a=1)
-    end
-
-    @testset "macro" begin
-        x = (b=2, c=3)
-        @test @insert(x.a = 1) == (b=2, c=3, a=1)
-        x = [1, 2]
-        @test @insert(x[3] = 3) == [1, 2, 3]
-        x = (a=(b=(1, 2),), c=1)
-        @test @insert(x.a.b[1] = 0) == (a=(b=(0, 1, 2),), c=1)
+        @test @inferred(doit((a='3', b=2, c="1"))) === (b=2, x="def", y=:abc)
     end
 end
 
