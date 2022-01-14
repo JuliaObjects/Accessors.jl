@@ -9,7 +9,7 @@ for filename in readdir(inputdir)
     cp(inpath, joinpath(outputdir, "examples", filename), force = true)
     Literate.markdown(inpath, outputdir; documenter = true)
 end
-cp(joinpath(@__DIR__, "..", "README.md"), joinpath(@__DIR__, "src", "index.md"))
+cp(joinpath(@__DIR__, "..", "README.md"), joinpath(@__DIR__, "src", "index.md"), force=true)
 
 makedocs(
     modules = [Accessors],
