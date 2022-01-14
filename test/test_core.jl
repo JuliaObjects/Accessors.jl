@@ -169,7 +169,7 @@ end
     obj = TT(o1, o2)
     @assert obj === TT(2, TT(TT(3,(4,4)), 2))
     i = 1
-    for (lens, val) ∈ [
+    @testset "$lens" for (lens, val) ∈ [
           ((@optic _.a           ),   o1 ),
           ((@optic _.b           ),   o2 ),
           ((@optic _.b.a         ),   o21),
@@ -179,14 +179,34 @@ end
           ((@optic _.b.a.b[static((i+1))]),  4  ),
           ((@optic _.b.a.b[static(2)]   ),   4.0),
           ((@optic _.b.a.b[static((i+1))]),  4.0),
-          ((@optic _.b.a.b[end]),     4.0),
-          ((@optic _.b.a.b[end÷2+1]), 4.0),
           ((@optic _             ),   obj),
           ((@optic _             ),   :xy),
         ]
         @inferred lens(obj)
         @inferred set(obj, lens, val)
         @inferred modify(identity, obj, lens)
+    end
+
+    @testset "$lens" for (lens, val) ∈ [
+          ((@optic _.b.a.b[end]),     4.0),
+          ((@optic _.b.a.b[end÷2+1]), 4.0),
+         ]
+        if VERSION < v"1.7"
+            @test begin
+                @inferred lens(obj)
+                @inferred set(obj, lens, val)
+                @inferred modify(identity, obj, lens)
+                true
+            end
+        else
+            @inferred lens(obj)
+            @inferred set(obj, lens, val)
+            @test_broken begin
+                # https://github.com/JuliaLang/julia/issues/43296
+                @inferred modify(identity, obj, lens)
+                true
+            end
+        end
     end
 end
 

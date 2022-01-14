@@ -128,10 +128,19 @@ innertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Inner
 # TODO better name
 # also better way to organize traits will
 # probably only emerge over time
+#
+# TODO 
+# There is an inference regression as of Julia v1.7.0
+# if recursion is combined with trait based dispatch
+# https://github.com/JuliaLang/julia/issues/43296
+
 abstract type OpticStyle end
 struct ModifyBased <: OpticStyle end
 struct SetBased <: OpticStyle end
-OpticStyle(obj) = OpticStyle(typeof(obj))
+# Base.@pure OpticStyle(obj) = OpticStyle(typeof(obj))
+function OpticStyle(optic::T) where {T}
+    OpticStyle(T)
+end
 # defining lenses should be very lightweight
 # e.g. only a single `set` implementation
 # so we choose this as the default trait
@@ -145,8 +154,8 @@ composed_optic_style(::ModifyBased, ::SetBased) = ModifyBased()
 composed_optic_style(::SetBased, ::ModifyBased) = ModifyBased()
 composed_optic_style(::ModifyBased, ::ModifyBased) = ModifyBased()
 
-@inline function set(obj, optic, val)
-    _set(obj, optic, val, OpticStyle(optic))
+@inline function set(obj, optic::O, val) where {O}
+    _set(obj, optic, val, OpticStyle(O))
 end
 
 function _set(obj, optic, val, ::SetBased)
@@ -176,8 +185,8 @@ end
     set(obj, optic.inner, inner_val)
 end
 
-@inline function modify(f, obj, optic)
-    _modify(f, obj, optic, OpticStyle(optic))
+@inline function modify(f, obj, optic::O) where {O}
+    _modify(f, obj, optic, OpticStyle(O))
 end
 
 function _modify(f, obj, optic, ::ModifyBased)

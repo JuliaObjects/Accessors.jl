@@ -5,7 +5,7 @@ julia> x = (greeting="Hello", name="World")
 (greeting = "Hello", name = "World")
 
 julia> x.greeting = "Hi"
-ERROR: setfield! immutable struct of type NamedTuple cannot be changed
+ERROR: setfield!: immutable struct of type NamedTuple cannot be changed
 [...]
 ```
 This fails, because named tuples are immutable. Instead you can use Accessors to carry out the update:

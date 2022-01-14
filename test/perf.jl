@@ -165,10 +165,13 @@ end
     println("Right associative composition: $b_right")
 
     @test b_default.allocs == 0
-    @test_broken b_right.allocs == 0
+    if VERSION >= v"1.7"
+        @test b_right.allocs == 0
+    else
+        @test_broken right.allocs == 0
+        @test b_right.time > 2b_default.time
+    end
     @test b_left.allocs == 0
-
-    @test b_right.time > 2b_default.time
     @test b_left.time ≈ b_default.time rtol=0.8
 end
 
