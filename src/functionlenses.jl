@@ -10,6 +10,11 @@ insert(obj, ::typeof(first), val) = insert(obj, IndexLens((firstindex(obj),)), v
 set(obj, ::typeof(identity), val) = val
 set(obj, ::typeof(inv), new_inv) = inv(new_inv)
 
+function set(obj, ::typeof(only), val)
+    only(obj) # error check
+    set(obj, first, val)
+end
+
 ################################################################################
 ##### eltype
 ################################################################################
