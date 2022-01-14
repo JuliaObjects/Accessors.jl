@@ -1,6 +1,6 @@
 # # Getting started
 Say you have a `NamedTuple` and you want to update it:
-```jldoctest getting_started
+```julia
 julia> x = (greeting="Hello", name="World")
 (greeting = "Hello", name = "World")
 
@@ -12,6 +12,9 @@ This fails, because named tuples are immutable. Instead you can use Accessors to
 
 ```jldoctest getting_started
 julia> using Accessors
+
+julia> x = (greeting="Hello", name="World")
+(greeting = "Hello", name = "World")
 
 julia> @set x.greeting = "Hi"
 (greeting = "Hi", name = "World")
