@@ -132,6 +132,8 @@ end
 
     @test @set(only((1,)) = 2 ) === (2,)
     @test_throws ArgumentError @set(only((1,2)) = 2 )
+
+    @test [@set(t[1] = 10), @set(t[2] *= 2)] == [(10, 2), (1, 4)]
 end
 
 

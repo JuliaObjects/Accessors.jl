@@ -49,6 +49,9 @@ using Accessors: insert
             return nt
         end
         @test @inferred(doit((a='3', b=2, c="1"))) === (b=2, x="def", y=:abc)
+
+        x = (1, 2)
+        @test [@insert(x[3] = 3)] == [(1, 2, 3)]
     end
 end
 
