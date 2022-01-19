@@ -266,16 +266,15 @@ function setmacro(optictransform, ex::Expr; overwrite::Bool=false)
     @assert length(ex.args) == 2
     ref, val = ex.args
     obj, optic = parse_obj_optic(ref)
-    dst = overwrite ? obj : gensym("_")
     val = esc(val)
     ret = if ex.head == :(=)
-        :($dst = $set($obj, ($optictransform)($optic), $val))
+        :($set($obj, ($optictransform)($optic), $val))
     else
         op = get_update_op(ex.head)
         f = :($_UpdateOp($op,$val))
-        :($dst = $modify($f, $obj, ($optictransform)($optic)))
+        :($modify($f, $obj, ($optictransform)($optic)))
     end
-    ret
+    return overwrite ? :($obj = $ret) : ret
 end
 
 """
@@ -301,9 +300,9 @@ function insertmacro(optictransform, ex::Expr; overwrite::Bool=false)
     @assert ex.head == :(=)
     ref, val = ex.args
     obj, optic = parse_obj_optic(ref)
-    dst = overwrite ? obj : gensym("_")
     val = esc(val)
-    :($dst = $insert($obj, ($optictransform)($optic), $val))
+    ret = :($insert($obj, ($optictransform)($optic), $val))
+    return overwrite ? :($obj = $ret) : ret
 end
 
 """
