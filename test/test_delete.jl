@@ -12,6 +12,11 @@ using StaticArrays
         @test delete( (1,2,3), last ) == (1, 2)
         @test @inferred(delete( (a=1, b=2, c=3), first ))== (b=2, c=3)
         @test @inferred(delete( SVector(1,2,3), last )) === SVector(1, 2)
+
+        l = @optic first(_, 2)
+        VERSION >= v"1.4" && @test l((1,2,3)) == [1,2]
+        @test delete((1,2,3), l) === (3,)
+
         let A = [1,2,3]
             @test delete(A, @optic(_[2])) == [1, 3]
             @test_throws Exception delete(A, @optic(_[2, 2]))
