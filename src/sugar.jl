@@ -202,6 +202,24 @@ function parse_obj_optics(ex)
     elseif @capture(ex, f_(front_))
         obj, frontoptic = parse_obj_optics(front)
         optic = esc(f) # function optic
+    elseif @capture(ex, f_(args__))
+        args_contain_under = map(args) do arg
+            foldtree((yes, x) -> yes || x === :_, false, arg)
+        end
+        if !any(args_contain_under)
+            # as if f(args...) didn't match
+            obj = esc(ex)
+            return obj, ()
+        end
+        length(args) == 2 || error("Only 1- and 2-argument functions are supported")
+        sum(args_contain_under) == 1 || error("Only a single function argument can be the optic target")
+        if args_contain_under[1]
+            obj, frontoptic = parse_obj_optics(args[1])
+            optic = :(Base.Fix2($(esc(f)), $(esc(args[2]))))
+        elseif args_contain_under[2]
+            obj, frontoptic = parse_obj_optics(args[2])
+            optic = :(Base.Fix1($(esc(f)), $(esc(args[1]))))
+        end
     else
         obj = esc(ex)
         return obj, ()

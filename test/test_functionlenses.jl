@@ -94,4 +94,20 @@ end
 
 end
 
+@testset "custom binary function" begin
+    ↑(x, y) = x - y
+    Accessors.set(x, f::Base.Fix1{typeof(↑)}, y) = f.x - y
+    Accessors.set(x, f::Base.Fix2{typeof(↑)}, y) = f.x + y
+
+    x = 5
+    o1 = @optic 2 ↑ _
+    o2 = @optic _ ↑ 2
+    @test o1(x) == -3
+    @test set(x, o1, 10) == -8
+    @test o2(x) == 3
+    @test set(x, o2, 10) == 12
+    test_getset_laws(o1, x, 2, -3)
+    test_getset_laws(o2, x, 2, -3)
+end
+
 end # module
