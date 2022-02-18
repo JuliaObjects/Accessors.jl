@@ -82,4 +82,18 @@ end
     @inferred modify(x -> 0, arr, @optic _ |> Elements() |> If(iseven))
 end
 
+@testset "Decomposition" begin 
+    @test Accessors.decompose(@optic _.a.b.c) == ((@optic _.c), (@optic _.b), (@optic _.a))
+end
+
+@testset "Propname" begin 
+    @test Accessors.propname(@optic _.a) == :a
+end
+
+@testset "Normalisation" begin 
+    @test Accessors.normalise((@optic _.c) ∘ (@optic _.a.b)).inner == @optic _.a
+    @test Accessors.normalise((@optic _.c) ∘ (@optic _.a.b)).outer.inner == @optic _.b
+    @test Accessors.normalise((@optic _.c) ∘ (@optic _.a.b)).outer.outer == @optic _.c
+end
+
 end#module
