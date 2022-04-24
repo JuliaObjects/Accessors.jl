@@ -1,4 +1,5 @@
 export @optic
+export PropertyLens, IndexLens
 export set, modify, delete, insert
 export ∘, opcompose, var"⨟"
 export Elements, Recursive, If, Properties
@@ -129,7 +130,7 @@ innertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Inner
 # also better way to organize traits will
 # probably only emerge over time
 #
-# TODO 
+# TODO
 # There is an inference regression as of Julia v1.7.0
 # if recursion is combined with trait based dispatch
 # https://github.com/JuliaLang/julia/issues/43296
@@ -376,6 +377,16 @@ end
 ################################################################################
 struct PropertyLens{fieldname} end
 
+"""
+    PropertyLens{fieldname}()
+    PropertyLens(fieldname)
+
+Construct a lens for accessing a property `fieldname` of an object.
+
+The second constructor may not be type stable when `fieldname` is not a constant.
+"""
+@inline PropertyLens(fieldname) = PropertyLens{fieldname}()
+
 function (l::PropertyLens{field})(obj) where {field}
     getproperty(obj, field)
 end
@@ -396,6 +407,14 @@ end
 struct IndexLens{I<:Tuple}
     indices::I
 end
+
+"""
+    IndexLens(indices::Tuple)
+    IndexLens(indices::Integer...)
+
+Construct a lens for accessing an element of an object at `indices` via `[]`.
+"""
+IndexLens(indices::Integer...) = IndexLens(indices)
 
 Base.@propagate_inbounds function (lens::IndexLens)(obj)
     getindex(obj, lens.indices...)
