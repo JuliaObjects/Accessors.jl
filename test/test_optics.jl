@@ -83,7 +83,7 @@ end
 end
 
 @testset "convenience constructors" begin
-    @test IndexLens(1, 2, 3) == IndexLens((1, 2, 3))
+    @test IndexLens(1, 2, 3) === IndexLens((1, 2, 3))
     @test PropertyLens(:a) == PropertyLens{:a}()
 end
 
