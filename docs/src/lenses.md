@@ -3,6 +3,7 @@
 Accessors.jl is build around so called lenses. A Lens allows to access or replace deeply nested parts of complicated objects.
 
 # Example
+
 ```jldoctest
 julia> using Accessors
 
@@ -24,6 +25,27 @@ T("AA", "BB")
 
 julia> modify(lowercase, obj, lens)
 T("aa", "BB")
+```
+
+Lenses can also be constructed directly and composed with [`opcompose`](@ref), `⨟`, or `∘` (note reverse order).
+
+```jldoctest
+julia> using Accessors
+
+julia> v = (a = 1:3, )
+(a = 1:3,)
+
+julia> l = opcompose(PropertyLens(:a), IndexLens(1))
+(@optic _[1]) ∘ (@optic _.a)
+
+julia> l ≡ @optic _.a[1]   # equivalent to macro form
+true
+
+julia> l(v)
+1
+
+julia> set(v, l, 3)
+(a = [3, 2, 3],)
 ```
 
 # Interface
