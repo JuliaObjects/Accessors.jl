@@ -38,6 +38,9 @@ julia> v = (a = 1:3, )
 julia> l = opcompose(PropertyLens(:a), IndexLens(1))
 (@optic _[1]) ∘ (@optic _.a)
 
+julia> l ≡ @optic _.a[1]   # equivalent to macro form
+true
+
 julia> l(v)
 1
 
