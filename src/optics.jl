@@ -211,15 +211,15 @@ end
 end
 
 function delete(obj, optic::ComposedOptic)
-    inner_obj = optic.inner(obj)
-    inner_val = delete(inner_obj, optic.outer)
-    set(obj, optic.inner, inner_val)
+    modify(obj, optic.inner) do inner_obj
+        delete(inner_obj, optic.outer)
+    end
 end
 
 function insert(obj, optic::ComposedOptic, val)
-	inner_obj = optic.inner(obj)
-	inner_val = insert(inner_obj, optic.outer, val)
-	set(obj, optic.inner, inner_val)
+    modify(obj, optic.inner) do inner_obj
+        insert(inner_obj, optic.outer, val)
+    end
 end
 
 """
