@@ -52,6 +52,9 @@ using Accessors: insert
 
         x = (1, 2)
         @test [@insert(x[3] = 3)] == [(1, 2, 3)]
+
+        A = [(x=1, y=2), (x=3, y=4)]
+        @test @insert(Elements()(A).z = 5) == [(x=1, y=2, z=5), (x=3, y=4, z=5)]
     end
 end
 

@@ -45,6 +45,9 @@ using StaticArrays
         x = [1, 2, 3]
         @test @delete(x[2]) == [1, 3]
         @test_throws BoundsError @delete(x[10])
+
+        A = [(x=1, y=2), (x=3, y=4)]
+        @test @delete(Elements()(A).x) == [(y=2,), (y=4,)]
     end
 end
 
