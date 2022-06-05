@@ -1,13 +1,13 @@
 using Test: @test
-function test_getset_laws(lens, obj, val1, val2)
+function test_getset_laws(lens, obj, val1, val2; cmp=(==))
 
     # set ⨟ get
     val = lens(obj)
-    @test set(obj, lens, val) == obj
+    @test cmp(set(obj, lens, val), obj)
 
     # get ⨟ set
     obj1 = set(obj, lens, val1)
-    @test lens(obj1) == val1
+    @test cmp(lens(obj1), val1)
 
     # set idempotent
     obj12 = set(obj1, lens, val2)

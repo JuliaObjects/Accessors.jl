@@ -2,6 +2,7 @@ module Accessors
 using MacroTools
 using MacroTools: isstructdef, splitstructdef, postwalk
 using Requires: @require
+using InverseFunctions
 
 
 
