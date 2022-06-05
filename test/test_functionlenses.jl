@@ -1,5 +1,6 @@
 module TestFunctionLenses
 using Test
+using Dates
 using Accessors: test_getset_laws
 using Accessors
 
@@ -91,7 +92,28 @@ end
     @test 2.0       === @set real(1) = 2.0
     @test 1.0 + 2im === @set imag(1) = 2.0
     @test 1.0 + 2im === @set imag(1+1im) = 2.0
+end
 
+@testset "dates" begin
+    @test set(DateTime(2020, 1, 2, 3, 4, 5, 6), Date, Date(1999, 5, 6)) === DateTime(1999, 5, 6, 3, 4, 5, 6)
+    @test set(DateTime(2020, 1, 2, 3, 4, 5, 6), Time, Time(1, 2, 3, 4)) === DateTime(2020, 1, 2, 1, 2, 3, 4)
+    @test set(Date(2020, 1, 2), Date, Date(1999, 5, 6)) === Date(1999, 5, 6)
+    @test set(Time(3, 4, 5, 6), Time, Time(1, 2, 3, 4)) === Time(1, 2, 3, 4)
+
+    @testset for lens in [year, month, day, dayofweek, hour, minute, second, millisecond]
+        test_getset_laws(lens, DateTime(2020, 1, 2, 3, 4, 5, 6), rand(1:7), rand(1:7))
+    end
+    @testset for lens in [year, month, day, dayofweek]
+        test_getset_laws(lens, Date(2020, 1, 2), rand(1:7), rand(1:7))
+    end
+    @testset for lens in [hour, minute, second, millisecond, microsecond, nanosecond]
+        test_getset_laws(lens, Time(1, 2, 3, 4, 5, 6), rand(0:23), rand(0:23))
+    end
+    @testset for x in [DateTime(2020, 1, 2, 3, 4, 5, 6), Date(2020, 1, 2)]
+        test_getset_laws(yearmonth, x, (rand(1:5000), rand(1:12)), (rand(1:5000), rand(1:12)))
+        test_getset_laws(monthday, x, (rand(1:12), rand(1:28)), (rand(1:12), rand(1:28)))
+        test_getset_laws(yearmonthday, x, (rand(1:5000), rand(1:12), rand(1:28)), (rand(1:5000), rand(1:12), rand(1:28)))
+    end
 end
 
 @testset "custom binary function" begin
