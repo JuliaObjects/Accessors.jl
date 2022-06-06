@@ -92,6 +92,24 @@ end
     @test 2.0       === @set real(1) = 2.0
     @test 1.0 + 2im === @set imag(1) = 2.0
     @test 1.0 + 2im === @set imag(1+1im) = 2.0
+
+    test_getset_laws(!, true, true, false)
+    # no need for extensive testing: all invertible lenses are simply forwarded to InverseFunctions
+    @testset for o in [inv, +, exp, sqrt, @optic(2 + _), @optic(_ * 3), @optic(log(2, _))]
+        x = 5
+        test_getset_laws(o, x, 10, 20; cmp=isapprox)
+        @inferred set(x, o, 10)
+    end
+    
+    x = 3 + 4im
+    @test @set(abs(x) = 10) ≈ 6 + 8im
+    @test @set(angle(x) = π/2) ≈ 5im
+    @test_throws DomainError @set(abs(x) = -10)
+
+    # composition
+    o = @optic 1/(1 + exp(-_))
+    @test o(2) ≈ 0.8807970779778823
+    @test @inferred(set(2, o, 0.999)) ≈ 6.906754778648465
 end
 
 @testset "dates" begin
