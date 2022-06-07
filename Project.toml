@@ -31,9 +31,10 @@ Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 PerformanceTestTools = "dc46b164-d16f-48ec-a853-60448fc869fe"
 QuickTypes = "ae2dfa86-617c-530c-b392-ef20fdad97bb"
+SplitApplyCombine = "03a91e81-4c3e-53e1-a0a4-9c0c8f19dd66"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 StaticNumbers = "c5e4b96a-f99f-5557-8ed2-dc63ef9b5131"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Documenter", "PerformanceTestTools", "QuickTypes", "StaticArrays", "BenchmarkTools", "InteractiveUtils", "StaticNumbers"]
+test = ["Test", "Documenter", "PerformanceTestTools", "QuickTypes", "SplitApplyCombine", "StaticArrays", "BenchmarkTools", "InteractiveUtils", "StaticNumbers"]
