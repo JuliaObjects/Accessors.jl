@@ -160,6 +160,10 @@ composed_optic_style(::ModifyBased, ::ModifyBased) = ModifyBased()
 end
 
 function _set(obj, optic, val, ::SetBased)
+    inv_func = inverse(optic)
+    if !(inv_func isa NoInverse)
+        return inv_func(val)
+    end
     Optic = typeof(optic)
     error("""
     This should be unreachable. You probably need to overload
