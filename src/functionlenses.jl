@@ -56,24 +56,6 @@ set(x,      ::typeof(abs), y) = y >= zero(y) ? y * sign(x) : throw(DomainError(y
 set(arr, ::typeof(normalize), val) = norm(arr) * val
 set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # should we check val is positive?
 
-# functions supported by inverse()
-# https://github.com/JuliaMath/InverseFunctions.jl/blob/master/src/inverse.jl
-set(x, f::Union{
-    typeof.((
-        identity, inv, adjoint, transpose, conj,
-        !, +, -,
-        exp, log, exp2, log2, exp10, log10, expm1, log1p,
-        sqrt, cbrt, deg2rad, rad2deg,
-    ))...,
-    Base.Fix1{typeof(+)}, Base.Fix2{typeof(+)},
-    Base.Fix1{typeof(-)}, Base.Fix2{typeof(-)},
-    Base.Fix1{typeof(*)}, Base.Fix2{typeof(*)},
-    Base.Fix1{typeof(/)}, Base.Fix2{typeof(/)},
-    Base.Fix1{typeof(\)}, Base.Fix2{typeof(\)},
-    Base.Fix1{typeof(^)}, Base.Fix2{typeof(^)},
-    Base.Fix1{typeof(log)}, Base.Fix2{typeof(log)},
-}, y) = inverse(f)(y)
-
 ################################################################################
 ##### dates
 ################################################################################
