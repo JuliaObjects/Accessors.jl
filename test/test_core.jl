@@ -137,6 +137,21 @@ end
     @test @set(p[2] = 1.23) === (1 => 1.23)
 end
 
+@testset "explicit target" begin
+    x = [1, 2, 3]
+    x_orig = x
+    @test (@set $(x)[2] = 100) == [1, 100, 3]
+    @test (@set $(x[2]) = 100) == 100
+    @test (@set $(x)[2] + 2 = 100) == [1, 98, 3]  # impossible without $
+    @test (@set $(x[2]) + 2 = 100) == 98  # impossible without $
+    @test x_orig === x == [1, 2, 3]
+
+    @test (@reset $(x[2]) = 100) == 100
+    @test x_orig === x == [1, 100, 3]
+    @test (@reset $(x)[2] = 200) == [1, 200, 3]
+    @test x_orig !== x == [1, 200, 3]
+end
+
 
 struct UserDefinedLens end
 
