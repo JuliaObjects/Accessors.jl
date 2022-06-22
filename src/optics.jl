@@ -401,7 +401,7 @@ end
 end
 
 @inline function insert(obj::NamedTuple, l::PropertyLens{field}, val) where {field}
-	(; obj..., (;field => val)...)
+    (; obj..., (;field => val)...)
 end
 
 struct IndexLens{I<:Tuple}
@@ -428,34 +428,15 @@ end
     (obj[1:(i - 1)]..., obj[(i + 1):end]...)
 end
 
-@inline function delete(obj::Vector, l::IndexLens)
+@inline function insert(obj::Tuple, l::IndexLens, val)
     i = only(l.indices)
-    vcat(obj[1:(i - 1)], obj[(i + 1):end])
+    (obj[1:i-1]..., val, obj[i:end]...)
 end
 
-@inline function delete(obj::AbstractDict, l::IndexLens)
-    i = only(l.indices)
-    res = copy(obj)
-    delete!(res, i)
-end
-
-function insert(obj::Tuple, l::IndexLens, val)
-	i = only(l.indices)
-	(obj[1:i-1]..., val, obj[i:end]...)
-end
-
-function insert(obj::Vector, l::IndexLens, val)
-	i = only(l.indices)
-    res = copy(obj)
-    insert!(res, i, val)
-end
-
-function insert(obj::AbstractDict, l::IndexLens, val)
-    i = only(l.indices)
-    res = copy(obj)
-    res[i] = val
-    res
-end
+@inline delete(obj::AbstractVector, l::IndexLens) = deleteat!(copy(obj), only(l.indices))
+@inline delete(obj::AbstractDict, l::IndexLens) = delete!(copy(obj), only(l.indices))
+@inline insert(obj::AbstractVector, l::IndexLens, val) = insert!(copy(obj), only(l.indices), val)
+@inline insert(obj::AbstractDict, l::IndexLens, val) = setindex(obj, val, only(l.indices))
 
 @inline delete(obj::NamedTuple, l::IndexLens{Tuple{Symbol}}) = Base.structdiff(obj, NamedTuple{l.indices})
 @inline delete(obj::NamedTuple, l::IndexLens{<:Tuple{Tuple{Vararg{Symbol}}}}) = Base.structdiff(obj, NamedTuple{only(l.indices)})
