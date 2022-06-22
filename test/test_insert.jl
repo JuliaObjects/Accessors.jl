@@ -16,7 +16,7 @@ using Accessors: insert
             @test A == [1, 2]  # not changed
         end
         @test insert((1,2), last, 3) == (1, 2, 3)
-        Base.thisminor(VERSION) == v"1.6" && @inferred(insert((1,2), last, 3))
+        Base.thisminor(VERSION) >= v"1.6" && @inferred(insert((1,2), last, 3))
         @test @inferred(insert(SVector(1,2), @optic(_[1]), 3)) == SVector(3, 1, 2)
         @test @inferred(insert(SVector(1,2), last, 3)) == SVector(1, 2, 3)
         let D = Dict(:a => 1)
