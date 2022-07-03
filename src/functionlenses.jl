@@ -18,6 +18,9 @@ function set(obj, ::typeof(only), val)
     set(obj, first, val)
 end
 
+set(obj, o::typeof(getfields), val) = constructorof(typeof(obj))(val...)
+set(obj, o::Base.Fix2{typeof(getfield)}, val) = @set getfields(obj)[o.x] = val
+
 ################################################################################
 ##### eltype
 ################################################################################

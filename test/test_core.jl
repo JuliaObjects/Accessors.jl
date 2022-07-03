@@ -3,7 +3,7 @@ using Test
 using Accessors
 using Accessors: test_getset_laws, test_modify_law
 using Accessors: compose, get_update_op
-using ConstructionBase: ConstructionBase
+using ConstructionBase: ConstructionBase, getfields
 using StaticNumbers: StaticNumbers, static
 if !isdefined(Base, :only)
     using Accessors: only
@@ -159,12 +159,17 @@ Base.show(io::IO, ::MIME"text/plain", ::LensIfTextPlain) =
             @optic _.b.a.b[end]
             @optic _.b.a.b[identity(end) - 1]
             @optic _
+            @optic getfield(_, :a)
+            @optic getfield(getfield(_, :b), :a)
+            @optic getfield(_, 1)
+            @optic getfield(getfield(_, 2), :a)
         ]
         val1, val2 = randn(2)
         f(x) = (x,x)
         test_getset_laws(lens, obj, val1, val2)
         test_modify_law(f, lens, obj)
     end
+    test_getset_laws(getfields, (a=1, b=:b), (a=:a, b=2), (a=:aa, b=22))
 end
 
 @testset "type stability" begin
@@ -378,29 +383,44 @@ end
     l = @optic _.x
     @test l(t) === 1
 
+    @test set(t, @optic(getfield(_, :x)), :hello) === (x=:hello, y=2)
+
     # do we want this to throw an error?
     @test_throws ArgumentError (@set t.z = 3)
+    @test_throws Exception set(t, @optic(getfield(_, :z)), 3)
 end
 
 struct CustomProperties
     _a
     _b
+    _c
 end
 
-function ConstructionBase.setproperties(o::CustomProperties, patch::NamedTuple)
+Base.propertynames(o::CustomProperties) = (:a, :b)
+
+Base.getproperty(o::CustomProperties, k) = getfield(k == :a ? :_a : :_b)
+
+ConstructionBase.setproperties(o::CustomProperties, patch::NamedTuple) = 
     CustomProperties(get(patch, :a, getfield(o, :_a)),
-                     get(patch, :b, getfield(o, :_b)))
-
-end
-
-ConstructionBase.constructorof(::Type{CustomProperties}) = error()
+                     get(patch, :b, getfield(o, :_b)),
+                     getfield(o, :_c))
 
 @testset "setproperties overloading" begin
-    o = CustomProperties("A", "B")
+    o = CustomProperties("A", "B", "C")
     o2 = @set o.a = :A
-    @test o2 == CustomProperties(:A, "B")
+    @test o2 == CustomProperties(:A, "B", "C")
     o3 = @set o.b = :B
-    @test o3 == CustomProperties("A", :B)
+    @test o3 == CustomProperties("A", :B, "C")
+
+    o4 = @inferred set(o, @optic(getfield(_, :_a)), 123)
+    @test o4 == CustomProperties(123, "B", "C")
+    o5 = @inferred set(o, @optic(getfield(_, 1)), 123)
+    @test o5 == CustomProperties(123, "B", "C")
+    @test_throws Exception set(o, @optic(getfield(_, :a)), 123)
+    if VERSION >= v"1.5"
+        # Base.setindex silently ignores out-of-bounds on earlier versions
+        @test_throws Exception set(o, @optic(getfield(_, 4)), 123)
+    end
 end
 
 @testset "issue #83" begin
