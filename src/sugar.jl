@@ -280,8 +280,13 @@ end
 See also [`opticmacro`](@ref).
 """
 function setmacro(optictransform, ex::Expr; overwrite::Bool=false)
-    @assert ex.head isa Symbol
-    @assert length(ex.args) == 2
+    if !(ex.head isa Symbol) || (length(ex.args) != 2)
+        msg = """
+        Invalid expression for set macro. Got: 
+        $(ex)
+        """
+        throw(ArgumentError(msg))
+    end
     ref, val = ex.args
     obj, optic = parse_obj_optic(ref)
     val = esc(val)
@@ -313,9 +318,14 @@ end
 See also [`opticmacro`](@ref),  [`setmacro`](@ref).
 """
 function insertmacro(optictransform, ex::Expr; overwrite::Bool=false)
-    @assert ex.head isa Symbol
-    @assert length(ex.args) == 2
-    @assert ex.head == :(=)
+    if (ex.head != :(=)) || (length(ex.args) != 2)
+        msg = """
+        Expression for insert macro must be an assignment. Got:
+        $(ex)
+        """
+        throw(ArgumentError(msg))
+    end
+
     ref, val = ex.args
     obj, optic = parse_obj_optic(ref)
     val = esc(val)
