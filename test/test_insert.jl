@@ -58,4 +58,9 @@ using Accessors: insert
     end
 end
 
+@testset "friendly error" begin
+    res = @test_throws ArgumentError Accessors.insertmacro(identity, :(obj.prop == val))
+    @test occursin("obj.prop == val", res.value.msg)
+end
+
 end

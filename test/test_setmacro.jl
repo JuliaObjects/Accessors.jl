@@ -79,4 +79,9 @@ end
     end
 end
 
+@testset "friendly error" begin
+    res = @test_throws ArgumentError Accessors.setmacro(identity, :(obj.prop == val))
+    @test occursin("obj.prop == val", res.value.msg)
+end
+
 end#module
