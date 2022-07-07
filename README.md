@@ -7,10 +7,6 @@
 The goal of [Accessors.jl](https://github.com/JuliaObjects/Accessors.jl) is to make updating immutable data simple.
 It is the successor of [Setfield.jl](https://github.com/jw3126/Setfield.jl).
 
-## Warning
-
-Accessors.jl is currently in an experimental stage. We may introduce breaking changes without clear deprecation path. For a more stable package we recommend [Setfield.jl](https://github.com/jw3126/Setfield.jl).
-
 # Usage
 Updating immutable data was never easier:
 ```julia
