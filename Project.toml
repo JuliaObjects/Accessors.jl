@@ -11,7 +11,7 @@ Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
-Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
@@ -20,7 +20,7 @@ CompositionsBase = "0.1"
 ConstructionBase = "1.2"
 InverseFunctions = "0.1.5"
 MacroTools = "0.4.4, 0.5"
-Requires = "0.5, 1.0"
+StaticArraysCore = "1"
 StaticNumbers = "0.3"
 julia = "1.3"
 

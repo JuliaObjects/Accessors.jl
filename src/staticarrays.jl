@@ -1,5 +1,5 @@
-import .StaticArrays
+import StaticArraysCore
 
-@inline setindex(a::StaticArrays.StaticArray, args...) = Base.setindex(a, args...)
-@inline delete(obj::StaticArrays.SVector, l::IndexLens) = StaticArrays.deleteat(obj, only(l.indices))
-@inline insert(obj::StaticArrays.SVector, l::IndexLens, val) = StaticArrays.insert(obj, only(l.indices), val)
+@inline setindex(a::StaticArraysCore.StaticArray, args...) = Base.setindex(a, args...)
+@inline delete(obj::StaticArraysCore.SVector, l::IndexLens) = StaticArrays.deleteat(obj, only(l.indices))
+@inline insert(obj::StaticArraysCore.SVector, l::IndexLens, val) = StaticArrays.insert(obj, only(l.indices), val)
