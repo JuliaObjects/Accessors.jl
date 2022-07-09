@@ -48,11 +48,10 @@ delete(path, ::typeof(dirname)) = basename(path)
 ################################################################################
 ##### math
 ################################################################################
-set(x::Real, ::typeof(real), y) = y
-set(x,       ::typeof(real), y) = y + im*imag(x)
-set(x,       ::typeof(imag), y) = real(x) + im*y
-set(x,      ::typeof(angle), y) = abs(x) * cis(y)
-set(x,        ::typeof(abs), y) = y >= 0 ? y * sign(x) : throw(DomainError(y, "cannot set abs($x) to $y"))
+set(x::T,  ::typeof(real), y) where {T} = T === real(T) ? y : y + im*imag(x)
+set(x,     ::typeof(imag), y) = real(x) + im*y
+set(x,    ::typeof(angle), y) = abs(x) * cis(y)
+set(x,      ::typeof(abs), y) = y >= zero(y) ? y * sign(x) : throw(DomainError(y, "cannot set abs($x) to $y"))
 
 set(arr, ::typeof(normalize), val) = norm(arr) * val
 set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # should we check val is positive?
