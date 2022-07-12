@@ -29,3 +29,5 @@ end
 @inline setindex(nt::NamedTuple, v, idx::Symbol) = merge(nt, (; idx => v))
 
 @inline setindex(nt::NamedTuple, v, idx::Tuple{Vararg{Symbol}}) = merge(nt, NamedTuple{idx}(v))
+
+@inline setindex(p::Pair, v, idx::Integer) = Pair(setindex(Tuple(p), v, idx)...)

@@ -134,6 +134,10 @@ end
     @test_throws ArgumentError @set(only((1,2)) = 2 )
 
     @test [@set(t[1] = 10), @set(t[2] *= 2)] == [(10, 2), (1, 4)]
+
+    p = 1 => :a
+    @test @set(p[1] = 1.23) === (1.23 => :a)
+    @test @set(p[2] = 1.23) === (1 => 1.23)
 end
 
 
