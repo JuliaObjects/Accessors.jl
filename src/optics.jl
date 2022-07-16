@@ -1,6 +1,6 @@
 export @optic
 export PropertyLens, IndexLens
-export set, modify, delete, insert
+export set, modify, delete, insert, getall
 export ∘, opcompose, var"⨟"
 export Elements, Recursive, If, Properties
 export setproperties
@@ -465,3 +465,14 @@ function make_salt(s64::UInt64)::UInt
 end
 const SALT_INDEXLENS = make_salt(0x8b4fd6f97c6aeed6)
 Base.hash(l::IndexLens, h::UInt) = hash(l.indices, SALT_INDEXLENS + h)
+
+
+
+getall(obj, optic::ComposedOptic) =
+    reduce(
+        (a, b) -> (a..., b...),
+        map(inner -> getall(inner, optic.outer), getall(obj, optic.inner))
+    )
+getall(obj, ::Elements) = obj |> values
+getall(obj, ::Properties) = getproperties(obj) |> values
+getall(obj, f) = (f(obj),)

@@ -13,5 +13,6 @@ include("test_quicktypes.jl")
 include("test_setmacro.jl")
 include("test_setindex.jl")
 include("test_functionlenses.jl")
+include("test_getsetall.jl")
 
 end  # module
