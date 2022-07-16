@@ -299,15 +299,9 @@ This function should not be overloaded directly. Instead both of
 should be overloaded.
 $EXPERIMENTAL
 """
-function mapproperties end
-
-function mapproperties(f, nt::NamedTuple)
-    map(f, nt)
-end
-
 function mapproperties(f, obj)
     nt = getproperties(obj)
-    patch = mapproperties(f, nt)
+    patch = map(f, nt)
     return setproperties(obj, patch)
 end
 
