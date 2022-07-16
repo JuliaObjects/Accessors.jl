@@ -468,11 +468,142 @@ Base.hash(l::IndexLens, h::UInt) = hash(l.indices, SALT_INDEXLENS + h)
 
 
 
-getall(obj, optic::ComposedOptic) =
-    reduce(
-        (a, b) -> (a..., b...),
-        map(inner -> getall(inner, optic.outer), getall(obj, optic.inner))
+_concat(a::Tuple, b::Tuple) = (a..., b...)
+
+function getall(obj, optic::CO) where {CO <: ComposedFunction}
+    N = length(decompose(optic))
+    _GetAll{N}()(obj, optic)
+end
+
+struct _GetAll{N} end
+
+function (::_GetAll{2})(obj, optic::ComposedOptic)
+    f1, f2 = deopcompose(optic)
+
+    reduce(_concat,
+        map(getall(obj, f1)) do obj
+            getall(obj, f2)
+        end
     )
+end
+
+function (::_GetAll{3})(obj, optic::ComposedOptic)
+    f1, f2, f3 = deopcompose(optic)
+
+    reduce(_concat,
+        map(getall(obj, f1)) do obj
+            reduce(_concat,
+                map(getall(obj, f2)) do obj
+                    getall(obj, f3)
+                end
+            )
+        end
+    )
+end
+
+function (::_GetAll{4})(obj, optic::ComposedOptic)
+    f1, f2, f3, f4 = deopcompose(optic)
+
+    reduce(_concat,
+        map(getall(obj, f1)) do obj
+            reduce(_concat,
+                map(getall(obj, f2)) do obj
+                    reduce(_concat,
+                        map(getall(obj, f3)) do obj
+                            getall(obj, f4)
+                        end
+                    )
+                end
+            )
+        end
+    )
+end
+
+function (::_GetAll{5})(obj, optic::ComposedOptic)
+    f1, f2, f3, f4, f5 = deopcompose(optic)
+
+    reduce(_concat,
+        map(getall(obj, f1)) do obj
+            reduce(_concat,
+                map(getall(obj, f2)) do obj
+                    reduce(_concat,
+                        map(getall(obj, f3)) do obj
+                            reduce(_concat,
+                                map(getall(obj, f4)) do obj
+                                    getall(obj, f6)
+                                end
+                            )
+                        end
+                    )
+                end
+            )
+        end
+    )
+end
+
+function (::_GetAll{6})(obj, optic::ComposedOptic)
+    f1, f2, f3, f4, f5, f6 = deopcompose(optic)
+
+    reduce(_concat,
+        map(getall(obj, f1)) do obj
+            reduce(_concat,
+                map(getall(obj, f2)) do obj
+                    reduce(_concat,
+                        map(getall(obj, f3)) do obj
+                            reduce(_concat,
+                                map(getall(obj, f4)) do obj
+                                    reduce(_concat,
+                                        map(getall(obj, f5)) do obj
+                                            getall(obj, f6)
+                                        end
+                                    )
+                                end
+                            )
+                        end
+                    )
+                end
+            )
+        end
+    )
+end
+
+function (::_GetAll{7})(obj, optic::ComposedOptic)
+    f1, f2, f3, f4, f5, f6, f7 = deopcompose(optic)
+
+    reduce(_concat,
+        map(getall(obj, f1)) do obj
+            reduce(_concat,
+                map(getall(obj, f2)) do obj
+                    reduce(_concat,
+                        map(getall(obj, f3)) do obj
+                            reduce(_concat,
+                                map(getall(obj, f4)) do obj
+                                    reduce(_concat,
+                                        map(getall(obj, f5)) do obj
+                                            reduce(_concat,
+                                                map(getall(obj, f6)) do obj
+                                                    getall(obj, f7)
+                                                end
+                                            )
+                                        end
+                                    )
+                                end
+                            )
+                        end
+                    )
+                end
+            )
+        end
+    )
+end
+
+
+# getall(obj, optic::ComposedOptic) =
+#     reduce(
+#         (a, b) -> (a..., b...),
+#         map(inner -> getall(inner, optic.outer), getall(obj, optic.inner))
+#     )
 getall(obj, ::Elements) = obj |> values
 getall(obj, ::Properties) = getproperties(obj) |> values
+getall(obj, o::If) = o.modify_condition(obj) ? (obj,) : ()
 getall(obj, f) = (f(obj),)
