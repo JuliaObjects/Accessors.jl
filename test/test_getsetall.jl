@@ -31,8 +31,26 @@ if VERSION >= v"1.6"  # for ComposedFunction
     @test (1, 2, 3, 4, 5, 6) === @inferred getall(obj, @optic _ |> Elements() |> Elements() |> Elements() |> Elements())
     @test (2, 5, 10, 17, 26, 37) === @inferred getall(obj, @optic _ |> Elements() |> Elements() |> Elements() |> Elements() |> _[1]^2 + 1)
 
-    # obj = [1, 2, 3]
-    # @test [1, 2, 3] == @inferred getall(obj, @optic )
+    obj = ()
+    @test () === @inferred getall(obj, @optic _ |> Elements() |> _ + 1)
+    obj = (1,)
+    @test (2,) === @inferred getall(obj, @optic _ |> Elements() |> _ + 1)
+    obj = Int[]
+    @test Int[] == @inferred getall(obj, @optic _ |> Elements() |> _ + 1)
+    obj = [1]
+    @test [2] == @inferred getall(obj, @optic _ |> Elements() |> _ + 1)
+
+    obj = [1, 2, 3]
+    @test [3] == getall(obj, @optic _ |> Elements() |> If(>(2)))
+    @test_broken (@inferred getall(obj, @optic _ |> Elements() |> If(>(2))); true)
+    obj = ([1, 2], 3:5, (6,))
+    @test [1, 2, 3, 4, 5, 6] == @inferred getall(obj, @optic _ |> Elements() |> Elements())
+    @test [2, 3, 4, 5, 6, 7] == @inferred getall(obj, @optic _ |> Elements() |> Elements() |> _ + 1)
+    obj = [[1, 2], [3]]
+    @test [1, 2, 3] == @inferred getall(obj, @optic _ |> Elements() |> Elements())
+
+    obj = ([1, 2], [:a, :b])
+    @test [1, 2, :a, :b] == @inferred getall(obj, @optic _ |> Elements() |> Elements())
 end
 end
 
