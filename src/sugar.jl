@@ -349,7 +349,7 @@ julia> t = T("A1", T(T("A3", "B3"), "B2"))
 T("A1", T(T("A3", "B3"), "B2"))
 
 julia> l = @optic _.b.a.b
-(@optic _.b) ∘ (@optic _.a) ∘ (@optic _.b)
+(@optic _.b.a.b)
 
 julia> l(t)
 "B3"
