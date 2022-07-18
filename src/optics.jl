@@ -95,7 +95,7 @@ julia> la = @optic _.a
        lb = @optic _.b
        lc = @optic _.c
        lens = la ⨟ lb ⨟ lc
-(@optic _.c) ∘ (@optic _.b) ∘ (@optic _.a)
+(@optic _.c) ∘ (@optic _.a.b)
 
 julia> lens(obj)
 1
