@@ -1,6 +1,6 @@
 export @optic
 export PropertyLens, IndexLens
-export set, modify, delete, insert, getall
+export set, modify, delete, insert, getall, setall
 export ∘, opcompose, var"⨟"
 export Elements, Recursive, If, Properties
 export setproperties
