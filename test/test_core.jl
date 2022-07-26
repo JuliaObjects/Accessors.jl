@@ -269,11 +269,12 @@ end
 end
 
 @testset "DynamicIndexLens" begin
-    l = @optic _[end]
-    @test l isa Accessors.DynamicIndexLens
-    obj = (1,2,3)
-    @test l(obj) == 3
-    @test set(obj, l, true) == (1,2,true)
+    for l in (@optic(_[end]), @optic(_[lastindex(_)]))
+        @test l isa Accessors.DynamicIndexLens
+        obj = (1,2,3)
+        @test l(obj) == 3
+        @test set(obj, l, true) == (1,2,true)
+    end
 
     l = @optic _[end÷2]
     @test l isa Accessors.DynamicIndexLens
