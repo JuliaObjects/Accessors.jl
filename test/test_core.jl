@@ -318,6 +318,15 @@ end
     @test set("a c", @optic(_[findfirst(' ', _)]), 'b') == "abc"
 end
 
+@testset "flipped index" begin
+    obj = (a=2, b=nothing)
+    lens = @optic (4:10)[_.a]
+    @test @inferred(set(obj, lens, 4)).a == 1
+    @test_throws ArgumentError set(obj, lens, 12)
+    test_getset_laws(lens, obj, 5, 6)
+    test_modify_law(x -> x + 1, lens, obj)
+end
+
 @testset "StaticNumbers" begin
     obj = (1, 2.0, '3')
     l = @optic _[static(1)]

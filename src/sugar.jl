@@ -172,16 +172,24 @@ function parse_obj_optics(ex)
         end
         return obj, tuple(frontoptic..., backoptic...)
     elseif @capture(ex, front_[indices__])
-        obj, frontoptic = parse_obj_optics(front)
-        if any(need_dynamic_optic, indices)
-            @gensym collection
-            indices = replace_underscore.(indices, collection)
-            dims = length(indices) == 1 ? nothing : 1:length(indices)
-            lindices = esc.(lower_index.(collection, indices, dims))
-            optic = :($DynamicIndexLens($(esc(collection)) -> ($(lindices...),)))
+        if !tree_contains(front, :_) && any(ind -> tree_contains(ind, :_), indices)
+            ind = only(indices)
+            if tree_contains(ind, :_)
+                obj, frontoptic = parse_obj_optics(ind)
+                optic = :(Base.Fix1(getindex, $(esc(front))))
+            end
         else
-            index = esc(Expr(:tuple, indices...))
-            optic = :($IndexLens($index))
+            obj, frontoptic = parse_obj_optics(front)
+            if any(need_dynamic_optic, indices)
+                @gensym collection
+                indices = replace_underscore.(indices, collection)
+                dims = length(indices) == 1 ? nothing : 1:length(indices)
+                lindices = esc.(lower_index.(collection, indices, dims))
+                optic = :($DynamicIndexLens($(esc(collection)) -> ($(lindices...),)))
+            else
+                index = esc(Expr(:tuple, indices...))
+                optic = :($IndexLens($index))
+            end
         end
     elseif @capture(ex, front_.property_)
         property isa Union{Int,Symbol,String} || throw(ArgumentError(
