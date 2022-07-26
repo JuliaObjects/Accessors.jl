@@ -139,10 +139,9 @@ foldtree(op, init, x) = op(init, x)
 foldtree(op, init, ex::Expr) =
     op(foldl((acc, x) -> foldtree(op, acc, x), ex.args; init=init), ex)
 
-need_dynamic_optic(ex) =
-    foldtree(false, ex) do yes, x
-        yes || x === :end || (x === :begin) || x === :_
-    end
+need_dynamic_optic(ex) = tree_contains(ex, (:end, :begin, :_))
+tree_contains(ex, parts::Tuple) = foldtree((yes, x) -> yes || x ∈ parts, false, ex)
+tree_contains(ex, part) = tree_contains(ex, (part,))
 
 replace_underscore(ex, to) = postwalk(x -> x === :_ ? to : x, ex)
 
@@ -195,9 +194,7 @@ function parse_obj_optics(ex)
         obj, frontoptic = parse_obj_optics(front)
         optic = esc(f) # function optic
     elseif @capture(ex, f_(args__))
-        args_contain_under = map(args) do arg
-            foldtree((yes, x) -> yes || x === :_, false, arg)
-        end
+        args_contain_under = map(arg -> tree_contains(arg, :_), args)
         if !any(args_contain_under)
             # as if f(args...) didn't match
             obj = esc(ex)
