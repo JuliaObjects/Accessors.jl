@@ -100,7 +100,7 @@ out = getall(data, optic)
 data = [2, 1, 3, 6, 9, 4, 8]
 out = @set data |> Filter(isodd) |> _[end] += 1
 @test out == [2, 1, 3, 6, 10, 4, 8]
-@test_broken eltype(out) == Int
+@test eltype(out) == Int
 
 # ### Remove nils from a nested sequence
 

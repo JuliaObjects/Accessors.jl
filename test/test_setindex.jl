@@ -31,6 +31,9 @@ end
     @test arr == [1,2,3]
     @test Accessors.setindex(arr, 10.0, 1) ==ₜ Float64[10.0, 2.0, 3.0]
 
+    @test Accessors.setindex([1. 2; 3 4], zeros(2), 1, :) ==ₜ [0. 0; 3 4]
+    @test Accessors.setindex([[i, j] for i in 1:2, j in 1:2], [im, im], 1, :) ==ₜ Any[[im] [im]; [[2, 1]] [[2, 2]]]
+
     d = Dict(:a => 1, :b => 2)
     @test_throws MethodError Base.setindex(d, 10, :a)
     @test Accessors.setindex(d, 10, :a) == Dict(:a=>10, :b=>2)
@@ -53,7 +56,9 @@ end
     @set ref[] = "no mutation"
     @test ref[] === 1
     @test typeof(ref) == Base.RefValue{Int}
+end
 
+@testset begin
     if VERSION >= v"1.5.0"
         _ = ref_alloc_test()
         @test @allocated(ref_alloc_test()) == 0

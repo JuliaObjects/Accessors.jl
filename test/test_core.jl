@@ -248,10 +248,13 @@ end
         @test set(obj, l, 456) === 456
     end
 
-
-    l = @optic _[1:3]
-    @test l isa Accessors.IndexLens
-    @test l([4,5,6,7]) == [4,5,6]
+    obj = [:a, :b, :c]
+    l = @optic _[1:2]
+    @test @inferred(l(obj))::Vector{Symbol} == [:a, :b]
+    @test @inferred(set(obj, l, [:x, :y]))::Vector{Symbol} == [:x, :y, :c]
+    l = @optic _[CartesianIndex(2)]
+    @test @inferred(l(obj)) == :b
+    @test @inferred(set(obj, l, :x))::Vector{Symbol} == [:a, :x, :c]
 
     nt = (a=1, b=2, c=3)
     l = @optic _[(:a, :c)]
