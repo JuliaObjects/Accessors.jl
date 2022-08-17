@@ -242,6 +242,12 @@ end
     @test l(obj) == 1
     @test set(obj, l, 6) == (6,2,3)
 
+    obj = 123
+    for l in (@optic(_[1]), @optic(_[end]), @optic(_[]))
+        @test l(obj) === 123
+        @test set(obj, l, 456) === 456
+    end
+
 
     l = @optic _[1:3]
     @test l isa Accessors.IndexLens

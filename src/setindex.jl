@@ -31,3 +31,9 @@ end
 @inline setindex(nt::NamedTuple, v, idx::Tuple{Vararg{Symbol}}) = merge(nt, NamedTuple{idx}(v))
 
 @inline setindex(p::Pair, v, idx::Integer) = Pair(setindex(Tuple(p), v, idx)...)
+
+@inline function setindex(x::Number, v, idx::Integer)
+    @boundscheck idx == only(eachindex(x)) || throw(BoundsError(x, idx))
+    return v
+end
+@inline setindex(x::Number, v) = v
