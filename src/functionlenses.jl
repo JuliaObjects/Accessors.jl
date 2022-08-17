@@ -53,6 +53,8 @@ set(x,     ::typeof(imag), y) = real(x) + im*y
 set(x,    ::typeof(angle), y) = abs(x) * cis(y)
 set(x,      ::typeof(abs), y) = y >= zero(y) ? y * sign(x) : throw(DomainError(y, "cannot set abs($x) to $y"))
 
+set(x, ::typeof(mod2pi), y) = 0 <= y <= 2π ? 2π * fld(x, 2π) + y : throw(DomainError(y, "cannot set mod2pi"))
+
 set(arr, ::typeof(normalize), val) = norm(arr) * val
 set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # should we check val is positive?
 
