@@ -423,12 +423,16 @@ end
 
 @inline function delete(obj::Tuple, l::IndexLens)
     i = only(l.indices)
-    (obj[1:(i - 1)]..., obj[(i + 1):end]...)
+    ntuple(length(obj) - 1) do j
+        obj[j < i ? j : j + 1]
+    end
 end
 
 @inline function insert(obj::Tuple, l::IndexLens, val)
     i = only(l.indices)
-    (obj[1:i-1]..., val, obj[i:end]...)
+    ntuple(length(obj) + 1) do j
+        j == i ? val : obj[j < i ? j : j - 1]
+    end
 end
 
 @inline delete(obj::AbstractVector, l::IndexLens) = deleteat!(copy(obj), only(l.indices))
