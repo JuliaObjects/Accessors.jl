@@ -8,6 +8,7 @@ using StaticArrays
         @test @inferred(delete( (a=1, b=2, c=3), @optic(_.a) )) == (b=2, c=3)
         @test @inferred(delete( (a=1, b=2, c=3), @optic(_.xxxx) )) === (a=1, b=2, c=3)
         @test @inferred(delete( (a=1, b=(c=2, d=3)), @optic(_.b.c) )) == (a=1, b=(d=3,))
+        @test @inferred(delete((1, 2), @optic(_[1]))) == (2,)
         @test delete( (a=1, b=2, c=3), @optic(_[:a]) ) == (b=2, c=3)
         @test delete( (1,2,3), last ) == (1, 2)
         VERSION >= v"1.6" && @inferred(delete( (1,2,3), last ))
