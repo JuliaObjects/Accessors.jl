@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Docstrings · Accessors.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">Accessors.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../getting_started/">Getting started</a></li></ul></li><li><span class="tocitem">Explanation</span><ul><li><a class="tocitem" href="../lenses/">Lenses</a></li></ul></li><li><span class="tocitem">Reference</span><ul><li class="is-active"><a class="tocitem" href>Docstrings</a><ul class="internal"><li><a class="tocitem" href="#Docstrings"><span>Docstrings</span></a></li></ul></li></ul></li><li><span class="tocitem">How-to guides</span><ul><li><a class="tocitem" href="../examples/custom_optics/">Custom Optics</a></li><li><a class="tocitem" href="../examples/custom_macros/">Custom Macros</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Reference</a></li><li class="is-active"><a href>Docstrings</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Docstrings</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaObjects/Accessors.jl/blob/master/docs/src/docstrings.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h2 id="Docstrings"><a class="docs-heading-anchor" href="#Docstrings">Docstrings</a><a id="Docstrings-1"></a><a class="docs-heading-anchor-permalink" href="#Docstrings" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="Accessors.Elements" href="#Accessors.Elements"><code>Accessors.Elements</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Elements</code></pre><p>Access all elements of a collection that implements <code>map</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; obj = (1,2,3);
+
+julia&gt; set(obj, Elements(), 0)
+(0, 0, 0)
+
+julia&gt; modify(x -&gt; 2x, obj, Elements())
+(2, 4, 6)</code></pre><p>This function/method/type is experimental. It can be changed or deleted at any point without warning</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/optics.jl#L229-L246">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.If" href="#Accessors.If"><code>Accessors.If</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">If(modify_condition)</code></pre><p>Restric access to locations for which <code>modify_condition</code> holds.</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; obj = (1,2,3,4,5,6);
+
+julia&gt; @set obj |&gt; Elements() |&gt; If(iseven) *= 10
+(1, 20, 3, 40, 5, 60)</code></pre><p>This function/method/type is experimental. It can be changed or deleted at any point without warning</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/optics.jl#L254-L269">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.IndexLens-Tuple{Vararg{Integer}}" href="#Accessors.IndexLens-Tuple{Vararg{Integer}}"><code>Accessors.IndexLens</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">IndexLens(indices::Tuple)
+IndexLens(indices::Integer...)</code></pre><p>Construct a lens for accessing an element of an object at <code>indices</code> via <code>[]</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/optics.jl#L409-L414">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.Properties" href="#Accessors.Properties"><code>Accessors.Properties</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Properties()</code></pre><p>Access all properties of an objects.</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; obj = (a=1, b=2, c=3)
+(a = 1, b = 2, c = 3)
+
+julia&gt; set(obj, Properties(), &quot;hi&quot;)
+(a = &quot;hi&quot;, b = &quot;hi&quot;, c = &quot;hi&quot;)
+
+julia&gt; modify(x -&gt; 2x, obj, Properties())
+(a = 2, b = 4, c = 6)</code></pre><p>Based on <a href="../internals/#Accessors.mapproperties-Tuple{Any, Any}"><code>mapproperties</code></a>.</p><p>This function/method/type is experimental. It can be changed or deleted at any point without warning</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/optics.jl#L312-L332">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.PropertyLens-Tuple{Any}" href="#Accessors.PropertyLens-Tuple{Any}"><code>Accessors.PropertyLens</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">PropertyLens{fieldname}()
+PropertyLens(fieldname)</code></pre><p>Construct a lens for accessing a property <code>fieldname</code> of an object.</p><p>The second constructor may not be type stable when <code>fieldname</code> is not a constant.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/optics.jl#L378-L385">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.Recursive" href="#Accessors.Recursive"><code>Accessors.Recursive</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Recursive(descent_condition, optic)</code></pre><p>Apply <code>optic</code> recursively as long as <code>descent_condition</code> holds.</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; obj = (a=missing, b=1, c=(d=missing, e=(f=missing, g=2)))
+(a = missing, b = 1, c = (d = missing, e = (f = missing, g = 2)))
+
+julia&gt; set(obj, Recursive(!ismissing, Properties()), 100)
+(a = 100, b = 1, c = (d = 100, e = (f = 100, g = 2)))
+
+julia&gt; obj = (1,2,(3,(4,5),6))
+(1, 2, (3, (4, 5), 6))
+
+julia&gt; modify(x -&gt; 100x, obj, Recursive(x -&gt; (x isa Tuple), Elements()))
+(100, 200, (300, (400, 500), 600))</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/optics.jl#L337-L356">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.delete" href="#Accessors.delete"><code>Accessors.delete</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">delete(obj, optic)</code></pre><p>Delete a part according to <code>optic</code> of <code>obj</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; obj = (a=1, b=2); lens=@optic _.a;
+
+julia&gt; delete(obj, lens)
+(b = 2,)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/optics.jl#L50-L63">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.getall" href="#Accessors.getall"><code>Accessors.getall</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">getall(obj, optic)</code></pre><p>Extract all parts of <code>obj</code> that are selected by <code>optic</code>. Returns a flat <code>Tuple</code> of values, or an <code>AbstractVector</code> if the selected parts contain arrays. This function is experimental and we might change the precise output container in future.</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; obj = (a=1, b=(2, 3));
+
+julia&gt; getall(obj, @optic _.a)
+(1,)
+
+julia&gt; getall(obj, @optic _ |&gt; Elements() |&gt; last)
+(1, 3)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/getsetall.jl#L1-L20">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.insert" href="#Accessors.insert"><code>Accessors.insert</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">insert(obj, optic, val)</code></pre><p>Insert a part according to <code>optic</code> into <code>obj</code> with the value <code>val</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; obj = (a=1, b=2); lens=@optic _.c; val = 100;
+
+julia&gt; insert(obj, lens, val)
+(a = 1, b = 2, c = 100)</code></pre><p>See also <a href="#Accessors.set"><code>set</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/optics.jl#L66-L80">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.modify" href="#Accessors.modify"><code>Accessors.modify</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">modify(f, obj, optic)</code></pre><p>Replace a part <code>x</code> of <code>obj</code> by <code>f(x)</code>. The <code>optic</code> argument selects which part to replace.</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; obj = (a=1, b=2); optic=@optic _.a; f = x -&gt; &quot;hello $x&quot;;
+
+julia&gt; modify(f, obj, optic)
+(a = &quot;hello 1&quot;, b = 2)</code></pre><p>See also <a href="#Accessors.set"><code>set</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/optics.jl#L15-L30">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.set" href="#Accessors.set"><code>Accessors.set</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">set(obj, optic, val)</code></pre><p>Replace a part according to <code>optic</code> of <code>obj</code> by <code>val</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; obj = (a=1, b=2); lens=@optic _.a; val = 100;
+
+julia&gt; set(obj, lens, val)
+(a = 100, b = 2)</code></pre><p>See also <a href="#Accessors.modify"><code>modify</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/optics.jl#L33-L47">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="CompositionsBase.opcompose" href="#CompositionsBase.opcompose"><code>CompositionsBase.opcompose</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">optic₁ ⨟ optic₂</code></pre><p>Compose optics <code>optic₁</code>, <code>optic₂</code>, ..., <code>opticₙ</code> to access nested objects.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; obj = (a = (b = (c = 1,),),);
+
+julia&gt; la = @optic _.a
+       lb = @optic _.b
+       lc = @optic _.c
+       lens = la ⨟ lb ⨟ lc
+(@optic _.c) ∘ (@optic _.a.b)
+
+julia&gt; lens(obj)
+1</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/optics.jl#L83-L103">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.@delete-Tuple{Any}" href="#Accessors.@delete-Tuple{Any}"><code>Accessors.@delete</code></a> — <span class="docstring-category">Macro</span></header><section><div><pre><code class="language-julia hljs">@delete obj_optic</code></pre><p>Define an optic and call <a href="#Accessors.delete"><code>delete</code></a> on it.</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; xs = (1,2,3);
+
+julia&gt; ys = @delete xs[2]
+(1, 3)</code></pre><p>Supports the same syntax as <a href="#Accessors.@optic-Tuple{Any}"><code>@optic</code></a>. See also <a href="#Accessors.@set-Tuple{Any}"><code>@set</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/sugar.jl#L81-L95">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.@insert-Tuple{Any}" href="#Accessors.@insert-Tuple{Any}"><code>Accessors.@insert</code></a> — <span class="docstring-category">Macro</span></header><section><div><pre><code class="language-julia hljs">@insert assignment</code></pre><p>Return a modified copy of deeply nested objects.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; t = (a=1, b=2);
+
+julia&gt; @insert t.c = 5
+(a = 1, b = 2, c = 5)
+
+julia&gt; t
+(a = 1, b = 2)</code></pre><p>Supports the same syntax as <a href="#Accessors.@optic-Tuple{Any}"><code>@optic</code></a>. See also <a href="#Accessors.@set-Tuple{Any}"><code>@set</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/sugar.jl#L101-L120">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.@modify-Tuple{Any, Any}" href="#Accessors.@modify-Tuple{Any, Any}"><code>Accessors.@modify</code></a> — <span class="docstring-category">Macro</span></header><section><div><pre><code class="language-julia hljs">@modify(f, obj_optic)</code></pre><p>Define an optic and call <a href="#Accessors.modify"><code>modify</code></a> on it.</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; xs = (1,2,3);
+
+julia&gt; ys = @modify(xs |&gt; Elements() |&gt; If(isodd)) do x
+           x + 1
+       end
+(2, 2, 4)</code></pre><p>Supports the same syntax as <a href="#Accessors.@optic-Tuple{Any}"><code>@optic</code></a>. See also <a href="#Accessors.@set-Tuple{Any}"><code>@set</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/sugar.jl#L60-L76">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.@optic-Tuple{Any}" href="#Accessors.@optic-Tuple{Any}"><code>Accessors.@optic</code></a> — <span class="docstring-category">Macro</span></header><section><div><pre><code class="language-julia hljs">@optic</code></pre><p>Construct an optic from property access and similar.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; struct T;a;b;end
+
+julia&gt; t = T(&quot;A1&quot;, T(T(&quot;A3&quot;, &quot;B3&quot;), &quot;B2&quot;))
+T(&quot;A1&quot;, T(T(&quot;A3&quot;, &quot;B3&quot;), &quot;B2&quot;))
+
+julia&gt; l = @optic _.b.a.b
+(@optic _.b.a.b)
+
+julia&gt; l(t)
+&quot;B3&quot;
+
+julia&gt; set(t, l, 100)
+T(&quot;A1&quot;, T(T(&quot;A3&quot;, 100), &quot;B2&quot;))
+
+julia&gt; t = (&quot;one&quot;, &quot;two&quot;)
+(&quot;one&quot;, &quot;two&quot;)
+
+julia&gt; set(t, (@optic _[1]), &quot;1&quot;)
+(&quot;1&quot;, &quot;two&quot;)</code></pre><p>See also <a href="#Accessors.@set-Tuple{Any}"><code>@set</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/sugar.jl#L336-L368">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.@reset-Tuple{Any}" href="#Accessors.@reset-Tuple{Any}"><code>Accessors.@reset</code></a> — <span class="docstring-category">Macro</span></header><section><div><pre><code class="language-julia hljs">@reset assignment</code></pre><p>Shortcut for <code>obj = @set obj...</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; t = (a=1,)
+(a = 1,)
+
+julia&gt; @reset t.a=2
+(a = 2,)
+
+julia&gt; t
+(a = 2,)</code></pre><p>Supports the same syntax as <a href="#Accessors.@optic-Tuple{Any}"><code>@optic</code></a>. See also <a href="#Accessors.@set-Tuple{Any}"><code>@set</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/sugar.jl#L36-L55">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Accessors.@set-Tuple{Any}" href="#Accessors.@set-Tuple{Any}"><code>Accessors.@set</code></a> — <span class="docstring-category">Macro</span></header><section><div><pre><code class="language-julia hljs">@set assignment</code></pre><p>Return a modified copy of deeply nested objects.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; struct T;a;b end
+
+julia&gt; t = T(1,2)
+T(1, 2)
+
+julia&gt; @set t.a = 5
+T(5, 2)
+
+julia&gt; t
+T(1, 2)
+
+julia&gt; t = @set t.a = T(2,2)
+T(T(2, 2), 2)
+
+julia&gt; @set t.a.b = 3
+T(T(2, 3), 2)</code></pre><p>Supports the same syntax as <a href="#Accessors.@optic-Tuple{Any}"><code>@optic</code></a>. See also <a href="#Accessors.@reset-Tuple{Any}"><code>@reset</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaObjects/Accessors.jl/blob/f0a65fe0edb542324574eaeef5680e78335415ba/src/sugar.jl#L4-L31">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../lenses/">« Lenses</a><a class="docs-footer-nextpage" href="../examples/custom_optics/">Custom Optics »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Friday 2 September 2022 09:49">Friday 2 September 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
