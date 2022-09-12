@@ -16,6 +16,7 @@ include("optics.jl")
 include("getsetall.jl")
 include("sugar.jl")
 include("functionlenses.jl")
+include("staticarrays.jl")
 include("testing.jl")
 
 end
