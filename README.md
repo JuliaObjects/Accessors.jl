@@ -16,3 +16,7 @@ using Accessors
 To get started, see [this tutorial](https://juliaobjects.github.io/Accessors.jl/stable/getting_started/) and/or watch this video:
 
 [![JuliaCon2020 Changing the immutable](https://img.youtube.com/vi/vkAOYeTpLg0/0.jpg)](https://youtu.be/vkAOYeTpLg0 "Changing the immutable")
+
+# Featured extensions
+
+- [AccessorsExtra.jl](https://gitlab.com/aplavin/AccessorsExtra.jl) [[docs](https://aplavin.github.io/AccessorsExtra.jl/test/notebook.html)] implements setters for types from other packages and includes additional optics

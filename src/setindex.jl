@@ -4,8 +4,9 @@ end
 
 @inline setindex(::Base.RefValue, val) = Ref(val)
 
-Base.@propagate_inbounds function setindex(xs::AbstractArray, v, I...)
-    T = promote_type(eltype(xs), typeof(v))
+Base.@propagate_inbounds function setindex(xs::AbstractArray, v, I_raw...)
+    I = to_indices(xs, I_raw)
+    T = promote_type(eltype(xs), I isa Tuple{Vararg{Integer}} ? typeof(v) : eltype(v))
     ys = similar(xs, T)
     if eltype(xs) !== Union{}
         copy!(ys, xs)
@@ -29,3 +30,11 @@ end
 @inline setindex(nt::NamedTuple, v, idx::Symbol) = merge(nt, (; idx => v))
 
 @inline setindex(nt::NamedTuple, v, idx::Tuple{Vararg{Symbol}}) = merge(nt, NamedTuple{idx}(v))
+
+@inline setindex(p::Pair, v, idx::Integer) = Pair(setindex(Tuple(p), v, idx)...)
+
+@inline function setindex(x::Number, v, idx::Integer)
+    @boundscheck idx == only(eachindex(x)) || throw(BoundsError(x, idx))
+    return v
+end
+@inline setindex(x::Number, v) = v

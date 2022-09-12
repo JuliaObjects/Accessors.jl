@@ -28,6 +28,7 @@ using Accessors: insert
             @inferred insert((a=1, b=(2, 3)), @optic(_.b[2]), "xxx")
             true
         end
+        @test @inferred(insert((1, 2), @optic(_[1]), 3)) == (3, 1, 2)
     end
 
     @testset "macro" begin

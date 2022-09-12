@@ -9,6 +9,11 @@ import ConstructionBase
     res = @inferred mapproperties(x->2x, (a=1, b=2))
     @test res === (a=2, b=4)
     @test NamedTuple() === @inferred mapproperties(cos, NamedTuple())
+
+    res = @inferred mapproperties(x->2x, (1, 2))
+    @test res === (2, 4)
+    @test () === @inferred mapproperties(cos, ())
+
     struct S{A,B}
         a::A
         b::B
@@ -34,6 +39,10 @@ end
 @testset "Properties" begin
     pt = (x=1, y=2, z=3)
     @test (x=0, y=1, z=2) === @set pt |> Properties() -= 1
+    @inferred modify(x->x-1, pt, Properties())
+
+    pt = (1, 2, 3)
+    @test (0, 1, 2) === @set pt |> Properties() -= 1
     @inferred modify(x->x-1, pt, Properties())
 
     # custom struct

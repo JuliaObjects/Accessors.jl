@@ -1,6 +1,6 @@
 export @optic
 export PropertyLens, IndexLens
-export set, modify, delete, insert
+export set, modify, delete, insert, getall
 export ∘, opcompose, var"⨟"
 export Elements, Recursive, If, Properties
 export setproperties
@@ -95,7 +95,7 @@ julia> la = @optic _.a
        lb = @optic _.b
        lc = @optic _.c
        lens = la ⨟ lb ⨟ lc
-(@optic _.c) ∘ (@optic _.b) ∘ (@optic _.a)
+(@optic _.c) ∘ (@optic _.a.b)
 
 julia> lens(obj)
 1
@@ -160,6 +160,10 @@ composed_optic_style(::ModifyBased, ::ModifyBased) = ModifyBased()
 end
 
 function _set(obj, optic, val, ::SetBased)
+    inv_func = inverse(optic)
+    if !(inv_func isa NoInverse)
+        return inv_func(val)
+    end
     Optic = typeof(optic)
     error("""
     This should be unreachable. You probably need to overload
@@ -299,15 +303,9 @@ This function should not be overloaded directly. Instead both of
 should be overloaded.
 $EXPERIMENTAL
 """
-function mapproperties end
-
-function mapproperties(f, nt::NamedTuple)
-    map(f, nt)
-end
-
 function mapproperties(f, obj)
     nt = getproperties(obj)
-    patch = mapproperties(f, nt)
+    patch = map(f, nt)
     return setproperties(obj, patch)
 end
 
@@ -425,12 +423,16 @@ end
 
 @inline function delete(obj::Tuple, l::IndexLens)
     i = only(l.indices)
-    (obj[1:(i - 1)]..., obj[(i + 1):end]...)
+    ntuple(length(obj) - 1) do j
+        obj[j < i ? j : j + 1]
+    end
 end
 
 @inline function insert(obj::Tuple, l::IndexLens, val)
     i = only(l.indices)
-    (obj[1:i-1]..., val, obj[i:end]...)
+    ntuple(length(obj) + 1) do j
+        j == i ? val : obj[j < i ? j : j - 1]
+    end
 end
 
 @inline delete(obj::AbstractVector, l::IndexLens) = deleteat!(copy(obj), only(l.indices))

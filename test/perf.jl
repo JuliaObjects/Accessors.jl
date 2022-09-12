@@ -45,6 +45,17 @@ function hand_set_i((obj, val, i))
     @inbounds Base.setindex(obj, val, i)
 end
 
+function lens_set_math((obj, val))
+    @set(inv(log(obj.a.b)) = val[2])
+end
+
+function hand_set_math((obj, val))
+    obja = obj.a
+    log(obja.b)  # setting a composed lens evaluates the inner one
+    AB(AB(obja.a, exp(1 / val[2])), obj.b)
+end
+
+
 function benchmark_lens_vs_hand(b_lens::Benchmark, b_hand::Benchmark)
 
     te_hand = minimum(run(b_lens))
@@ -112,6 +123,7 @@ let
             (lens=lens_set_a,           hand=hand_set_a,       args=(obj, val)),
             (lens=lens_set_ab,          hand=hand_set_ab,      args=(obj, val)),
             (lens=lens_set_a_and_b,     hand=hand_set_a_and_b, args=(obj, val)),
+            (lens=lens_set_math,        hand=hand_set_math,    args=(obj, val)),
             (lens=lens_set_i,           hand=hand_set_i,
              args=(@SVector[1,2], 10, 1))
             ]
@@ -119,7 +131,7 @@ let
         f_hand = setup.hand
         args = setup.args
 
-        @assert f_hand(args) == f_lens(args)
+        @test f_hand(args) == f_lens(args)
 
         @testset "IR" begin
             info_lens, _ = @code_typed f_lens(args)

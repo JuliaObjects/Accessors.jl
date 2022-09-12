@@ -134,6 +134,10 @@ end
     @test_throws ArgumentError @set(only((1,2)) = 2 )
 
     @test [@set(t[1] = 10), @set(t[2] *= 2)] == [(10, 2), (1, 4)]
+
+    p = 1 => :a
+    @test @set(p[1] = 1.23) === (1.23 => :a)
+    @test @set(p[2] = 1.23) === (1 => 1.23)
 end
 
 
@@ -238,10 +242,19 @@ end
     @test l(obj) == 1
     @test set(obj, l, 6) == (6,2,3)
 
+    obj = 123
+    for l in (@optic(_[1]), @optic(_[end]), @optic(_[]))
+        @test l(obj) === 123
+        @test set(obj, l, 456) === 456
+    end
 
-    l = @optic _[1:3]
-    @test l isa Accessors.IndexLens
-    @test l([4,5,6,7]) == [4,5,6]
+    obj = [:a, :b, :c]
+    l = @optic _[1:2]
+    @test @inferred(l(obj))::Vector{Symbol} == [:a, :b]
+    @test @inferred(set(obj, l, [:x, :y]))::Vector{Symbol} == [:x, :y, :c]
+    l = @optic _[CartesianIndex(2)]
+    @test @inferred(l(obj)) == :b
+    @test @inferred(set(obj, l, :x))::Vector{Symbol} == [:a, :x, :c]
 
     nt = (a=1, b=2, c=3)
     l = @optic _[(:a, :c)]
@@ -477,6 +490,7 @@ else
                 @optic _ |> UserDefinedLens() |> _.b
                 (@optic _.a) ∘ UserDefinedLens()   ∘ (@optic _.b)
                 (@optic _.a) ∘ LensIfTextPlain() ∘ (@optic _.b)
+                @optic 2 * (abs(_.a.b[2].c) + 1)
             ]
             buf = IOBuffer()
             show(buf, item)
