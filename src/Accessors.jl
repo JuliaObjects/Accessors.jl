@@ -13,6 +13,7 @@ end
 
 include("setindex.jl")
 include("optics.jl")
+include("getsetall.jl")
 include("sugar.jl")
 include("functionlenses.jl")
 include("testing.jl")

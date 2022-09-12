@@ -1,6 +1,7 @@
 module TestFunctionLenses
 using Test
 using Dates
+using Unitful
 using Accessors: test_getset_laws
 using Accessors
 
@@ -88,20 +89,28 @@ end
 end
 
 @testset "math" begin
-    x = 1
     @test 2.0       === @set real(1) = 2.0
+    @test 2.0 + 1im === @set real(1+1im) = 2.0
     @test 1.0 + 2im === @set imag(1) = 2.0
     @test 1.0 + 2im === @set imag(1+1im) = 2.0
+    @test 1u"m"         === @set real(2u"m") = 1u"m"
+    @test (2 + 1im)u"m" === @set imag(2u"m") = 1u"m"
+
+    test_getset_laws(mod2pi, 5.3, 1, 2; cmp=isapprox)
+    test_getset_laws(mod2pi, -5.3, 1, 2; cmp=isapprox)
 
     test_getset_laws(!, true, true, false)
-    # no need for extensive testing: all invertible lenses are simply forwarded to InverseFunctions
-    @testset for o in [inv, +, exp, sqrt, @optic(2 + _), @optic(_ * 3), @optic(log(2, _))]
+    @testset for o in [
+            # invertible lenses below: no need for extensive testing, simply forwarded to InverseFunctions
+            inv, +, exp, sqrt, @optic(2 + _), @optic(_ * 3), @optic(log(2, _))
+        ]
         x = 5
         test_getset_laws(o, x, 10, 20; cmp=isapprox)
         @inferred set(x, o, 10)
     end
     
     x = 3 + 4im
+    @test @set(abs(-2u"m") = 1u"m") === -1u"m"
     @test @set(abs(x) = 10) ≈ 6 + 8im
     @test @set(angle(x) = π/2) ≈ 5im
     @test_throws DomainError @set(abs(x) = -10)
