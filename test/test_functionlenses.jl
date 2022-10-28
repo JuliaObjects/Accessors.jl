@@ -95,6 +95,9 @@ end
     @test 1.0 + 2im === @set imag(1+1im) = 2.0
     @test 1u"m"         === @set real(2u"m") = 1u"m"
     @test (2 + 1im)u"m" === @set imag(2u"m") = 1u"m"
+    
+    @test set.(10, @optic(mod(_, 3)), 0:2) == 9:11
+    @test_throws DomainError set(10, @optic(mod(_, 3)), 10)
 
     test_getset_laws(mod2pi, 5.3, 1, 2; cmp=isapprox)
     test_getset_laws(mod2pi, -5.3, 1, 2; cmp=isapprox)
@@ -102,7 +105,9 @@ end
     test_getset_laws(!, true, true, false)
     @testset for o in [
             # invertible lenses below: no need for extensive testing, simply forwarded to InverseFunctions
-            inv, +, exp, sqrt, @optic(2 + _), @optic(_ * 3), @optic(log(2, _))
+            inv, +, exp, sqrt, @optic(2 + _), @optic(_ * 3), @optic(log(2, _)),
+            # non-invertible lenses, indirectly forwarded to InverseFunctions
+            @optic(mod(_, 21)), @optic(fld(_, 3)), @optic(rem(_, 21)), @optic(div(_, 3)),
         ]
         x = 5
         test_getset_laws(o, x, 10, 20; cmp=isapprox)
