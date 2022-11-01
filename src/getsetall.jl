@@ -43,7 +43,7 @@ setall(obj, o, vs) = set(obj, o, only(vs))
 # Instead, we need to generate unrolled code explicitly.
 function getall(obj, optic::ComposedFunction)
     N = length(decompose(optic))
-    _GetAll{N}()(obj, optic)
+    _getall(obj, optic, Val(N))
 end
 
 function setall(obj, optic::ComposedFunction, vs)
@@ -53,8 +53,8 @@ function setall(obj, optic::ComposedFunction, vs)
 end
 
 
-struct _GetAll{N} end
-(::_GetAll{N})(_) where {N} = error("Too many chained optics: $N is not supported for now. See also https://github.com/JuliaObjects/Accessors.jl/pull/64.")
+_getall(_, _, ::Val{N}) where {N} = error("Too many chained optics: $N is not supported for now. See also https://github.com/JuliaObjects/Accessors.jl/pull/64.")
+_setall(_, _, _, ::Val{N}) where {N} = error("Too many chained optics: $N is not supported for now. See also https://github.com/JuliaObjects/Accessors.jl/pull/68.")
 
 _concat(a::Tuple, b::Tuple) = (a..., b...)
 _concat(a::Tuple, b::AbstractVector) = vcat(collect(a), b)
@@ -66,28 +66,16 @@ _reduce_concat(xs::AbstractVector) = reduce(append!, xs; init=eltype(eltype(xs))
 _reduce_concat(xs::Tuple{AbstractVector, Vararg{AbstractVector}}) = reduce(vcat, xs)
 _reduce_concat(xs::AbstractVector{<:AbstractVector}) = reduce(vcat, xs)
 
-function _generate_getall(N::Int)
-    syms = [Symbol(:f_, i) for i in 1:N]
 
-    expr = :( getall(obj, $(syms[end])) )
-    for s in syms[1:end - 1] |> reverse
-        expr = :(
-            _reduce_concat(
-                map(getall(obj, $(s))) do obj
-                    $expr
-                end
-            )
+_getall(obj, optic, ::Val{1}) = getall(obj, optic)
+for i in 2:10
+    @eval function _getall(obj, optic, ::Val{$i})
+        _reduce_concat(
+            map(getall(obj, optic.inner)) do obj
+                _getall(obj, optic.outer, Val($(i-1)))
+            end
         )
     end
-
-    :(function (::_GetAll{$N})(obj, optic)
-        ($(syms...),) = deopcompose(optic)
-        $expr
-    end)
-end
-
-for i in 2:10
-    eval(_generate_getall(i))
 end
 
 
@@ -102,7 +90,7 @@ _val(::Type{Val{N}}) where {N} = N
 
 getall_lengths(obj, optic, ::Val{1}) = _staticlength(getall(obj, optic))
 for i in 2:10
-    @eval function getall_lengths(obj, optic::ComposedFunction, ::Val{$i})
+    @eval function getall_lengths(obj, optic, ::Val{$i})
         map(getall(obj, optic.inner)) do o
             getall_lengths(o, optic.outer, Val($(i - 1)))
         end
@@ -135,7 +123,7 @@ end
 
 _setall(obj, optic, vs, ::Val{1}) = setall(obj, optic, vs)
 for i in 2:10
-    @eval function _setall(obj, optic::ComposedFunction, vs, ::Val{$i})
+    @eval function _setall(obj, optic, vs, ::Val{$i})
         setall(obj, optic.inner, map(getall(obj, optic.inner), vs) do obj, vss
             _setall(obj, optic.outer, vss, Val($(i - 1)))
         end)
