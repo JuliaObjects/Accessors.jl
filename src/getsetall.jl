@@ -44,9 +44,10 @@ function getall(obj, optic::ComposedFunction)
     _GetAll{N}()(obj, optic)
 end
 
-function setall(obj, optic::ComposedFunction, vs::Tuple)
+function setall(obj, optic::ComposedFunction, vs)
     N = length(decompose(optic))
-    _SetAll{N}()(obj, optic, vs)
+    vss = to_nested_shape(vs, typeof(getall_lengths(obj, optic, Val(N))), Val(N))
+    _setall(obj, optic, vss, Val(N))
 end
 
 
@@ -90,27 +91,19 @@ end
 
 _staticlength(::Number) = Val(1)
 _staticlength(::NTuple{N, <:Any}) where {N} = Val(N)
-# _staticlength(x::Vector) = length(x)
+# _staticlength(x::AbstractVector) = length(x)
 
 _val(::Val{N}) where {N} = N
 _val(::Type{Val{N}}) where {N} = N
 
 _staticsum(f, x) = sum(_val ∘ f, x) |> Val
 
-getall_lengths(obj, optic) = _staticlength(getall(obj, optic))
-function getall_lengths(obj, optic::ComposedFunction, ::Val{2})
-    map(getall(obj, optic.inner)) do o
-        getall_lengths(o, optic.outer)
-    end
-end
-function getall_lengths(obj, optic::ComposedFunction, ::Val{3})
-    map(getall(obj, optic.inner)) do o
-        getall_lengths(o, optic.outer, Val(2))
-    end
-end
-function getall_lengths(obj, optic::ComposedFunction, ::Val{4})
-    map(getall(obj, optic.inner)) do o
-        getall_lengths(o, optic.outer, Val(3))
+getall_lengths(obj, optic, ::Val{1}) = _staticlength(getall(obj, optic))
+for i in 2:10
+    @eval function getall_lengths(obj, optic::ComposedFunction, ::Val{$i})
+        map(getall(obj, optic.inner)) do o
+            getall_lengths(o, optic.outer, Val($(i - 1)))
+        end
     end
 end
 
@@ -119,77 +112,30 @@ nestedsum(ls::Type{L}) where {L <: Val} = L
 nestedsum(ls::Type{LS}) where {LS <: Tuple} = _staticsum(nestedsum, LS.parameters)
 
 
-to_nested_shape(vs, ls::Type{LS}) where {LS <: Val} = (@assert length(vs) == _val(LS); vs)
-to_nested_shape(vs, ls::LS, VN) where {LS <: Tuple} = to_nested_shape(vs, typeof(ls), VN)
-@generated function to_nested_shape(vs, ls::Type{LS}, ::Val{2}) where {LS <: Tuple}
-    i = 1
-    subs = map(LS.parameters) do lss
-        n = nestedsum(lss)
-        elems = map(i:i+_val(n)-1) do j
-            :( vs[$j] )
+to_nested_shape(vs, ls::Type{LS}, ::Val{1}) where {LS <: Val} = (@assert length(vs) == _val(LS); vs)
+for i in 2:10
+    @eval @generated function to_nested_shape(vs, ls::Type{LS}, ::Val{$i}) where {LS <: Tuple}
+        vi = 1
+        subs = map(LS.parameters) do lss
+            n = nestedsum(lss)
+            elems = map(vi:vi+_val(n)-1) do j
+                :( vs[$j] )
+            end
+            res = :( to_nested_shape(($(elems...),), $lss, $(Val($(i - 1)))) )
+            vi = vi + _val(n)
+            res
         end
-        res = :( to_nested_shape(($(elems...),), $lss) )
-        i = i + _val(n)
-        res
+        :( ($(subs...),) )
     end
-    :( ($(subs...),) )
 end
-@generated function to_nested_shape(vs, ls::Type{LS}, ::Val{3}) where {LS <: Tuple}
-    i = 1
-    subs = map(LS.parameters) do lss
-        n = nestedsum(lss)
-        elems = map(i:i+_val(n)-1) do j
-            :( vs[$j] )
-        end
-        res = :( to_nested_shape(($(elems...),), $lss, Val(2)) )
-        i = i + _val(n)
-        res
+
+
+_setall(obj, optic, vs, ::Val{1}) = setall(obj, optic, vs)
+for i in 2:10
+    @eval function _setall(obj, optic::ComposedFunction, vs, ::Val{$i})
+        setall(obj, optic.inner, map(getall(obj, optic.inner), vs) do obj, vss
+            _setall(obj, optic.outer, vss, Val($(i - 1)))
+        end)
     end
-    :( ($(subs...),) )
-end
-@generated function to_nested_shape(vs, ls::Type{LS}, ::Val{4}) where {LS <: Tuple}
-    i = 1
-    subs = map(LS.parameters) do lss
-        n = nestedsum(lss)
-        elems = map(i:i+_val(n)-1) do j
-            :( vs[$j] )
-        end
-        res = :( to_nested_shape(($(elems...),), $lss, Val(3)) )
-        i = i + _val(n)
-        res
-    end
-    :( ($(subs...),) )
 end
 
-
-_setall(obj, optic, vs) = setall(obj, optic, vs)
-_setall(obj, optic::ComposedFunction, vs, ::Val{2}) =
-    setall(obj, optic.inner, map(getall(obj, optic.inner), vs) do obj, vss
-        _setall(obj, optic.outer, vss)
-    end)
-_setall(obj, optic::ComposedFunction, vs, ::Val{3}) =
-    setall(obj, optic.inner, map(getall(obj, optic.inner), vs) do obj, vss
-        _setall(obj, optic.outer, vss, Val(2))
-    end)
-_setall(obj, optic::ComposedFunction, vs, ::Val{4}) =
-    setall(obj, optic.inner, map(getall(obj, optic.inner), vs) do obj, vss
-        _setall(obj, optic.outer, vss, Val(3))
-    end)
-
-
-struct _SetAll{N} end
-
-function (::_SetAll{N})(obj, optic, vs) where {N}
-    vss = to_nested_shape(vs, getall_lengths(obj, optic, Val(N)), Val(N))
-    # @info "" vs getall_lengths(obj, optic, Val(N)) vss
-    _setall(obj, optic, vss, Val(N))
-end
-
-# split a into two parts: b-sized front and remaining
-_split_n(a::NTuple{Na, Any}, b::NTuple{Nb, Any}) where {Na, Nb} = ntuple(i -> a[i], Nb), ntuple(i -> a[Nb + i], Na - Nb)
-
-# split vs into parts sized according to getall(o, f)
-_split_getall(ins_old, f, vs) = foldl(ins_old; init=((), vs)) do (acc, vs_), o
-    vs_cur, vs_rest = _split_n(vs_, getall(o, f))
-    (acc..., vs_cur), vs_rest
-end |> first
