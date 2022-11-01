@@ -20,6 +20,8 @@ julia> getall(obj, @optic _ |> Elements() |> last)
 """
 function getall end
 
+# implementations for individual noncomposite optics
+
 getall(obj::Union{Tuple, AbstractVector}, ::Elements) = obj
 getall(obj::Union{NamedTuple}, ::Elements) = values(obj)
 getall(obj::AbstractArray, ::Elements) = vec(obj)
@@ -38,8 +40,10 @@ setall(obj, o::If, vs) = error("Not supported")
 setall(obj, o, vs) = set(obj, o, only(vs))
 
 
-# A straightforward recursive implementation of getall and setall don't actually infer,
-# see https://github.com/JuliaObjects/Accessors.jl/pull/64.
+# implementations for composite optics
+
+# A straightforward recursive approach doesn't actually infer,
+# see https://github.com/JuliaObjects/Accessors.jl/pull/64 and https://github.com/JuliaObjects/Accessors.jl/pull/68.
 # Instead, we need to generate separate functions for each recursion level.
 
 function getall(obj, optic::ComposedFunction)
@@ -80,6 +84,8 @@ for i in 2:10
 end
 
 
+# helper functions
+
 _concat(a::Tuple, b::Tuple) = (a..., b...)
 _concat(a::Tuple, b::AbstractVector) = vcat(collect(a), b)
 _concat(a::AbstractVector, b::Tuple) = vcat(a, collect(b))
@@ -93,10 +99,6 @@ _reduce_concat(xs::AbstractVector{<:AbstractVector}) = reduce(vcat, xs)
 _staticlength(::NTuple{N, <:Any}) where {N} = Val(N)
 _staticlength(x::AbstractVector) = length(x)
 
-_val(N::Int) = N
-_val(::Val{N}) where {N} = N
-
-
 getall_lengths(obj, optic, ::Val{1}) = _staticlength(getall(obj, optic))
 for i in 2:10
     @eval function getall_lengths(obj, optic, ::Val{$i})
@@ -107,11 +109,9 @@ for i in 2:10
     end
 end
 
-
 nestedsum(ls::Int) = ls
 nestedsum(ls::Val) = ls
 nestedsum(ls::Tuple) = sum(_val ∘ nestedsum, ls)
-
 
 to_nested_shape(vs, ::Val{LS}, ::Val{1}) where {LS} = (@assert length(vs) == _val(LS); vs)
 for i in 2:10
@@ -129,3 +129,6 @@ for i in 2:10
         :( ($(subs...),) )
     end
 end
+
+_val(N::Int) = N
+_val(::Val{N}) where {N} = N
