@@ -31,9 +31,11 @@ getall(obj, f) = (f(obj),)
 
 setall(obj, ::Properties, vs::Tuple) = setproperties(obj, NamedTuple{propertynames(obj)}(vs))
 setall(obj::NamedTuple{NS}, ::Elements, vs::Tuple) where {NS} = NamedTuple{NS}(vs)
-setall(obj::NTuple{N, Any}, ::Elements, vs::NTuple{N, Any}) where {N} = vs
-setall(obj, o::If, vs::Tuple) = error("Not supported")
-setall(obj, o, vs::Tuple) = set(obj, o, only(vs))
+setall(obj::NTuple{N, Any}, ::Elements, vs) where {N} = (@assert length(vs) == N; Tuple(vs))
+setall(obj::AbstractArray, ::Elements, vs::AbstractArray) = (@assert length(obj) == length(vs); reshape(vs, size(obj)))
+setall(obj::AbstractArray, ::Elements, vs) = setall(obj, Elements(), collect(vs))
+setall(obj, o::If, vs) = error("Not supported")
+setall(obj, o, vs) = set(obj, o, only(vs))
 
 
 # A recursive implementation of getall doesn't actually infer,
@@ -46,7 +48,7 @@ end
 
 function setall(obj, optic::ComposedFunction, vs)
     N = length(decompose(optic))
-    vss = to_nested_shape(vs, typeof(getall_lengths(obj, optic, Val(N))), Val(N))
+    vss = to_nested_shape(vs, Val(getall_lengths(obj, optic, Val(N))), Val(N))
     _setall(obj, optic, vss, Val(N))
 end
 
@@ -91,12 +93,12 @@ end
 
 _staticlength(::Number) = Val(1)
 _staticlength(::NTuple{N, <:Any}) where {N} = Val(N)
-# _staticlength(x::AbstractVector) = length(x)
+_staticlength(x::AbstractVector) = length(x)
 
+_val(N::Int) = N
 _val(::Val{N}) where {N} = N
 _val(::Type{Val{N}}) where {N} = N
 
-_staticsum(f, x) = sum(_val ∘ f, x) |> Val
 
 getall_lengths(obj, optic, ::Val{1}) = _staticlength(getall(obj, optic))
 for i in 2:10
@@ -108,20 +110,21 @@ for i in 2:10
 end
 
 
-nestedsum(ls::Type{L}) where {L <: Val} = L
-nestedsum(ls::Type{LS}) where {LS <: Tuple} = _staticsum(nestedsum, LS.parameters)
+nestedsum(ls::Int) = ls
+nestedsum(ls::Val) = ls
+nestedsum(ls::Tuple) = sum(_val ∘ nestedsum, ls)
 
 
-to_nested_shape(vs, ls::Type{LS}, ::Val{1}) where {LS <: Val} = (@assert length(vs) == _val(LS); vs)
+to_nested_shape(vs, ::Val{LS}, ::Val{1}) where {LS} = (@assert length(vs) == _val(LS); vs)
 for i in 2:10
-    @eval @generated function to_nested_shape(vs, ls::Type{LS}, ::Val{$i}) where {LS <: Tuple}
+    @eval @generated function to_nested_shape(vs, ls::Val{LS}, ::Val{$i}) where {LS}
         vi = 1
-        subs = map(LS.parameters) do lss
+        subs = map(LS) do lss
             n = nestedsum(lss)
             elems = map(vi:vi+_val(n)-1) do j
                 :( vs[$j] )
             end
-            res = :( to_nested_shape(($(elems...),), $lss, $(Val($(i - 1)))) )
+            res = :( to_nested_shape(($(elems...),), $(Val(lss)), $(Val($(i - 1)))) )
             vi = vi + _val(n)
             res
         end
