@@ -38,9 +38,10 @@ setall(obj, o::If, vs) = error("Not supported")
 setall(obj, o, vs) = set(obj, o, only(vs))
 
 
-# A recursive implementation of getall doesn't actually infer,
+# A straightforward recursive implementation of getall and setall don't actually infer,
 # see https://github.com/JuliaObjects/Accessors.jl/pull/64.
-# Instead, we need to generate unrolled code explicitly.
+# Instead, we need to generate separate functions for each recursion level.
+
 function getall(obj, optic::ComposedFunction)
     N = length(decompose(optic))
     _getall(obj, optic, Val(N))
@@ -53,20 +54,8 @@ function setall(obj, optic::ComposedFunction, vs)
 end
 
 
+# _getall: the actual workhorse for getall
 _getall(_, _, ::Val{N}) where {N} = error("Too many chained optics: $N is not supported for now. See also https://github.com/JuliaObjects/Accessors.jl/pull/64.")
-_setall(_, _, _, ::Val{N}) where {N} = error("Too many chained optics: $N is not supported for now. See also https://github.com/JuliaObjects/Accessors.jl/pull/68.")
-
-_concat(a::Tuple, b::Tuple) = (a..., b...)
-_concat(a::Tuple, b::AbstractVector) = vcat(collect(a), b)
-_concat(a::AbstractVector, b::Tuple) = vcat(a, collect(b))
-_concat(a::AbstractVector, b::AbstractVector) = vcat(a, b)
-_reduce_concat(xs::Tuple) = reduce(_concat, xs; init=())
-_reduce_concat(xs::AbstractVector) = reduce(append!, xs; init=eltype(eltype(xs))[])
-# fast path:
-_reduce_concat(xs::Tuple{AbstractVector, Vararg{AbstractVector}}) = reduce(vcat, xs)
-_reduce_concat(xs::AbstractVector{<:AbstractVector}) = reduce(vcat, xs)
-
-
 _getall(obj, optic, ::Val{1}) = getall(obj, optic)
 for i in 2:10
     @eval function _getall(obj, optic, ::Val{$i})
@@ -78,20 +67,41 @@ for i in 2:10
     end
 end
 
+# _setall: the actual workhorse for setall
+# takes values as a nested tuple with proper leaf lengths, prepared in setall above
+_setall(_, _, _, ::Val{N}) where {N} = error("Too many chained optics: $N is not supported for now. See also https://github.com/JuliaObjects/Accessors.jl/pull/68.")
+_setall(obj, optic, vs, ::Val{1}) = setall(obj, optic, vs)
+for i in 2:10
+    @eval function _setall(obj, optic, vs, ::Val{$i})
+        setall(obj, optic.inner, map(getall(obj, optic.inner), vs) do obj, vss
+            _setall(obj, optic.outer, vss, Val($(i - 1)))
+        end)
+    end
+end
 
-_staticlength(::Number) = Val(1)
+
+_concat(a::Tuple, b::Tuple) = (a..., b...)
+_concat(a::Tuple, b::AbstractVector) = vcat(collect(a), b)
+_concat(a::AbstractVector, b::Tuple) = vcat(a, collect(b))
+_concat(a::AbstractVector, b::AbstractVector) = vcat(a, b)
+_reduce_concat(xs::Tuple) = reduce(_concat, xs; init=())
+_reduce_concat(xs::AbstractVector) = reduce(append!, xs; init=eltype(eltype(xs))[])
+# fast path:
+_reduce_concat(xs::Tuple{AbstractVector, Vararg{AbstractVector}}) = reduce(vcat, xs)
+_reduce_concat(xs::AbstractVector{<:AbstractVector}) = reduce(vcat, xs)
+
 _staticlength(::NTuple{N, <:Any}) where {N} = Val(N)
 _staticlength(x::AbstractVector) = length(x)
 
 _val(N::Int) = N
 _val(::Val{N}) where {N} = N
-_val(::Type{Val{N}}) where {N} = N
 
 
 getall_lengths(obj, optic, ::Val{1}) = _staticlength(getall(obj, optic))
 for i in 2:10
     @eval function getall_lengths(obj, optic, ::Val{$i})
-        map(getall(obj, optic.inner)) do o
+        # convert to Tuple: vectors cannot be put into Val
+        map(getall(obj, optic.inner) |> Tuple) do o
             getall_lengths(o, optic.outer, Val($(i - 1)))
         end
     end
@@ -119,14 +129,3 @@ for i in 2:10
         :( ($(subs...),) )
     end
 end
-
-
-_setall(obj, optic, vs, ::Val{1}) = setall(obj, optic, vs)
-for i in 2:10
-    @eval function _setall(obj, optic, vs, ::Val{$i})
-        setall(obj, optic.inner, map(getall(obj, optic.inner), vs) do obj, vss
-            _setall(obj, optic.outer, vss, Val($(i - 1)))
-        end)
-    end
-end
-
