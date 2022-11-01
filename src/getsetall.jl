@@ -109,6 +109,9 @@ for i in 2:10
     end
 end
 
+_val(N::Int) = N
+_val(::Val{N}) where {N} = N
+
 nestedsum(ls::Int) = ls
 nestedsum(ls::Val) = ls
 nestedsum(ls::Tuple) = sum(_val ∘ nestedsum, ls)
@@ -123,12 +126,9 @@ for i in 2:10
                 :( vs[$j] )
             end
             res = :( to_nested_shape(($(elems...),), $(Val(lss)), $(Val($(i - 1)))) )
-            vi = vi + _val(n)
+            vi += _val(n)
             res
         end
         :( ($(subs...),) )
     end
 end
-
-_val(N::Int) = N
-_val(::Val{N}) where {N} = N
