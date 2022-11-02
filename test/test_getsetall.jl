@@ -64,6 +64,49 @@ if VERSION >= v"1.6"  # for ComposedFunction
     obj = ([1, 2], [:a, :b])
     @test [1, 2, :a, :b] == @inferred getall(obj, @optic _ |> Elements() |> Elements())
 end
+
+@testset "setall" begin
+    for o in [Elements(), Properties()]
+        @test (a=2, b=3) === @inferred setall((a=1, b="2"), o, (2, 3))
+        @test (a=2, b="3") === @inferred setall((a=1, b="2"), o, (2, "3"))
+        @test (a=2, b=3) === @inferred setall((a=1, b="2"), o, [2, 3])
+    end
+    @test (2, 3) === @inferred setall((1, "2"), Elements(), (2, 3))
+    @test (2, "3") === @inferred setall((1, "2"), Elements(), (2, "3"))
+    @test (2, 3) === @inferred setall((1, "2"), Elements(), [2, 3])
+    @test [2, 3] == @inferred setall([1, "2"], Elements(), (2, 3))
+    @test [2, "3"] == @inferred setall([1, "2"], Elements(), (2, "3"))
+    @test [2, 3] == @inferred setall([1, "2"], Elements(), [2, 3])
+
+    obj = (a=1, b=2.0, c='3')
+    @test (a="aa", b=2.0, c='3') === @inferred setall(obj, @optic(_.a), ("aa",))
+    @test (a=9, b=19.0, c='4') === @inferred setall(obj, @optic(_ |> Elements() |> _ + 1), (10, 20.0, '5'))
+
+    obj = (a=1, b=((c=3, d=4), (c=5, d=6)))
+    @test (a=1, b=(:x, :y)) === @inferred setall(obj, @optic(_.b |> Elements()), (:x, :y))
+    @test (a=1, b=((c=:x, d=4), (c=:y, d=6))) === @inferred setall(obj, @optic(_.b |> Elements() |> _.c), (:x, :y))
+    @test (a=1, b=((c=:x, d="y"), (c=:z, d=10))) === @inferred setall(obj, @optic(_.b |> Elements() |> Properties()), (:x, "y", :z, 10))
+    @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, @optic(_.b |> Elements() |> Properties() |> _ * 3), (-9, -12, -15, -18))
+    @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, @optic(_.b |> Elements() |> Properties() |> _ * 3), [-9, -12, -15, -18])
+
+    obj = ([1, 2], 3:5, (6,))
+    @test obj == setall(obj, @optic(_ |> Elements() |> Elements()), 1:6)
+    @test ([2, 3], 4:6, (7,)) == setall(obj, @optic(_ |> Elements() |> Elements() |> _ - 1), 1:6)
+    # can this infer?..
+    @test_broken obj == @inferred setall(obj, @optic(_ |> Elements() |> Elements()), 1:6)
+    @test_broken ([2, 3], 4:6, (7,)) == @inferred setall(obj, @optic(_ |> Elements() |> Elements() |> _ - 1), 1:6)
+end
+
+@testset "getall/setall consistency" begin
+    for (optic, obj, vals1, vals2) in [
+            (Elements(), (1, "2"), (2, 3), (4, 5)),
+            (Properties(), (a=1, b="2"), (2, 3), (4, 5)),
+            (@optic(_.b |> Elements() |> Properties() |> _ * 3), (a=1, b=((c=3, d=4), (c=5, d=6))), 1:4, (-9, -12, -15, -18)),
+        ]
+        Accessors.test_getsetall_laws(optic, obj, vals1, vals2)
+    end
+end
+        
 end
 
 end
