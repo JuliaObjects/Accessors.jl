@@ -116,6 +116,15 @@ nestedsum(ls::Int) = ls
 nestedsum(ls::Val) = ls
 nestedsum(ls::Tuple) = sum(_val ∘ nestedsum, ls)
 
+# to_nested_shape() definition uses both @eval and @generated
+#
+# @eval is needed because the code for different recursion depths should be different for inference,
+# not the same method with different parameters.
+#
+# @generated is used to unpack target lengths from the second argument at compile time to make to_nested_shape() as cheap as possible.
+#
+# Note: to_nested_shape() only operates on plain Julia types and won't be affected by user lens definition, unlike setall for example.
+# That's why it's safe to make it @generated.
 to_nested_shape(vs, ::Val{LS}, ::Val{1}) where {LS} = (@assert length(vs) == _val(LS); vs)
 for i in 2:10
     @eval @generated function to_nested_shape(vs, ls::Val{LS}, ::Val{$i}) where {LS}
