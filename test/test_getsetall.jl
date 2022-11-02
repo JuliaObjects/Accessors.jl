@@ -96,6 +96,16 @@ end
     @test_broken obj == @inferred setall(obj, @optic(_ |> Elements() |> Elements()), 1:6)
     @test_broken ([2, 3], 4:6, (7,)) == @inferred setall(obj, @optic(_ |> Elements() |> Elements() |> _ - 1), 1:6)
 end
+
+@testset "getall/setall consistency" begin
+    for (optic, obj, vals1, vals2) in [
+            (Elements(), (1, "2"), (2, 3), (4, 5)),
+            (Properties(), (a=1, b="2"), (2, 3), (4, 5)),
+            (@optic(_.b |> Elements() |> Properties() |> _ * 3), (a=1, b=((c=3, d=4), (c=5, d=6))), 1:4, (-9, -12, -15, -18)),
+        ]
+        Accessors.test_getsetall_laws(optic, obj, vals1, vals2)
+    end
+end
         
 end
 
