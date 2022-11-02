@@ -3,7 +3,10 @@
 
 Extract all parts of `obj` that are selected by `optic`.
 Returns a flat `Tuple` of values, or an `AbstractVector` if the selected parts contain arrays.
-This function is experimental and we might change the precise output container in future.
+
+This function is experimental and we might change the precise output container in the future.
+
+See also [`setall`](@ref).
 
 
 ```jldoctest
@@ -19,6 +22,32 @@ julia> getall(obj, @optic _ |> Elements() |> last)
 ```
 """
 function getall end
+
+"""
+    setall(obj, optic, values)
+
+Replace a part of `obj` that is selected by `optic` with `values`.
+The `values` collection should have the same number of elements as selected by `optic`.
+
+This function is experimental and might change in the future.
+
+See also [`getall`](@ref), [`set`](@ref). The former is dual to `setall`:
+
+```jldoctest
+julia> using Accessors
+
+julia> obj = (a=1, b=(2, 3));
+
+julia> optic = @optic _ |> Elements() |> last;
+
+julia> getall(obj, optic)
+(1, 3)
+
+julia> setall(obj, optic, (4, 5))
+(a = 4, b = (2, 5))
+```
+"""
+function setall end
 
 # implementations for individual noncomposite optics
 
