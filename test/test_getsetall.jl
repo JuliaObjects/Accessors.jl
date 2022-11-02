@@ -66,15 +66,20 @@ if VERSION >= v"1.6"  # for ComposedFunction
 end
 
 @testset "setall" begin
-    @test (2,) === @inferred setall((1,), Elements(), (2,))
-    @test (2,) === setall((1,), Elements(), [2,])
-    @test [2,] == @inferred setall([1,], Elements(), (2,))
-    @test [2,] == @inferred setall([1,], Elements(), [2,])
+    for o in [Elements(), Properties()]
+        @test (a=2, b=3) === @inferred setall((a=1, b="2"), o, (2, 3))
+        @test (a=2, b="3") === @inferred setall((a=1, b="2"), o, (2, "3"))
+        @test (a=2, b=3) === @inferred setall((a=1, b="2"), o, [2, 3])
+    end
+    @test (2, 3) === @inferred setall((1, "2"), Elements(), (2, 3))
+    @test (2, "3") === @inferred setall((1, "2"), Elements(), (2, "3"))
+    @test (2, 3) === @inferred setall((1, "2"), Elements(), [2, 3])
+    @test [2, 3] == @inferred setall([1, "2"], Elements(), (2, 3))
+    @test [2, "3"] == @inferred setall([1, "2"], Elements(), (2, "3"))
+    @test [2, 3] == @inferred setall([1, "2"], Elements(), [2, 3])
 
     obj = (a=1, b=2.0, c='3')
     @test (a="aa", b=2.0, c='3') === @inferred setall(obj, @optic(_.a), ("aa",))
-    @test (a="aa", b=1, c='5') === @inferred setall(obj, Properties(), ("aa", 1, '5'))
-    @test (a="aa", b=1, c='5') === @inferred setall(obj, Elements(), ("aa", 1, '5'))
     @test (a=9, b=19.0, c='4') === @inferred setall(obj, @optic(_ |> Elements() |> _ + 1), (10, 20.0, '5'))
 
     obj = (a=1, b=((c=3, d=4), (c=5, d=6)))

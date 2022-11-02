@@ -31,9 +31,12 @@ getall(obj, ::Properties) = getproperties(obj) |> values
 getall(obj, o::If) = o.modify_condition(obj) ? (obj,) : ()
 getall(obj, f) = (f(obj),)
 
-setall(obj, ::Properties, vs::Tuple) = setproperties(obj, NamedTuple{propertynames(obj)}(vs))
-setall(obj::NamedTuple{NS}, ::Elements, vs::Tuple) where {NS} = NamedTuple{NS}(vs)
-setall(obj::NTuple{N, Any}, ::Elements, vs) where {N} = (@assert length(vs) == N; Tuple(vs))
+function setall(obj, ::Properties, vs)
+    names = propertynames(obj)
+    setproperties(obj, NamedTuple{names}(NTuple{length(names)}(vs)))
+end
+setall(obj::NamedTuple{NS}, ::Elements, vs) where {NS} = NamedTuple{NS}(NTuple{length(NS)}(vs))
+setall(obj::NTuple{N, Any}, ::Elements, vs) where {N} = (@assert length(vs) == N; NTuple{N}(vs))
 setall(obj::AbstractArray, ::Elements, vs::AbstractArray) = (@assert length(obj) == length(vs); reshape(vs, size(obj)))
 setall(obj::AbstractArray, ::Elements, vs) = setall(obj, Elements(), collect(vs))
 setall(obj, o::If, vs) = error("Not supported")
