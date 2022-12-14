@@ -20,7 +20,7 @@ function Accessors.set(o, l::Lens!{PropertyLens{prop}}, val) where {prop}
     setproperty!(o, prop, val)
     o
 end
-function Accessors.set(o, l::Lens!{<:IndexLens}, val) where {prop}
+function Accessors.set(o, l::Lens!{<:IndexLens}, val)
     o[l.pure.indices...] = val
     o
 end
