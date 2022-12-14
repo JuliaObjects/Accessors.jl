@@ -1,9 +1,7 @@
 module Accessors
 using MacroTools
 using MacroTools: isstructdef, splitstructdef, postwalk
-using Requires: @require
 using InverseFunctions
-
 
 
 if !isdefined(Base, :only)
@@ -14,8 +12,13 @@ if !isdefined(Base, :only)
     end
 end
 
-function __init__()
-    @require StaticArrays = "90137ffa-7385-5640-81b9-e52037218182" include("staticarrays.jl")
+if !isdefined(Base, :get_extension)
+    using Requires
+end
+@static if !isdefined(Base, :get_extension)
+    function __init__()
+        @require StaticArrays = "90137ffa-7385-5640-81b9-e52037218182" include("../ext/StaticArraysExt.jl")
+    end
 end
 
 include("setindex.jl")
