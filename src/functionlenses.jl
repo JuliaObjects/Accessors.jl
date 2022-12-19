@@ -18,6 +18,11 @@ function set(obj, ::typeof(only), val)
     set(obj, first, val)
 end
 
+function set(x::TX, f::Base.Fix1{typeof(convert)}, v) where {TX}
+    @assert v isa f.x
+    convert(TX, v)
+end
+
 ################################################################################
 ##### eltype
 ################################################################################

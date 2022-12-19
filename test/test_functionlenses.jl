@@ -47,6 +47,12 @@ end
     @test (@set last(obj2.a).b = '2') === (a=(1, (b='2',)), c=3)
 end
 
+@testset "convert" begin
+    x = Second(180)
+    @test @modify(m -> m + 1, x |> convert(Minute, _).value) === Second(240)
+    test_getset_laws(@optic(convert(Minute, _)), x, Minute(10), Minute(20))
+end
+
 @testset "eltype on Number" begin
     @test @set(eltype(Int) = Float32) === Float32
     @test @set(eltype(1.0) = UInt8)   === UInt8(1)
