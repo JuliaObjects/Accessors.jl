@@ -2,6 +2,7 @@ module TestFunctionLenses
 using Test
 using Dates
 using Unitful
+using InverseFunctions: inverse
 using Accessors: test_getset_laws
 using Accessors
 
@@ -124,6 +125,11 @@ end
     o = @optic 1/(1 + exp(-_))
     @test o(2) ≈ 0.8807970779778823
     @test @inferred(set(2, o, 0.999)) ≈ 6.906754778648465
+
+    # setting inverse
+    f = @set inverse(sin) = sqrt
+    @test f(2) == sin(2)
+    @test inverse(f)(4) == 2
 end
 
 @testset "dates" begin

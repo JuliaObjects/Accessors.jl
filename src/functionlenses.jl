@@ -62,6 +62,8 @@ set(x, f::Base.Fix2{typeof(rem)}, y) = set(x, @optic(last(divrem(_, f.x))), y)
 set(arr, ::typeof(normalize), val) = norm(arr) * val
 set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # should we check val is positive?
 
+set(f, ::typeof(inverse), invf) = setinverse(f, invf)
+
 ################################################################################
 ##### dates
 ################################################################################
