@@ -89,6 +89,29 @@ end
     @test typeof(@set eltype(obj) = Pair{UInt, Float64}) === Dict{UInt, Float64}
 end
 
+@testset "array shapes" begin
+    A = [1 2 3; 4 5 6]
+
+    B = @insert size(A)[2] = 1
+    @test reshape(A, (2, 1, 3)) == B
+    @test A == @delete size(B)[2]
+    @test_throws Exception @set size(A)[1] = 1
+    @test_throws Exception @insert size(A)[2] = 2
+
+    @inferred insert(A, @optic(size(_)[2]), 1)
+    @inferred delete(B, @optic(size(_)[2]))
+
+    B = @set vec(A) = 1:6
+    @test B == [1 3 5; 2 4 6]
+
+    B = @set reverse(vec(A)) = 1:6
+    @test B == [6 4 2; 5 3 1]
+
+    test_getset_laws(size, A, (1, 6), (3, 2))
+    test_getset_laws(vec, A, 10:15, 21:26)
+    test_getset_laws(reverse, collect(1:6), 10:15, 21:26)
+end
+
 @testset "math" begin
     @test 2.0       === @set real(1) = 2.0
     @test 2.0 + 1im === @set real(1+1im) = 2.0

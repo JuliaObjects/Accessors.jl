@@ -34,6 +34,26 @@ set(obj::Type{<:Dict{<:Any,V}}, lens::typeof(keytype), ::Type{K}) where {K,V} = 
 set(obj::Type{<:Dict{K}}, lens::typeof(valtype), ::Type{V}) where {K,V} = Dict{K,V}
 
 ################################################################################
+##### array shapes
+################################################################################
+set(obj, ::typeof(size), v::Tuple) = reshape(obj, v)
+
+# set vec(): keep array shape and type, change its values
+function set(x::AbstractArray, ::typeof(vec), v::AbstractVector)
+    res = similar(x, eltype(v))
+    vec(res) .= v
+    res
+end
+
+# set reverse(): keep vector type, change its values
+function set(x::AbstractVector, ::typeof(reverse), v::AbstractVector)
+    res = similar(x, eltype(v))
+    res .= v
+    reverse!(res)
+    res
+end
+
+################################################################################
 ##### os
 ################################################################################
 set(path, ::typeof(splitext), (stem, ext))     = string(stem, ext)
