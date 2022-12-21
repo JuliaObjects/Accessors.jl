@@ -54,6 +54,17 @@ function set(x::AbstractVector, ::typeof(reverse), v::AbstractVector)
 end
 
 ################################################################################
+##### ranges
+################################################################################
+set(r::AbstractRange, ::typeof(step), s) = range(first(r), last(r), step=s)
+set(r::AbstractRange, ::typeof(length), l) = range(first(r), last(r), length=l)
+set(r::AbstractRange, ::typeof(first), x) = range(x,  last(r), step=step(r))
+set(r::AbstractRange, ::typeof(last),  x) = range(first(r), x, step=step(r))
+set(r::AbstractUnitRange, ::typeof(first), x) = x:last(r)
+set(r::AbstractUnitRange, ::typeof(last),  x) = first(r):x
+set(r::Base.OneTo, ::typeof(last),  x) = Base.OneTo(x)
+
+################################################################################
 ##### os
 ################################################################################
 set(path, ::typeof(splitext), (stem, ext))     = string(stem, ext)
