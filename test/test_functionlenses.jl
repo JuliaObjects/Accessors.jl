@@ -177,9 +177,10 @@ end
     @test @inferred(set(2, o, 0.999)) ≈ 6.906754778648465
 
     # setting inverse
-    f = @set inverse(sin) = sqrt
+    myasin(x) = asin(x)+2π
+    f = @set inverse(sin) = myasin
     @test f(2) == sin(2)
-    @test inverse(f)(4) == 2
+    @test inverse(f)(0.5) == asin(0.5) + 2π
 end
 
 @testset "dates" begin
