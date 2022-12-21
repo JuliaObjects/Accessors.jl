@@ -50,6 +50,7 @@ end
 @testset "convert" begin
     x = Second(180)
     @test @modify(m -> m + 1, x |> convert(Minute, _).value) === Second(240)
+    @test_throws ArgumentError @set x |> convert(Minute, _) = 123
     test_getset_laws(@optic(convert(Minute, _)), x, Minute(10), Minute(20))
 end
 
