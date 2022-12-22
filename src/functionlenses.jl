@@ -18,6 +18,11 @@ function set(obj, ::typeof(only), val)
     set(obj, first, val)
 end
 
+function set(x::TX, f::Base.Fix1{typeof(convert)}, v) where {TX}
+    v isa f.x || throw(ArgumentError("convert($(f.x), _) cannot have type $(typeof(v))"))
+    convert(TX, v)
+end
+
 ################################################################################
 ##### eltype
 ################################################################################
@@ -32,6 +37,26 @@ set(obj::Dict, lens::Union{typeof(keytype),typeof(valtype)}, T::Type) =
     set(typeof(obj), lens, T)(obj)
 set(obj::Type{<:Dict{<:Any,V}}, lens::typeof(keytype), ::Type{K}) where {K,V} = Dict{K,V}
 set(obj::Type{<:Dict{K}}, lens::typeof(valtype), ::Type{V}) where {K,V} = Dict{K,V}
+
+################################################################################
+##### array shapes
+################################################################################
+set(obj, ::typeof(size), v::Tuple) = reshape(obj, v)
+
+# set vec(): keep array shape and type, change its values
+function set(x::AbstractArray, ::typeof(vec), v::AbstractVector)
+    res = similar(x, eltype(v))
+    vec(res) .= v
+    res
+end
+
+# set reverse(): keep vector type, change its values
+function set(x::AbstractVector, ::typeof(reverse), v::AbstractVector)
+    res = similar(x, eltype(v))
+    res .= v
+    reverse!(res)
+    res
+end
 
 ################################################################################
 ##### os
@@ -61,6 +86,8 @@ set(x, f::Base.Fix2{typeof(rem)}, y) = set(x, @optic(last(divrem(_, f.x))), y)
 
 set(arr, ::typeof(normalize), val) = norm(arr) * val
 set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # should we check val is positive?
+
+set(f, ::typeof(inverse), invf) = setinverse(f, invf)
 
 ################################################################################
 ##### dates

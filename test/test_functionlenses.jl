@@ -2,6 +2,7 @@ module TestFunctionLenses
 using Test
 using Dates
 using Unitful
+using InverseFunctions: inverse
 using Accessors: test_getset_laws
 using Accessors
 
@@ -46,6 +47,13 @@ end
     @test (@set last(obj2.a).b = '2') === (a=(1, (b='2',)), c=3)
 end
 
+@testset "convert" begin
+    x = Second(180)
+    @test @modify(m -> m + 1, x |> convert(Minute, _).value) === Second(240)
+    @test_throws ArgumentError @set x |> convert(Minute, _) = 123
+    test_getset_laws(@optic(convert(Minute, _)), x, Minute(10), Minute(20))
+end
+
 @testset "eltype on Number" begin
     @test @set(eltype(Int) = Float32) === Float32
     @test @set(eltype(1.0) = UInt8)   === UInt8(1)
@@ -88,6 +96,29 @@ end
     @test typeof(@set eltype(obj) = Pair{UInt, Float64}) === Dict{UInt, Float64}
 end
 
+@testset "array shapes" begin
+    A = [1 2 3; 4 5 6]
+
+    B = @insert size(A)[2] = 1
+    @test reshape(A, (2, 1, 3)) == B
+    @test A == @delete size(B)[2]
+    @test_throws Exception @set size(A)[1] = 1
+    @test_throws Exception @insert size(A)[2] = 2
+
+    @inferred insert(A, @optic(size(_)[2]), 1)
+    @inferred delete(B, @optic(size(_)[2]))
+
+    B = @set vec(A) = 1:6
+    @test B == [1 3 5; 2 4 6]
+
+    B = @set reverse(vec(A)) = 1:6
+    @test B == [6 4 2; 5 3 1]
+
+    test_getset_laws(size, A, (1, 6), (3, 2))
+    test_getset_laws(vec, A, 10:15, 21:26)
+    test_getset_laws(reverse, collect(1:6), 10:15, 21:26)
+end
+
 @testset "math" begin
     @test 2.0       === @set real(1) = 2.0
     @test 2.0 + 1im === @set real(1+1im) = 2.0
@@ -124,6 +155,12 @@ end
     o = @optic 1/(1 + exp(-_))
     @test o(2) ≈ 0.8807970779778823
     @test @inferred(set(2, o, 0.999)) ≈ 6.906754778648465
+
+    # setting inverse
+    myasin(x) = asin(x)+2π
+    f = @set inverse(sin) = myasin
+    @test f(2) == sin(2)
+    @test inverse(f)(0.5) == asin(0.5) + 2π
 end
 
 @testset "dates" begin
