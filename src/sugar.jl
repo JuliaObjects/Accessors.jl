@@ -1,4 +1,4 @@
-export @set, @optic, @reset, @modify, @delete, @insert
+export @set, @optic, @reset, @modify, @delete, @insert, @accessor
 using MacroTools
 
 """
@@ -391,6 +391,17 @@ function opticmacro(optictransform, ex)
         throw(ArgumentError(msg))
     end
     :($(optictransform)($optic))
+end
+
+
+macro accessor(ex)
+    def = splitdef(ex)
+    length(def[:args]) == 1 || throw(ArgumentError("@accessor only supports single argument functions. Overload `Accessors.set(obj, ::typeof($(def[:name])), v)` manually."))
+    arg = only(def[:args])
+    quote
+        $ex
+        $Accessors.set($arg, ::typeof($(def[:name])), v) = $Accessors.@set $(def[:body]) = v
+    end |> esc
 end
 
 
