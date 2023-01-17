@@ -34,6 +34,8 @@ end
     @test (@set first(obj2.a).b = '1') === (a=((b='1',), 2), c=3)
     @test (@set first(obj2) = '1') === (a='1', c=3)
     @test @inferred(set(obj2, first, '1')) === (a='1', c=3)
+
+    Accessors.test_getset_laws(first, obj, 123, "456")
 end
 
 @testset "last" begin
@@ -45,6 +47,8 @@ end
 
     obj2 = (a=(1, (b=2,)), c=3)
     @test (@set last(obj2.a).b = '2') === (a=(1, (b='2',)), c=3)
+
+    Accessors.test_getset_laws(last, obj, 123, "456")
 end
 
 @testset "convert" begin
