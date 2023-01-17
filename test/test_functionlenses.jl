@@ -196,6 +196,18 @@ end
         test_getset_laws(monthday, x, (rand(1:12), rand(1:28)), (rand(1:12), rand(1:28)))
         test_getset_laws(yearmonthday, x, (rand(1:5000), rand(1:12), rand(1:28)), (rand(1:5000), rand(1:12), rand(1:28)))
     end
+
+    l = @optic DateTime(_, dateformat"yyyy_mm_dd")
+    @test set("2020_03_04", month ∘ l, 10) == "2020_10_04"
+    Accessors.test_getset_laws(month ∘ l, "2020_03_04", 10, 11)
+
+    l = @optic Date(_, dateformat"yyyy/mm/dd")
+    @test set("2020/03/04", day ∘ l, 10) == "2020/03/10"
+    Accessors.test_getset_laws(day ∘ l, "2020/03/04", 10, 11)
+    @test_throws ArgumentError set("2020_03_04", month ∘ l, 10)
+
+    l = @optic Time(_, dateformat"HH:MM")
+    Accessors.test_getset_laws(hour ∘ l, "12:34", 10, 11)
 end
 
 @testset "custom binary function" begin

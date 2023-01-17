@@ -116,3 +116,6 @@ set(x::Time, ::typeof(nanosecond),  y) = Time(hour(x), minute(x), second(x), mil
 
 set(x::DateTime, optic::Union{typeof.((year, month, day, yearmonth, monthday, yearmonthday, dayofweek))...}, y) = modify(d -> set(d, optic, y), x, Date)
 set(x::DateTime, optic::Union{typeof.((hour, minute, second, millisecond))...}, y) = modify(d -> set(d, optic, y), x, Time)
+
+
+set(x::AbstractString, optic::Base.Fix2{Type{T}}, dt::T) where {T <: Union{Date, Time, DateTime}} = Dates.format(dt, optic.x)
