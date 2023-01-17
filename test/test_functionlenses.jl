@@ -169,6 +169,13 @@ end
     @test o(2) ≈ 0.8807970779778823
     @test @inferred(set(2, o, 0.999)) ≈ 6.906754778648465
 
+    # parse-related
+    @test modify(x -> -2x, "3", @optic parse(Int, _)) == "-6"
+    @test_throws ErrorException modify(log10, "100", @optic parse(Int, _))
+    @test modify(log10, "100", @optic parse(Float64, _)) == "2.0"
+    Accessors.test_getset_laws(@optic(parse(Int, _)), "3", -10, 123)
+    Accessors.test_getset_laws(@optic(parse(Float64, _)), "3.0", -10., 123.)
+
     # setting inverse
     myasin(x) = asin(x)+2π
     f = @set inverse(sin) = myasin
