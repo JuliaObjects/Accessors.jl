@@ -10,6 +10,9 @@ insert(obj, ::typeof(first), val) = insert(obj, IndexLens((firstindex(obj),)), v
 
 delete(obj, o::Base.Fix2{typeof(first)}) = obj[(firstindex(obj) + o.x):end]
 
+set(obj::Tuple, ::typeof(Base.front), val::Tuple) = (val..., last(obj))
+set(obj::Tuple, ::typeof(Base.tail), val::Tuple) = (first(obj), val...)
+
 set(obj, ::typeof(identity), val) = val
 set(obj, ::typeof(inv), new_inv) = inv(new_inv)
 

@@ -51,6 +51,15 @@ end
     Accessors.test_getset_laws(last, obj, 123, "456")
 end
 
+@testset "front, tail" begin
+    obj = (1, 2.0, '3')
+    @test (@set Base.front(obj) = ("5", 6)) === ("5", 6, '3')
+    @test set(obj, Base.tail, ("5", 6)) === (1, "5", 6)
+
+    Accessors.test_getset_laws(Base.front, obj, (), ("456", 7))
+    Accessors.test_getset_laws(Base.tail, obj, (123,), ("456", 7))
+end
+
 @testset "convert" begin
     x = Second(180)
     @test @modify(m -> m + 1, x |> convert(Minute, _).value) === Second(240)
