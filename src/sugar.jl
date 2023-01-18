@@ -398,9 +398,11 @@ macro accessor(ex)
     def = splitdef(ex)
     length(def[:args]) == 1 || throw(ArgumentError("@accessor only supports single argument functions. Overload `Accessors.set(obj, ::typeof($(def[:name])), v)` manually."))
     arg = only(def[:args])
+    argname = splitarg(arg)[1]
+    body_optic = MacroTools.replace(def[:body], argname, :_)
     quote
         $ex
-        $Accessors.set($arg, ::typeof($(def[:name])), v) = $Accessors.@set $(def[:body]) = v
+        $Accessors.set($arg, ::typeof($(def[:name])), v) = $set($argname, $Accessors.@optic($body_optic), v)
     end |> esc
 end
 
