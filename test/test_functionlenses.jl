@@ -217,6 +217,32 @@ end
     Accessors.test_getset_laws(hour ∘ l, "12:34", 10, 11)
 end
 
+@testset "strings" begin
+    @test modify(x -> x+1, " abc def", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements())) == " bcd def"
+    @test modify(x -> x+1, " abc xyz", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements())) == " bcd!yz{"
+    @test modify(x -> x^2, "abc xyz", @optic(split(_, ' ') |> Elements())) == "abcabc xyzxyz"
+    @test modify(x -> x^2, " abc  xyz", @optic(split(_, ' ') |> Elements())) == " abcabc  xyzxyz"
+
+    test_getset_laws(lstrip, " abc  ", "def", "")
+    test_getset_laws(rstrip, " abc  ", "def", "")
+    test_getset_laws(strip, " abc  ", "def", "")
+    test_getset_laws(lstrip, "abc", "def", "")
+    test_getset_laws(rstrip, "abc", "def", "")
+    test_getset_laws(strip, "abc", "def", "")
+    test_getset_laws(@optic(lstrip(==(' '), _)), " abc  ", "def", "")
+    test_getset_laws(@optic(rstrip(==(' '), _)), " abc  ", "def", "")
+    test_getset_laws(@optic(strip(==(' '), _)), " abc  ", "def", "")
+
+    test_getset_laws(@optic(chopprefix(_, "def")), "def abc", "xyz", "")
+    test_getset_laws(@optic(chopsuffix(_, "def")), "abc def", "xyz", "")
+    test_getset_laws(@optic(chopprefix(_, "abc")), "def abc", "xyz", "")
+    test_getset_laws(@optic(chopsuffix(_, "abc")), "abc def", "xyz", "")
+    
+    test_getset_laws(@optic(split(_, ' ')), " abc def ", ["z"], [])
+    test_getset_laws(@optic(split(_, ' ')), " abc def ", ["", "z"], [])
+    @test_throws ArgumentError set(" abc def ", @optic(split(_, ' ')), [" ", "y"])
+end
+
 @testset "custom binary function" begin
     ↑(x, y) = x - y
     Accessors.set(x, f::Base.Fix1{typeof(↑)}, y) = f.x - y

@@ -121,3 +121,31 @@ set(x::DateTime, optic::Union{typeof.((hour, minute, second, millisecond))...}, 
 
 
 set(x::AbstractString, optic::Base.Fix2{Type{T}}, dt::T) where {T <: Union{Date, Time, DateTime}} = Dates.format(dt, optic.x)
+
+################################################################################
+##### strings
+################################################################################
+
+set(s::AbstractString, o::Base.Fix2{typeof(chopsuffix), <:AbstractString}, v) =
+    endswith(s, o.x) ? v * o.x : v
+set(s::AbstractString, o::Base.Fix2{typeof(chopprefix), <:AbstractString}, v) =
+    startswith(s, o.x) ? o.x * v : v
+
+set(s::AbstractString, ::typeof(strip), v) = @set lstrip(rstrip(s)) = v
+set(s::AbstractString, ::typeof(lstrip), v) = @set s |> lstrip(isspace, _) = v
+set(s::AbstractString, ::typeof(rstrip), v) = @set s |> rstrip(isspace, _) = v
+
+set(s::AbstractString, o::Base.Fix1{typeof(strip)}, v) = @set s |> lstrip(o.x, rstrip(o.x, _)) = v
+function set(s::AbstractString, o::Base.Fix1{typeof(lstrip)}, v)
+    ix = @something findfirst(!o.x, s) nextind(s, lastindex(s))
+    s[begin:prevind(s, ix)] * v
+end
+function set(s::AbstractString, o::Base.Fix1{typeof(rstrip)}, v)
+    ix = @something findlast(!o.x, s) prevind(s, firstindex(s))
+    v * s[nextind(s, ix):end]
+end
+
+function set(s::AbstractString, o::Base.Fix2{typeof(split), <:Union{AbstractChar,AbstractString}}, v)
+    any(contains(o.x), v) && throw(ArgumentError("split components cannot contain the delimiter $(repr(o.x))"))
+    join(v, o.x)
+end
