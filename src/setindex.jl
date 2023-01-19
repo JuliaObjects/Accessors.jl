@@ -38,3 +38,5 @@ end
     return v
 end
 @inline setindex(x::Number, v) = v
+
+@inline setindex(s::AbstractString, v::AbstractChar, idx::Integer) = view(s, firstindex(s):prevind(s, idx)) * v * view(s, nextind(s, idx):lastindex(s))

@@ -38,7 +38,12 @@ end
     @test set([1, 2, 3], @optic(first(_, 2)), [4, 5]) == [4, 5, 3]
     @test_throws DimensionMismatch set([1, 2, 3], @optic(first(_, 2)), [4])
 
+    @test set("абв", first, 'x') == "xбв"
+    @test set("абв", @optic(first(_, 2)), "xж") == "xжв"
+    @test_throws DimensionMismatch set("абв", @optic(first(_, 2)), "x")
+
     Accessors.test_getset_laws(first, obj, 123, "456")
+    Accessors.test_getset_laws(first, "abc", 'x', ' ')
 end
 
 @testset "last" begin
@@ -54,7 +59,12 @@ end
     @test set([1, 2, 3], @optic(last(_, 2)), [4, 5]) == [1, 4, 5]
     @test_throws DimensionMismatch set([1, 2, 3], @optic(last(_, 2)), [4])
 
+    @test set("абв", last, 'x') == "абx"
+    @test set("абв", @optic(last(_, 2)), "xж") == "аxж"
+    @test_throws DimensionMismatch set("абв", @optic(last(_, 2)), "x")
+
     Accessors.test_getset_laws(last, obj, 123, "456")
+    Accessors.test_getset_laws(last, "abc", 'x', ' ')
 end
 
 @testset "front, tail" begin

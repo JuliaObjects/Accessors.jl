@@ -131,6 +131,16 @@ set(x::AbstractString, optic::Base.Fix2{Type{T}}, dt::T) where {T <: Union{Date,
 ##### strings
 ################################################################################
 
+function set(s::AbstractString, o::Base.Fix2{typeof(first)}, v::AbstractString)
+    length(v) == o.x || throw(DimensionMismatch("tried to assign $(length(v)) elements to $(o.x) destinations"))
+    v * chop(s; head=o.x, tail=0)
+end
+
+function set(s::AbstractString, o::Base.Fix2{typeof(last)}, v::AbstractString)
+    length(v) == o.x || throw(DimensionMismatch("tried to assign $(length(v)) elements to $(o.x) destinations"))
+    chop(s; head=0, tail=o.x) * v
+end
+
 set(s::AbstractString, o::Base.Fix2{typeof(chopsuffix), <:AbstractString}, v) =
     endswith(s, o.x) ? v * o.x : v
 set(s::AbstractString, o::Base.Fix2{typeof(chopprefix), <:AbstractString}, v) =
