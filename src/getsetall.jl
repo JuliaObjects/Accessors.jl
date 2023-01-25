@@ -145,7 +145,7 @@ _val(N::Int) = N
 _val(::Val{N}) where {N} = N
 
 nestedsum(ls::Union{Int,Val}) = _val(ls)
-nestedsum(ls::Tuple) = sum(nestedsum, ls)
+nestedsum(ls::Tuple) = sum(nestedsum, ls; init=0)
 
 # to_nested_shape() definition uses both @eval and @generated
 #

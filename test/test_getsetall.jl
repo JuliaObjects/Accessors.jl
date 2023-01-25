@@ -81,6 +81,7 @@ end
     obj = (a=1, b=2.0, c='3')
     @test (a="aa", b=2.0, c='3') === @inferred setall(obj, @optic(_.a), ("aa",))
     @test (a=9, b=19.0, c='4') === @inferred setall(obj, @optic(_ |> Elements() |> _ + 1), (10, 20.0, '5'))
+    @test ((),) === @inferred setall(((),), @optic(_ |> Elements() |> Elements() |> first), ())
 
     obj = (a=1, b=((c=3, d=4), (c=5, d=6)))
     @test (a=1, b=(:x, :y)) === @inferred setall(obj, @optic(_.b |> Elements()), (:x, :y))
