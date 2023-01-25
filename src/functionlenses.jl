@@ -8,7 +8,12 @@ delete(obj, ::typeof(first)) = delete(obj, IndexLens((firstindex(obj),)))
 insert(obj, ::typeof(last), val) = insert(obj, IndexLens((lastindex(obj) + 1,)), val)
 insert(obj, ::typeof(first), val) = insert(obj, IndexLens((firstindex(obj),)), val)
 
-delete(obj, o::Base.Fix2{typeof(first)}) = obj[(firstindex(obj) + o.x):end]
+set(obj, o::Base.Fix2{typeof(first)}, val) = @set obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
+set(obj, o::Base.Fix2{typeof(last)}, val) = @set obj[(lastindex(obj) - o.x + 1):lastindex(obj)] = val
+delete(obj, o::Base.Fix2{typeof(first)}) = obj[(firstindex(obj) + o.x):lastindex(obj)]
+delete(obj, o::Base.Fix2{typeof(last)}) = obj[firstindex(obj):(lastindex(obj) - o.x)]
+insert(obj, o::Base.Fix2{typeof(first)}, val) = @insert obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
+insert(obj, o::Base.Fix2{typeof(last)}, val) = @insert obj[(lastindex(obj) + 1):(lastindex(obj) + o.x)] = val
 
 set(obj::Tuple, ::typeof(Base.front), val::Tuple) = (val..., last(obj))
 set(obj::Tuple, ::typeof(Base.tail), val::Tuple) = (first(obj), val...)

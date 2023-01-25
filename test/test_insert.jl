@@ -13,6 +13,8 @@ using Accessors: insert
             @test_throws BoundsError insert(A, @optic(_[4]), 3)
             @test_throws Exception insert(A, @optic(_[1, 3]), 3)
             @test insert(A, first, 3) == [3, 1, 2]
+            @test insert(A, @optic(first(_, 2)), [3, 4]) == [3, 4, 1, 2]
+            @test insert(A, @optic(last(_, 2)), [3, 4]) == [1, 2, 3, 4]
             @test A == [1, 2]  # not changed
         end
         @test insert((1,2), last, 3) == (1, 2, 3)

@@ -35,6 +35,9 @@ end
     @test (@set first(obj2) = '1') === (a='1', c=3)
     @test @inferred(set(obj2, first, '1')) === (a='1', c=3)
 
+    @test set([1, 2, 3], @optic(first(_, 2)), [4, 5]) == [4, 5, 3]
+    @test_throws DimensionMismatch set([1, 2, 3], @optic(first(_, 2)), [4])
+
     Accessors.test_getset_laws(first, obj, 123, "456")
 end
 
@@ -47,6 +50,9 @@ end
 
     obj2 = (a=(1, (b=2,)), c=3)
     @test (@set last(obj2.a).b = '2') === (a=(1, (b='2',)), c=3)
+
+    @test set([1, 2, 3], @optic(last(_, 2)), [4, 5]) == [1, 4, 5]
+    @test_throws DimensionMismatch set([1, 2, 3], @optic(last(_, 2)), [4])
 
     Accessors.test_getset_laws(last, obj, 123, "456")
 end

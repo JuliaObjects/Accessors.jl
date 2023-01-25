@@ -440,6 +440,14 @@ end
 @inline insert(obj::AbstractVector, l::IndexLens, val) = insert!(copy(obj), only(l.indices), val)
 @inline insert(obj::AbstractDict, l::IndexLens, val) = setindex(obj, val, only(l.indices))
 
+@inline function insert(obj::AbstractVector, l::IndexLens{<:Tuple{UnitRange}}, val)
+    I = only(l.indices)
+    length(I) == length(val) || throw(DimensionMismatch("tried to assign $(length(val)) elements to $(length(I)) destinations"))
+    res = copy(obj)
+    splice!(res, first(I):(first(I)-1), val)
+    return res
+end
+
 @inline delete(obj::NamedTuple, l::IndexLens{Tuple{Symbol}}) = Base.structdiff(obj, NamedTuple{l.indices})
 @inline delete(obj::NamedTuple, l::IndexLens{<:Tuple{Tuple{Vararg{Symbol}}}}) = Base.structdiff(obj, NamedTuple{only(l.indices)})
 @inline delete(obj::NamedTuple, l::IndexLens{Tuple{Int}}) = Base.structdiff(obj, NamedTuple{(keys(obj)[only(l.indices)],)})
