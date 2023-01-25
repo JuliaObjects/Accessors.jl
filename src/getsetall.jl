@@ -144,9 +144,8 @@ end
 _val(N::Int) = N
 _val(::Val{N}) where {N} = N
 
-nestedsum(ls::Int) = ls
-nestedsum(ls::Val) = ls
-nestedsum(ls::Tuple) = sum(_val ∘ nestedsum, ls)
+nestedsum(ls::Union{Int,Val}) = _val(ls)
+nestedsum(ls::Tuple) = sum(nestedsum, ls)
 
 # to_nested_shape() definition uses both @eval and @generated
 #
@@ -163,11 +162,11 @@ for i in 2:10
         vi = 1
         subs = map(LS) do lss
             n = nestedsum(lss)
-            elems = map(vi:vi+_val(n)-1) do j
+            elems = map(vi:vi+n-1) do j
                 :( vs[$j] )
             end
             res = :( to_nested_shape(($(elems...),), $(Val(lss)), $(Val($(i - 1)))) )
-            vi += _val(n)
+            vi += n
             res
         end
         :( ($(subs...),) )
