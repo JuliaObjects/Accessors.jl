@@ -78,9 +78,15 @@ end
     @test [2, "3"] == @inferred setall([1, "2"], Elements(), (2, "3"))
     @test [2, 3] == @inferred setall([1, "2"], Elements(), [2, 3])
 
+    @test 2 === @inferred setall(1, If(>(0)), (2,))
+    @test 1 === @inferred setall(1, If(<(0)), ())
+    @test_throws Exception @inferred setall(1, If(>(0)), ())
+    @test_throws Exception @inferred setall(1, If(<(0)), (2,))
+
     obj = (a=1, b=2.0, c='3')
     @test (a="aa", b=2.0, c='3') === @inferred setall(obj, @optic(_.a), ("aa",))
     @test (a=9, b=19.0, c='4') === @inferred setall(obj, @optic(_ |> Elements() |> _ + 1), (10, 20.0, '5'))
+    @test (a=9, b=19.0, c='3') === @inferred setall(obj, @optic(_ |> Elements() |> If(x -> x isa Number) |> _ + 1), (10, 20.0))
     @test ((),) === @inferred setall(((),), @optic(_ |> Elements() |> Elements() |> first), ())
 
     obj = (a=1, b=((c=3, d=4), (c=5, d=6)))
@@ -102,6 +108,7 @@ end
     for (optic, obj, vals1, vals2) in [
             (Elements(), (1, "2"), (2, 3), (4, 5)),
             (Properties(), (a=1, b="2"), (2, 3), (4, 5)),
+            (If(x -> x isa Number) ∘ Properties(), (a=1, b="2"), (2,), (4,)),
             (@optic(_.b |> Elements() |> Properties() |> _ * 3), (a=1, b=((c=3, d=4), (c=5, d=6))), 1:4, (-9, -12, -15, -18)),
         ]
         Accessors.test_getsetall_laws(optic, obj, vals1, vals2)

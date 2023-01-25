@@ -68,7 +68,15 @@ setall(obj::NamedTuple{NS}, ::Elements, vs) where {NS} = NamedTuple{NS}(NTuple{l
 setall(obj::NTuple{N, Any}, ::Elements, vs) where {N} = (@assert length(vs) == N; NTuple{N}(vs))
 setall(obj::AbstractArray, ::Elements, vs::AbstractArray) = (@assert length(obj) == length(vs); reshape(vs, size(obj)))
 setall(obj::AbstractArray, ::Elements, vs) = setall(obj, Elements(), collect(vs))
-setall(obj, o::If, vs) = error("Not supported")
+function setall(obj, o::If, vs)
+    if o.modify_condition(obj)
+        @assert o.modify_condition(only(vs))
+        only(vs)
+    else
+        @assert isempty(vs)
+        obj
+    end
+end
 setall(obj, o, vs) = set(obj, o, only(vs))
 
 
