@@ -262,6 +262,8 @@ end
     VERSION >= v"1.7" && @test l(nt) === (a=1, c=3)
     @test set(nt, l, ('1', '2')) === (a='1', b=2, c='2')
     @test set(nt, l, (c='2', a='1')) === (a='1', b=2, c='2')
+
+    @test set("abc", @optic(_[1]), ' ') == " bc"
 end
 
 @testset "DynamicIndexLens" begin
@@ -309,6 +311,8 @@ end
         @test l(obj) == 20
         @test set(obj, l, true) == (a=(1, (a=10, b=true), 3), b=4)
     end
+
+    @test set("a c", @optic(_[findfirst(' ', _)]), 'b') == "abc"
 end
 
 @testset "StaticNumbers" begin

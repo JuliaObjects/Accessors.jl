@@ -34,6 +34,16 @@ end
     @test (@set first(obj2.a).b = '1') === (a=((b='1',), 2), c=3)
     @test (@set first(obj2) = '1') === (a='1', c=3)
     @test @inferred(set(obj2, first, '1')) === (a='1', c=3)
+
+    @test set([1, 2, 3], @optic(first(_, 2)), [4, 5]) == [4, 5, 3]
+    @test_throws DimensionMismatch set([1, 2, 3], @optic(first(_, 2)), [4])
+
+    @test set("абв", first, 'x') == "xбв"
+    @test set("абв", @optic(first(_, 2)), "xж") == "xжв"
+    @test_throws DimensionMismatch set("абв", @optic(first(_, 2)), "x")
+
+    Accessors.test_getset_laws(first, obj, 123, "456")
+    Accessors.test_getset_laws(first, "abc", 'x', ' ')
 end
 
 @testset "last" begin
@@ -45,6 +55,25 @@ end
 
     obj2 = (a=(1, (b=2,)), c=3)
     @test (@set last(obj2.a).b = '2') === (a=(1, (b='2',)), c=3)
+
+    @test set([1, 2, 3], @optic(last(_, 2)), [4, 5]) == [1, 4, 5]
+    @test_throws DimensionMismatch set([1, 2, 3], @optic(last(_, 2)), [4])
+
+    @test set("абв", last, 'x') == "абx"
+    @test set("абв", @optic(last(_, 2)), "xж") == "аxж"
+    @test_throws DimensionMismatch set("абв", @optic(last(_, 2)), "x")
+
+    Accessors.test_getset_laws(last, obj, 123, "456")
+    Accessors.test_getset_laws(last, "abc", 'x', ' ')
+end
+
+@testset "front, tail" begin
+    obj = (1, 2.0, '3')
+    @test (@set Base.front(obj) = ("5", 6)) === ("5", 6, '3')
+    @test set(obj, Base.tail, ("5", 6)) === (1, "5", 6)
+
+    Accessors.test_getset_laws(Base.front, obj, (), ("456", 7))
+    Accessors.test_getset_laws(Base.tail, obj, (123,), ("456", 7))
 end
 
 @testset "convert" begin
@@ -156,6 +185,18 @@ end
     @test o(2) ≈ 0.8807970779778823
     @test @inferred(set(2, o, 0.999)) ≈ 6.906754778648465
 
+    # parse-related
+    if VERSION >= v"1.8"
+        # on earlier versions,
+        # @optic(parse(Int, _)) isa Base.Fix1{typeof(parse), Type{T}} where {T}
+        # doesn't hold
+        @test @inferred(modify(x -> -2x, "3", @optic parse(Int, _))) == "-6"
+        @test_throws ErrorException modify(log10, "100", @optic parse(Int, _))
+        @test modify(log10, "100", @optic parse(Float64, _)) == "2.0"
+        Accessors.test_getset_laws(@optic(parse(Int, _)), "3", -10, 123)
+        Accessors.test_getset_laws(@optic(parse(Float64, _)), "3.0", -10., 123.)
+    end
+
     # setting inverse
     myasin(x) = asin(x)+2π
     f = @set inverse(sin) = myasin
@@ -183,6 +224,48 @@ end
         test_getset_laws(monthday, x, (rand(1:12), rand(1:28)), (rand(1:12), rand(1:28)))
         test_getset_laws(yearmonthday, x, (rand(1:5000), rand(1:12), rand(1:28)), (rand(1:5000), rand(1:12), rand(1:28)))
     end
+
+    l = @optic DateTime(_, dateformat"yyyy_mm_dd")
+    @test @inferred(set("2020_03_04", month ∘ l, 10)) == "2020_10_04"
+    Accessors.test_getset_laws(month ∘ l, "2020_03_04", 10, 11)
+
+    l = @optic Date(_, dateformat"yyyy/mm/dd")
+    @test set("2020/03/04", day ∘ l, 10) == "2020/03/10"
+    Accessors.test_getset_laws(day ∘ l, "2020/03/04", 10, 11)
+    @test_throws ArgumentError set("2020_03_04", month ∘ l, 10)
+
+    l = @optic Time(_, dateformat"HH:MM")
+    Accessors.test_getset_laws(hour ∘ l, "12:34", 10, 11)
+end
+
+@testset "strings" begin
+    if VERSION >= v"1.8"
+        @test @inferred(modify(x -> x+1, " abc def", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements()))) == " bcd def"
+        @test @inferred(modify(x -> x+1, " abc xyz", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements()))) == " bcd!yz{"
+    end
+    @test @inferred(modify(x -> x^2, "abc xyz", @optic(split(_, ' ') |> Elements()))) == "abcabc xyzxyz"
+    @test @inferred(modify(x -> x^2, " abc  xyz", @optic(split(_, ' ') |> Elements()))) == " abcabc  xyzxyz"
+
+    test_getset_laws(lstrip, " abc  ", "def", "")
+    test_getset_laws(rstrip, " abc  ", "def", "")
+    test_getset_laws(strip, " abc  ", "def", "")
+    test_getset_laws(lstrip, "abc", "def", "")
+    test_getset_laws(rstrip, "abc", "def", "")
+    test_getset_laws(strip, "abc", "def", "")
+    test_getset_laws(@optic(lstrip(==(' '), _)), " abc  ", "def", "")
+    test_getset_laws(@optic(rstrip(==(' '), _)), " abc  ", "def", "")
+    test_getset_laws(@optic(strip(==(' '), _)), " abc  ", "def", "")
+
+    if VERSION >= v"1.8"
+        test_getset_laws(@optic(chopprefix(_, "def")), "def abc", "xyz", "")
+        test_getset_laws(@optic(chopsuffix(_, "def")), "abc def", "xyz", "")
+        test_getset_laws(@optic(chopprefix(_, "abc")), "def abc", "xyz", "")
+        test_getset_laws(@optic(chopsuffix(_, "abc")), "abc def", "xyz", "")
+    end
+    
+    test_getset_laws(@optic(split(_, ' ')), " abc def ", ["z"], [])
+    test_getset_laws(@optic(split(_, ' ')), " abc def ", ["", "z"], [])
+    @test_throws ArgumentError set(" abc def ", @optic(split(_, ' ')), [" ", "y"])
 end
 
 @testset "custom binary function" begin

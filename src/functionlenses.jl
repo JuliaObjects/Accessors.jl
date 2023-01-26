@@ -8,7 +8,15 @@ delete(obj, ::typeof(first)) = delete(obj, IndexLens((firstindex(obj),)))
 insert(obj, ::typeof(last), val) = insert(obj, IndexLens((lastindex(obj) + 1,)), val)
 insert(obj, ::typeof(first), val) = insert(obj, IndexLens((firstindex(obj),)), val)
 
-delete(obj, o::Base.Fix2{typeof(first)}) = obj[(firstindex(obj) + o.x):end]
+set(obj, o::Base.Fix2{typeof(first)}, val) = @set obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
+set(obj, o::Base.Fix2{typeof(last)}, val) = @set obj[(lastindex(obj) - o.x + 1):lastindex(obj)] = val
+delete(obj, o::Base.Fix2{typeof(first)}) = obj[(firstindex(obj) + o.x):lastindex(obj)]
+delete(obj, o::Base.Fix2{typeof(last)}) = obj[firstindex(obj):(lastindex(obj) - o.x)]
+insert(obj, o::Base.Fix2{typeof(first)}, val) = @insert obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
+insert(obj, o::Base.Fix2{typeof(last)}, val) = @insert obj[(lastindex(obj) + 1):(lastindex(obj) + o.x)] = val
+
+set(obj::Tuple, ::typeof(Base.front), val::Tuple) = (val..., last(obj))
+set(obj::Tuple, ::typeof(Base.tail), val::Tuple) = (first(obj), val...)
 
 set(obj, ::typeof(identity), val) = val
 set(obj, ::typeof(inv), new_inv) = inv(new_inv)
@@ -84,6 +92,8 @@ set(x, f::Base.Fix2{typeof(mod)}, y) = set(x, @optic(last(fldmod(_, f.x))), y)
 set(x, f::Base.Fix2{typeof(div)}, y) = set(x, @optic(first(divrem(_, f.x))), y)
 set(x, f::Base.Fix2{typeof(rem)}, y) = set(x, @optic(last(divrem(_, f.x))), y)
 
+set(x::AbstractString, f::Base.Fix1{typeof(parse), Type{T}}, y::T) where {T} = string(y)
+
 set(arr, ::typeof(normalize), val) = norm(arr) * val
 set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # should we check val is positive?
 
@@ -113,3 +123,48 @@ set(x::Time, ::typeof(nanosecond),  y) = Time(hour(x), minute(x), second(x), mil
 
 set(x::DateTime, optic::Union{typeof.((year, month, day, yearmonth, monthday, yearmonthday, dayofweek))...}, y) = modify(d -> set(d, optic, y), x, Date)
 set(x::DateTime, optic::Union{typeof.((hour, minute, second, millisecond))...}, y) = modify(d -> set(d, optic, y), x, Time)
+
+
+set(x::AbstractString, optic::Base.Fix2{Type{T}}, dt::T) where {T <: Union{Date, Time, DateTime}} = Dates.format(dt, optic.x)
+
+################################################################################
+##### strings
+################################################################################
+
+function set(s::AbstractString, o::Base.Fix2{typeof(first)}, v::AbstractString)
+    length(v) == o.x || throw(DimensionMismatch("tried to assign $(length(v)) elements to $(o.x) destinations"))
+    v * chop(s; head=o.x, tail=0)
+end
+
+function set(s::AbstractString, o::Base.Fix2{typeof(last)}, v::AbstractString)
+    length(v) == o.x || throw(DimensionMismatch("tried to assign $(length(v)) elements to $(o.x) destinations"))
+    chop(s; head=0, tail=o.x) * v
+end
+
+if VERSION >= v"1.8"
+    set(s::AbstractString, o::Base.Fix2{typeof(chopsuffix), <:AbstractString}, v) =
+        endswith(s, o.x) ? v * o.x : v
+    set(s::AbstractString, o::Base.Fix2{typeof(chopprefix), <:AbstractString}, v) =
+        startswith(s, o.x) ? o.x * v : v
+end
+
+set(s::AbstractString, ::typeof(strip), v) = @set lstrip(rstrip(s)) = v
+set(s::AbstractString, ::typeof(lstrip), v) = @set s |> lstrip(isspace, _) = v
+set(s::AbstractString, ::typeof(rstrip), v) = @set s |> rstrip(isspace, _) = v
+
+set(s::AbstractString, o::Base.Fix1{typeof(strip)}, v) = @set s |> lstrip(o.x, rstrip(o.x, _)) = v
+function set(s::AbstractString, o::Base.Fix1{typeof(lstrip)}, v)
+    ix = findfirst(!o.x, s)
+    isnothing(ix) && (ix = nextind(s, lastindex(s)))
+    s[1:prevind(s, ix)] * v
+end
+function set(s::AbstractString, o::Base.Fix1{typeof(rstrip)}, v)
+    ix = findlast(!o.x, s)
+    isnothing(ix) && (ix = prevind(s, firstindex(s)))
+    v * s[nextind(s, ix):end]
+end
+
+function set(s::AbstractString, o::Base.Fix2{typeof(split), <:Union{AbstractChar,AbstractString}}, v)
+    any(c -> occursin(o.x, c), v) && throw(ArgumentError("split components cannot contain the delimiter $(repr(o.x))"))
+    join(v, o.x)
+end
