@@ -14,9 +14,10 @@ using StaticNumbers
         @test setindex(obj, 5, 2, 1) === StaticArrays.@SMatrix [1 2; 5 4]
     end
 
-    v = @SVector [1,2,3]
-    @test (@set v[1] = 10) === @SVector [10,2,3]
-    @test_broken (@set v[1] = π) === @SVector [π,2,3]
+    v = @SVector [1.,2,3]
+    @test (@set v[1] = 10) === @SVector [10.,2,3]
+    @test (@set v[1] = π) === @SVector [π,2,3]
+    @test_broken (@set v.x = 10) === @SVector [10.,2,3]
 
     @testset "Multi-dynamic indexing" begin
         two = 2
