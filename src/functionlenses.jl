@@ -84,7 +84,11 @@ delete(path, ::typeof(dirname)) = basename(path)
 set(x::T,  ::typeof(real), y) where {T} = T === real(T) ? y : y + im*imag(x)
 set(x,     ::typeof(imag), y) = real(x) + im*y
 set(x,    ::typeof(angle), y) = abs(x) * cis(y)
-set(x,      ::typeof(abs), y) = y >= zero(y) ? y * sign(x) : throw(DomainError(y, "cannot set abs($x) to $y"))
+function set(x, ::typeof(abs), y)
+    y >= zero(y) || throw(DomainError(y, "cannot set abs($x) to $y"))
+    s = sign(x)
+    iszero(s) ? y * one(x) : y * s
+end
 
 set(x, ::typeof(mod2pi), y) = set(x, @optic(mod(_, 2π)), y)
 set(x, f::Base.Fix2{typeof(fld)}, y) = set(x, @optic(first(fldmod(_, f.x))), y)
