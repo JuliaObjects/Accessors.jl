@@ -186,7 +186,7 @@ end
     @test @inferred(set(2, o, 0.999)) ≈ 6.906754778648465
 
     # parse-related
-    @test modify(x -> -2x, "3", @optic parse(Int, _)) == "-6"
+    @test @inferred(modify(x -> -2x, "3", @optic parse(Int, _))) == "-6"
     @test_throws ErrorException modify(log10, "100", @optic parse(Int, _))
     @test modify(log10, "100", @optic parse(Float64, _)) == "2.0"
     Accessors.test_getset_laws(@optic(parse(Int, _)), "3", -10, 123)
@@ -221,7 +221,7 @@ end
     end
 
     l = @optic DateTime(_, dateformat"yyyy_mm_dd")
-    @test set("2020_03_04", month ∘ l, 10) == "2020_10_04"
+    @test @inferred(set("2020_03_04", month ∘ l, 10)) == "2020_10_04"
     Accessors.test_getset_laws(month ∘ l, "2020_03_04", 10, 11)
 
     l = @optic Date(_, dateformat"yyyy/mm/dd")
@@ -234,10 +234,10 @@ end
 end
 
 @testset "strings" begin
-    @test modify(x -> x+1, " abc def", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements())) == " bcd def"
-    @test modify(x -> x+1, " abc xyz", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements())) == " bcd!yz{"
-    @test modify(x -> x^2, "abc xyz", @optic(split(_, ' ') |> Elements())) == "abcabc xyzxyz"
-    @test modify(x -> x^2, " abc  xyz", @optic(split(_, ' ') |> Elements())) == " abcabc  xyzxyz"
+    @test @inferred(modify(x -> x+1, " abc def", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements()))) == " bcd def"
+    @test @inferred(modify(x -> x+1, " abc xyz", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements()))) == " bcd!yz{"
+    @test @inferred(modify(x -> x^2, "abc xyz", @optic(split(_, ' ') |> Elements()))) == "abcabc xyzxyz"
+    @test @inferred(modify(x -> x^2, " abc  xyz", @optic(split(_, ' ') |> Elements()))) == " abcabc  xyzxyz"
 
     test_getset_laws(lstrip, " abc  ", "def", "")
     test_getset_laws(rstrip, " abc  ", "def", "")
