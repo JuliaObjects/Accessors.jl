@@ -178,6 +178,9 @@ end
     @test @set(abs(-2u"m") = 1u"m") === -1u"m"
     @test @set(abs(x) = 10) ≈ 6 + 8im
     @test @set(angle(x) = π/2) ≈ 5im
+    @test set(0, abs, 10) == 10
+    @test set(0+0im, abs, 10) == 10
+    @test set(0+1e-100im, abs, 10) == 10im
     @test_throws DomainError @set(abs(x) = -10)
 
     # composition
