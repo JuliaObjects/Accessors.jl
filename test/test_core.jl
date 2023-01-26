@@ -566,4 +566,18 @@ end
     @test count(hash(@optic(_[i][j])) != hash(((i,), (j,))) for i = 1:32, j = 1:32) > 900
 end
 
+struct MyStruct
+    x
+end
+@accessor my_x(s) = s.x
+@accessor Base.:(+)(s::MyStruct) = 5 - s.x.a
+
+@testset "@accessor" begin
+    s = MyStruct((a=123,))
+    @test (@set my_x(s) = 456) === MyStruct(456)
+    @test (@set +s = 456) === MyStruct((a=5-456,))
+    Accessors.test_getset_laws(my_x, s, 456, "1")
+    Accessors.test_getset_laws(+, s, 456, 1.0)
+end
+
 end
