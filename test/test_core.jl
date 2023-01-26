@@ -186,6 +186,7 @@ end
           ((@optic _.b           ),   o2 ),
           ((@optic _.b.a         ),   o21),
           ((@optic _.b.a.b[2]    ),   4  ),
+          ((@optic _.b.a.b.:2    ),   4  ),
           ((@optic _.b.a.b[i+1]  ),   4  ),
           ((@optic _.b.a.b[static(2)]   ),   4  ),
           ((@optic _.b.a.b[static((i+1))]),  4  ),
