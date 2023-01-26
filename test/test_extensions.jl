@@ -1,4 +1,4 @@
-module TestStaticArrays
+module TestExtensions
 using Test
 using Accessors
 using StaticArrays
