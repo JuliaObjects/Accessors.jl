@@ -68,7 +68,15 @@ setall(obj::NamedTuple{NS}, ::Elements, vs) where {NS} = NamedTuple{NS}(NTuple{l
 setall(obj::NTuple{N, Any}, ::Elements, vs) where {N} = (@assert length(vs) == N; NTuple{N}(vs))
 setall(obj::AbstractArray, ::Elements, vs::AbstractArray) = (@assert length(obj) == length(vs); reshape(vs, size(obj)))
 setall(obj::AbstractArray, ::Elements, vs) = setall(obj, Elements(), collect(vs))
-setall(obj, o::If, vs) = error("Not supported")
+function setall(obj, o::If, vs)
+    if o.modify_condition(obj)
+        @assert o.modify_condition(only(vs))
+        only(vs)
+    else
+        @assert isempty(vs)
+        obj
+    end
+end
 setall(obj, o, vs) = set(obj, o, only(vs))
 
 
@@ -144,9 +152,8 @@ end
 _val(N::Int) = N
 _val(::Val{N}) where {N} = N
 
-nestedsum(ls::Int) = ls
-nestedsum(ls::Val) = ls
-nestedsum(ls::Tuple) = sum(_val ∘ nestedsum, ls)
+nestedsum(ls::Union{Int,Val}) = _val(ls)
+nestedsum(ls::Tuple) = sum(nestedsum, ls; init=0)
 
 # to_nested_shape() definition uses both @eval and @generated
 #
@@ -163,11 +170,11 @@ for i in 2:10
         vi = 1
         subs = map(LS) do lss
             n = nestedsum(lss)
-            elems = map(vi:vi+_val(n)-1) do j
+            elems = map(vi:vi+n-1) do j
                 :( vs[$j] )
             end
             res = :( to_nested_shape(($(elems...),), $(Val(lss)), $(Val($(i - 1)))) )
-            vi += _val(n)
+            vi += n
             res
         end
         :( ($(subs...),) )
