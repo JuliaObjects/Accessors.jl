@@ -86,6 +86,8 @@ end
     obj = (a=1, b=2.0, c='3')
     @test (a="aa", b=2.0, c='3') === @inferred setall(obj, @optic(_.a), ("aa",))
     @test (a=9, b=19.0, c='4') === @inferred setall(obj, @optic(_ |> Elements() |> _ + 1), (10, 20.0, '5'))
+    @test_throws DimensionMismatch setall(obj, @optic(_ |> Elements() |> _ + 1), (10, 20.0))
+    @test_throws DimensionMismatch setall(obj, @optic(_ |> Elements() |> _ + 1), (10, 20.0, '5', 10))
     @test (a=9, b=19.0, c='3') === @inferred setall(obj, @optic(_ |> Elements() |> If(x -> x isa Number) |> _ + 1), (10, 20.0))
     @test ((),) === @inferred setall(((),), @optic(_ |> Elements() |> Elements() |> first), ())
 

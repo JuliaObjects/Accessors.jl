@@ -177,6 +177,10 @@ for i in 2:10
             vi += n
             res
         end
-        :( ($(subs...),) )
+        total_n = nestedsum(LS)
+        quote
+            length(vs) == $total_n || throw(DimensionMismatch("tried to assign $(length(vs)) elements to $($total_n) destinations"))
+            ($(subs...),)
+        end
     end
 end
