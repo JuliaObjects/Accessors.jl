@@ -11,6 +11,7 @@ if VERSION >= v"1.6"  # for ComposedFunction
     @test (1,) === @inferred getall(obj, @optic _.a)
     @test (1, 2.0, '3') === @inferred getall(obj, @optic _ |> Properties())
     @test (1, 2.0, '3') === @inferred getall(obj, @optic _ |> Elements())
+    @test_throws ErrorException getall('a', Elements())
     @test (2, 3.0, '4') === @inferred getall(obj, @optic _ |> Elements() |> _ + 1)
     @test (1, 2.0) === @inferred getall(obj, @optic _ |> Elements() |> If(x -> x isa Number))
     @test (2.0,) === getall(obj, @optic _ |> Elements() |> If(x -> x isa Number && x >= 2))
@@ -77,6 +78,7 @@ end
     @test [2, 3] == @inferred setall([1, "2"], Elements(), (2, 3))
     @test [2, "3"] == @inferred setall([1, "2"], Elements(), (2, "3"))
     @test [2, 3] == @inferred setall([1, "2"], Elements(), [2, 3])
+    @test_throws ErrorException setall("abc", Elements(), [2, 3])
 
     @test 2 === @inferred setall(1, If(>(0)), (2,))
     @test 1 === @inferred setall(1, If(<(0)), ())
