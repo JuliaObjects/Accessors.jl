@@ -401,7 +401,7 @@ macro accessor(ex)
     argname = splitarg(arg)[1]
     body_optic = MacroTools.replace(def[:body], argname, :_)
     quote
-        $ex
+        Base.@__doc__ $ex
         $Accessors.set($arg, ::typeof($(def[:name])), v) = $set($argname, $Accessors.@optic($body_optic), v)
     end |> esc
 end
