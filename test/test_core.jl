@@ -569,11 +569,13 @@ end
 struct MyStruct
     x
 end
+"Documentation for my_x"
 @accessor my_x(s) = s.x
 @accessor Base.:(+)(s::MyStruct) = 5 - s.x.a
 
 @testset "@accessor" begin
     s = MyStruct((a=123,))
+    @test strip(string(@doc(my_x))) == "Documentation for my_x"
     @test (@set my_x(s) = 456) === MyStruct(456)
     @test (@set +s = 456) === MyStruct((a=5-456,))
     Accessors.test_getset_laws(my_x, s, 456, "1")

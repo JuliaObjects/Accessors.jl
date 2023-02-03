@@ -394,6 +394,22 @@ function opticmacro(optictransform, ex)
 end
 
 
+"""
+    @accessor func
+
+Given a simple getter function, define the corresponding `set` method automatically.
+
+# Example
+```julia
+julia> @accessor my_func(x) = x.a
+
+julia> my_func((a=1, b=2))
+1
+
+julia> set((a=1, b=2), my_func, 100)
+(a = 100, b = 2)
+```
+"""
 macro accessor(ex)
     def = splitdef(ex)
     length(def[:args]) == 1 || throw(ArgumentError("@accessor only supports single argument functions. Overload `Accessors.set(obj, ::typeof($(def[:name])), v)` manually."))
@@ -401,7 +417,7 @@ macro accessor(ex)
     argname = splitarg(arg)[1]
     body_optic = MacroTools.replace(def[:body], argname, :_)
     quote
-        $ex
+        Base.@__doc__ $ex
         $Accessors.set($arg, ::typeof($(def[:name])), v) = $set($argname, $Accessors.@optic($body_optic), v)
     end |> esc
 end
