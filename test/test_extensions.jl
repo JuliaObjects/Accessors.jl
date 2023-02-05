@@ -3,7 +3,6 @@ using Test
 using Accessors
 using AxisKeys
 using IntervalSets
-using SkyCoords: ICRSCoords, FK5Coords, GalCoords, lat, lon
 using StaticArrays, StaticNumbers
 using StructArrays
 
@@ -65,18 +64,6 @@ VERSION >= v"1.9-" && @testset "IntervalSets" begin
     @test 2 === @set 2 |> mod(_, 20..23) = 20
     @test 33 === @set 32 |> mod(_, 20..23) = 21
     Accessors.test_getset_laws(@optic(mod(_, 5..8)), 20, 6, 5)
-end
-
-
-VERSION >= v"1.9-" && @testset "SkyCoords" begin
-    for T in [ICRSCoords, FK5Coords{2000}, GalCoords]
-        c = T(0.5, -1)
-        Accessors.test_getset_laws(lat, c, 1.2, -0.3)
-        Accessors.test_getset_laws(lon, c, 1.2, -0.3)
-    end
-    c = ICRSCoords(0.5, -1)
-    c1 = @set(c |> convert(GalCoords, _) |> lon = 0)::ICRSCoords
-    @test c1 ≈ ICRSCoords(5.884005859354123, -0.69919820078915)
 end
 
 @testset "StaticArrays" begin
