@@ -572,6 +572,8 @@ end
 "Documentation for my_x"
 @accessor my_x(s) = s.x
 @accessor Base.:(+)(s::MyStruct) = 5 - s.x.a
+@accessor Base.Int(s::MyStruct) = s.x[1]
+@accessor Base.Float64(s::MyStruct) = s.x[2]
 
 @testset "@accessor" begin
     s = MyStruct((a=123,))
@@ -580,6 +582,10 @@ end
     @test (@set +s = 456) === MyStruct((a=5-456,))
     Accessors.test_getset_laws(my_x, s, 456, "1")
     Accessors.test_getset_laws(+, s, 456, 1.0)
+
+    s = MyStruct((1, 2.0))
+    Accessors.test_getset_laws(Int, s, 1, 2)
+    Accessors.test_getset_laws(Float64, s, 1., 2.)
 end
 
 end

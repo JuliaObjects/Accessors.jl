@@ -412,13 +412,24 @@ julia> set((a=1, b=2), my_func, 100)
 """
 macro accessor(ex)
     def = splitdef(ex)
+    fname = def[:name]
     length(def[:args]) == 1 || throw(ArgumentError("@accessor only supports single argument functions. Overload `Accessors.set(obj, ::typeof($(def[:name])), v)` manually."))
     arg = only(def[:args])
     argname = splitarg(arg)[1]
     body_optic = MacroTools.replace(def[:body], argname, :_)
+    ftype = :(
+        if $fname isa Function
+            typeof($fname)
+        elseif $fname isa Type
+            Type{$fname}
+        else
+            # is it possible at all?
+            error("Unsupported accessor $(fname)::$(typeof($fname))")
+        end
+    )
     quote
         Base.@__doc__ $ex
-        $Accessors.set($arg, ::typeof($(def[:name])), v) = $set($argname, $Accessors.@optic($body_optic), v)
+        $Accessors.set($arg, ::$ftype, v) = $set($argname, $Accessors.@optic($body_optic), v)
     end |> esc
 end
 
