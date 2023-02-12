@@ -574,6 +574,7 @@ end
 @accessor Base.:(+)(s::MyStruct) = 5 - s.x.a
 @accessor Base.Int(s::MyStruct) = s.x[1]
 @accessor Base.Float64(s::MyStruct) = s.x[2]
+@accessor (t::MyStruct)(s::MyStruct) = s.x + t.x
 
 @testset "@accessor" begin
     s = MyStruct((a=123,))
@@ -586,6 +587,8 @@ end
     s = MyStruct((1, 2.0))
     Accessors.test_getset_laws(Int, s, 1, 2)
     Accessors.test_getset_laws(Float64, s, 1., 2.)
+
+    Accessors.test_getset_laws(MyStruct(2), MyStruct(1), 1, 2)
 end
 
 end
