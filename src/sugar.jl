@@ -417,19 +417,23 @@ macro accessor(ex)
     arg = only(def[:args])
     argname = splitarg(arg)[1]
     body_optic = MacroTools.replace(def[:body], argname, :_)
-    ftype = :(
-        if $fname isa Function
-            typeof($fname)
-        elseif $fname isa Type
-            Type{$fname}
-        else
-            # is it possible at all?
-            error("Unsupported accessor $(fname)::$(typeof($fname))")
-        end
-    )
+    farg = if @capture fname name_::T__
+        fname
+    else
+        ftype = :(
+            ::if $fname isa Function
+                typeof($fname)
+            elseif $fname isa Type
+                Type{$fname}
+            else
+                # is it possible at all?
+                error("Unsupported accessor $(fname)::$(typeof($fname))")
+            end
+        )
+    end
     quote
         Base.@__doc__ $ex
-        $Accessors.set($arg, ::$ftype, v) = $set($argname, $Accessors.@optic($body_optic), v)
+        $Accessors.set($arg, $farg, v) = $set($argname, $Accessors.@optic($body_optic), v)
     end |> esc
 end
 
