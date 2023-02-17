@@ -2,9 +2,6 @@ module IntervalSetsExt
 using Accessors
 using IntervalSets
 
-# XXX: remove when CB updated
-Accessors.ConstructionBase.constructorof(::Type{<:Interval{L, R}}) where {L, R} = Interval{L, R}
-
 Accessors.set(x::Interval, ::typeof(endpoints), v::NTuple{2}) = setproperties(x, left=first(v), right=last(v))
 Accessors.set(x::Interval, ::typeof(leftendpoint), v) = @set x.left = v
 Accessors.set(x::Interval, ::typeof(rightendpoint), v) = @set x.right = v
