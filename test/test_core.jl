@@ -570,7 +570,7 @@ struct MyStruct
     x
 end
 "Documentation for my_x"
-@accessor my_x(s) = s.x
+@accessor my_x(v) = v.x
 @accessor Base.:(+)(s::MyStruct) = 5 - s.x.a
 @accessor Base.Int(s::MyStruct) = s.x[1]
 @accessor Base.Float64(s::MyStruct) = s.x[2]
