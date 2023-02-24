@@ -193,9 +193,9 @@ function parse_obj_optics(ex)
             optic = :($IndexLens($index))
         end
     elseif @capture(ex, front_.property_)
-        property isa Union{Symbol,String} || throw(ArgumentError(
+        property isa Union{Int,Symbol,String} || throw(ArgumentError(
             string("Error while parsing :($ex). Second argument to `getproperty` can only be",
-                   "a `Symbol` or `String` literal, received `$property` instead.")
+                   "an `Int`, `Symbol` or `String` literal, received `$property` instead.")
         ))
         obj, frontoptic = parse_obj_optics(front)
         optic = :($PropertyLens{$(QuoteNode(property))}())
@@ -431,9 +431,10 @@ macro accessor(ex)
             end
         )
     end
+    valarg = gensym(:v)
     quote
         Base.@__doc__ $ex
-        $Accessors.set($arg, $farg, v) = $set($argname, $Accessors.@optic($body_optic), v)
+        $Accessors.set($arg, $farg, $valarg) = $set($argname, $Accessors.@optic($body_optic), $valarg)
     end |> esc
 end
 
