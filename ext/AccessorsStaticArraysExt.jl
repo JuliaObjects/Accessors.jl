@@ -1,4 +1,4 @@
-module StaticArraysExt
+module AccessorsStaticArraysExt
 isdefined(Base, :get_extension) ? (import StaticArrays) : (import ..StaticArrays)
 using Accessors
 using Accessors: only  # for 1.3-
