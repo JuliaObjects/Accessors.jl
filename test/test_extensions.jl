@@ -79,7 +79,8 @@ end
     v = @SVector [1.,2,3]
     @test (@set v[1] = 10) === @SVector [10.,2,3]
     @test (@set v[1] = π) === @SVector [π,2,3]
-    @test (@set v.x = 10) === @SVector [10.,2,3]
+    # requires ConstructionBase extension:
+    VERSION >= v"1.9-DEV" && @test (@set v.x = 10) === @SVector [10.,2,3]
 
     @testset "Multi-dynamic indexing" begin
         two = 2
