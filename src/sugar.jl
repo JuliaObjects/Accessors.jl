@@ -431,9 +431,10 @@ macro accessor(ex)
             end
         )
     end
+    valarg = gensym(:v)
     quote
         Base.@__doc__ $ex
-        $Accessors.set($arg, $farg, v) = $set($argname, $Accessors.@optic($body_optic), v)
+        $Accessors.set($arg, $farg, $valarg) = $set($argname, $Accessors.@optic($body_optic), $valarg)
     end |> esc
 end
 
