@@ -24,6 +24,14 @@ Base.@propagate_inbounds function setindex(d0::AbstractDict, v, k)
     return d
 end
 
+# may be added to Base in https://github.com/JuliaLang/julia/pull/46453
+@inline function setindex(t::Tuple, v, inds::AbstractVector{<:Integer})
+    ntuple(length(t)) do i
+        ix = findlast(==(i), inds)
+        isnothing(ix) ? t[i] : v[ix]
+    end
+end
+
 @inline setindex(x::NamedTuple{names}, v, i::Int) where {names} = NamedTuple{names}(setindex(values(x), v, i))
 
 # copied from Base: this method doesn't exist in Julia 1.3

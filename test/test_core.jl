@@ -253,6 +253,7 @@ end
     l = @optic _[1:2]
     @test @inferred(l(obj))::Vector{Symbol} == [:a, :b]
     @test @inferred(set(obj, l, [:x, :y]))::Vector{Symbol} == [:x, :y, :c]
+    @test set((1, 2, 3), l, [:x, :y]) == (:x, :y, 3)
     l = @optic _[CartesianIndex(2)]
     @test @inferred(l(obj)) == :b
     @test @inferred(set(obj, l, :x))::Vector{Symbol} == [:a, :x, :c]
