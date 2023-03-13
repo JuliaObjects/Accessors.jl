@@ -31,6 +31,17 @@ function set(x::TX, f::Base.Fix1{typeof(convert)}, v) where {TX}
     convert(TX, v)
 end
 
+set(obj::Tuple, ::Type{Tuple}, val::Tuple) = val
+set(obj::NamedTuple{KS}, ::Type{Tuple}, val::Tuple) where {KS} = NamedTuple{KS}(val)
+set(obj::CartesianIndex, ::Type{Tuple}, val::Tuple) = CartesianIndex(val)
+set(obj::AbstractVector, ::Type{Tuple}, val::Tuple) = similar(obj, eltype(val)) .= val
+
+set(obj, ::Type{NamedTuple{KS}}, val::NamedTuple) where {KS} = set(obj, Tuple, values(NamedTuple{KS}(val)))
+function set(obj::NamedTuple, ::Type{NamedTuple{KS}}, val::NamedTuple) where {KS}
+    length(KS) == length(val) || throw(ArgumentError("Cannot assign NamedTuple with keys $KSV to NamedTuple with keys $KS"))
+    setproperties(obj, NamedTuple{KS}(val))
+end
+
 ################################################################################
 ##### eltype
 ################################################################################

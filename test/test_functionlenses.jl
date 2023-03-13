@@ -76,11 +76,29 @@ end
     Accessors.test_getset_laws(Base.tail, obj, (123,), ("456", 7))
 end
 
-@testset "convert" begin
+@testset "change types" begin
     x = Second(180)
     @test @modify(m -> m + 1, x |> convert(Minute, _).value) === Second(240)
     @test_throws ArgumentError @set x |> convert(Minute, _) = 123
     test_getset_laws(@optic(convert(Minute, _)), x, Minute(10), Minute(20))
+    
+    test_getset_laws(Tuple, (1, 'a'), ('x', 'y'), (1, 2))
+    test_getset_laws(Tuple, (a=1, b='a'), ('x', 'y'), (1, 2))
+    test_getset_laws(Tuple, [0, 1], ('x', 'y'), (1, 2))
+    test_getset_laws(Tuple, CartesianIndex(1, 2), (3, 4), (5, 6))
+
+    cmp(a::NamedTuple, b::NamedTuple) = Set(keys(a)) == Set(keys(b)) && NamedTuple{keys(b)}(a) === b
+    cmp(a::T, b::T) where {T} = a == b
+    test_getset_laws(NamedTuple{(:x, :y)}, (1, 'a'), (x='x', y='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, (1, 'a'), (y='x', x='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, (y=1, x='a'), (x='x', y='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, (y=1, x='a'), (y='x', x='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, (y=1, z=10, x='a'), (x='x', y='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, (y=1, z=10, x='a'), (y='x', x='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, [0, 1], (x='x', y='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, [0, 1], (y='x', x='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, CartesianIndex(1, 2), (x=3, y=4), (x=5, y=6); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, CartesianIndex(1, 2), (y=3, x=4), (x=5, y=6); cmp=cmp)
 end
 
 @testset "eltype on Number" begin
