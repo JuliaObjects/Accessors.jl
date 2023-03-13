@@ -3,7 +3,7 @@ using Test
 using Dates
 using Unitful
 using InverseFunctions: inverse
-using Accessors: test_getset_laws
+using Accessors: test_getset_laws, test_modify_law
 using Accessors
 
 @testset "os" begin
@@ -143,7 +143,7 @@ end
     @test typeof(@set eltype(obj) = Pair{UInt, Float64}) === Dict{UInt, Float64}
 end
 
-@testset "array shapes" begin
+@testset "arrays" begin
     A = [1 2 3; 4 5 6]
 
     B = @insert size(A)[2] = 1
@@ -164,6 +164,16 @@ end
     test_getset_laws(size, A, (1, 6), (3, 2))
     test_getset_laws(vec, A, 10:15, 21:26)
     test_getset_laws(reverse, collect(1:6), 10:15, 21:26)
+
+    @test @inferred(modify(x -> x ./ sum(x), [1, -2, 3], @optic filter(>(0), _))) == [0.25, -2, 0.75]
+    @test isequal(modify(x -> x ./ sum(x), [1, missing, 3], skipmissing), [0.25, missing, 0.75])
+    @test modify(cumsum, [2, 3, 1], sort) == [3, 6, 1]
+
+    test_getset_laws(@optic(map(first, _)), [(1,), (2,)], [(3,), (4,)], [(5,), (6,)])
+    test_getset_laws(@optic(filter(>(0), _)), [1, -2, 3, -4, 5, -6], [1, 2, 3], [1, 3, 5])
+    test_modify_law(reverse, @optic(filter(>(0), _)), [1, -2, 3, -4, 5, -6])
+    test_getset_laws(skipmissing, [1, missing, 3], [0, 1], [5, 6]; cmp=(x,y) -> isequal(collect(x), collect(y)))
+    test_modify_law(cumsum, sort, [1, -2, 3, -4, 5, -6])
 end
 
 @testset "math" begin

@@ -12,7 +12,7 @@ function test_getset_laws(lens, obj, val1, val2; cmp=(==))
     # set idempotent
     obj12 = set(obj1, lens, val2)
     obj2 = set(obj12, lens, val2)
-    @test obj12 == obj2
+    @test cmp(obj12, obj2)
 end
 
 function test_modify_law(f, lens, obj)
