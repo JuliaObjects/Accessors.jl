@@ -28,6 +28,7 @@ using StaticArrays
             @test_throws Exception delete(A, @optic(_[2, 2]))
             @test_throws BoundsError delete(A, @optic(_[10]))
             @test delete(A, @optic(_[end])) == [1, 2]
+            @test delete(A, @optic(_[[end-2, end]])) == [2]
             @test A == [1, 2, 3]  # not changed
         end
         let A = Dict("a" => 1, "b" => 2, "c" => 3)
