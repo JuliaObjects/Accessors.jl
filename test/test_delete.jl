@@ -12,7 +12,8 @@ using StaticArrays
         @test delete( (a=1, b=2, c=3), @optic(_[:a]) ) == (b=2, c=3)
         @test delete( (1,2,3), last ) == (1, 2)
         VERSION >= v"1.6" && @inferred(delete( (1,2,3), last ))
-        @test_broken delete((1,2,3), @optic(_[1:2])) == (3,)
+        f(t) = delete(t, @optic(_[1:2]))
+        @test @inferred(f((1,2,3))) == (3,)
         @test @inferred(delete( (a=1, b=2, c=3), first ))== (b=2, c=3)
         @test @inferred(delete( SVector(1,2,3), last )) === SVector(1, 2)
         @test @inferred(delete( [1, 2, 3], @optic(first(_, 2)))) == [3]

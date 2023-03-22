@@ -10,8 +10,8 @@ insert(obj, ::typeof(first), val) = insert(obj, IndexLens((firstindex(obj),)), v
 
 set(obj, o::Base.Fix2{typeof(first)}, val) = @set obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
 set(obj, o::Base.Fix2{typeof(last)}, val) = @set obj[(lastindex(obj) - o.x + 1):lastindex(obj)] = val
-delete(obj, o::Base.Fix2{typeof(first)}) = obj[(firstindex(obj) + o.x):lastindex(obj)]
-delete(obj, o::Base.Fix2{typeof(last)}) = obj[firstindex(obj):(lastindex(obj) - o.x)]
+delete(obj, o::Base.Fix2{typeof(first)}) = @delete obj[firstindex(obj):(firstindex(obj) + o.x - 1)]
+delete(obj, o::Base.Fix2{typeof(last)}) = @delete obj[(lastindex(obj) - o.x + 1):lastindex(obj)]
 insert(obj, o::Base.Fix2{typeof(first)}, val) = @insert obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
 insert(obj, o::Base.Fix2{typeof(last)}, val) = @insert obj[(lastindex(obj) + 1):(lastindex(obj) + o.x)] = val
 
