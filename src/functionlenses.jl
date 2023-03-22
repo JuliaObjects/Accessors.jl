@@ -145,6 +145,11 @@ function set(s::AbstractString, o::Base.Fix2{typeof(last)}, v::AbstractString)
     chop(s; head=0, tail=o.x) * v
 end
 
+delete(s::AbstractString, o::typeof(first)) = chop(s; head=1, tail=0)
+delete(s::AbstractString, o::typeof(last)) = chop(s; head=0, tail=1)
+delete(s::AbstractString, o::Base.Fix2{typeof(first)}) = chop(s; head=o.x, tail=0)
+delete(s::AbstractString, o::Base.Fix2{typeof(last)}) = chop(s; head=0, tail=o.x)
+
 if VERSION >= v"1.8"
     set(s::AbstractString, o::Base.Fix2{typeof(chopsuffix), <:AbstractString}, v) =
         endswith(s, o.x) ? v * o.x : v

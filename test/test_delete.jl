@@ -23,6 +23,11 @@ using StaticArrays
         VERSION >= v"1.6" && @test l((1,2,3)) == [1,2]
         @test delete((1,2,3), l) === (3,)
 
+        @test delete("абв", first) == "бв"
+        @test delete("абв", last) == "аб"
+        @test delete("абв", @optic(first(_, 2))) == "в"
+        @test delete("абв", @optic(last(_, 1))) == "аб"
+
         let A = [1,2,3]
             @test delete(A, @optic(_[2])) == [1, 3]
             @test delete(A, @optic(_[1:2])) == [3]
