@@ -88,26 +88,23 @@ setall(obj, o, vs) = set(obj, o, only(vs))
 # see https://github.com/JuliaObjects/Accessors.jl/pull/64 and https://github.com/JuliaObjects/Accessors.jl/pull/68.
 # Instead, we need to generate separate functions for each recursion level.
 
-function getall(obj, optic::ComposedFunction)
-    N = length(decompose(optic))
-    _getall(obj, optic, Val(N))
-end
+getall(obj, optic::ComposedFunction) = _getall(obj, decompose(optic))
 
 function setall(obj, optic::ComposedFunction, vs)
-    N = length(decompose(optic))
-    vss = to_nested_shape(vs, Val(getall_lengths(obj, optic, Val(N))), Val(N))
-    _setall(obj, optic, vss, Val(N))
+    optics = decompose(optic)
+    N = length(optics)
+    vss = to_nested_shape(vs, Val(getall_lengths(obj, optics)), Val(N))
+    _setall(obj, optics, vss)
 end
 
 
 # _getall: the actual workhorse for getall
-_getall(_, _, ::Val{N}) where {N} = error("Too many chained optics: $N is not supported for now. See also https://github.com/JuliaObjects/Accessors.jl/pull/64.")
-_getall(obj, optic, ::Val{1}) = getall(obj, optic)
-for i in 2:10
-    @eval function _getall(obj, optic, ::Val{$i})
+_getall(obj, optics::Tuple{Any}) = getall(obj, only(optics))
+for N in [2:10; :(<: Any)]
+    @eval function _getall(obj, optics::NTuple{$N,Any})
         _reduce_concat(
-            map(getall(obj, optic.inner)) do obj
-                _getall(obj, optic.outer, Val($(i-1)))
+            map(getall(obj, last(optics))) do obj
+                _getall(obj, Base.front(optics))
             end
         )
     end
@@ -115,12 +112,11 @@ end
 
 # _setall: the actual workhorse for setall
 # takes values as a nested tuple with proper leaf lengths, prepared in setall above
-_setall(_, _, _, ::Val{N}) where {N} = error("Too many chained optics: $N is not supported for now. See also https://github.com/JuliaObjects/Accessors.jl/pull/68.")
-_setall(obj, optic, vs, ::Val{1}) = setall(obj, optic, vs)
-for i in 2:10
-    @eval function _setall(obj, optic, vs, ::Val{$i})
-        setall(obj, optic.inner, map(getall(obj, optic.inner), vs) do obj, vss
-            _setall(obj, optic.outer, vss, Val($(i - 1)))
+_setall(obj, optics::Tuple{Any}, vs) = setall(obj, only(optics), vs)
+for N in [2:10; :(<: Any)]
+    @eval function _setall(obj, optics::NTuple{$N,Any}, vs)
+        setall(obj, last(optics), map(getall(obj, last(optics)), vs) do obj, vss
+            _setall(obj, Base.front(optics), vss)
         end)
     end
 end
@@ -141,12 +137,12 @@ _reduce_concat(xs::AbstractVector{<:AbstractVector}) = reduce(vcat, xs)
 _staticlength(::NTuple{N, <:Any}) where {N} = Val(N)
 _staticlength(x::AbstractVector) = length(x)
 
-getall_lengths(obj, optic, ::Val{1}) = _staticlength(getall(obj, optic))
-for i in 2:10
-    @eval function getall_lengths(obj, optic, ::Val{$i})
+getall_lengths(obj, optics::Tuple{Any}) = _staticlength(getall(obj, only(optics)))
+for N in [2:10; :(<: Any)]
+    @eval function getall_lengths(obj, optics::NTuple{$N,Any})
         # convert to Tuple: vectors cannot be put into Val
-        map(getall(obj, optic.inner) |> Tuple) do o
-            getall_lengths(o, optic.outer, Val($(i - 1)))
+        map(getall(obj, last(optics)) |> Tuple) do o
+            getall_lengths(o, Base.front(optics))
         end
     end
 end
