@@ -79,10 +79,14 @@ end
 
 
 set(obj, o::Base.Fix1{typeof(map)}, val) = map((ob, v) -> set(ob, o.x, v), obj, val)
+
 set(obj, o::Base.Fix1{typeof(filter)}, val) = @set obj[findall(o.x, obj)] = val
 modify(f, obj, o::Base.Fix1{typeof(filter)}) = @modify(f, obj[findall(o.x, obj)])
+delete(obj, o::Base.Fix1{typeof(filter)}) = filter(!o.x, obj)
+
 set(obj, o::typeof(skipmissing), val) = @set obj |> filter(!ismissing, _) = collect(val)
 modify(f, obj, o::typeof(skipmissing)) = @modify(f, obj |> filter(!ismissing, _))
+
 set(obj, ::typeof(sort), val) = @set obj[sortperm(obj)] = val
 modify(f, obj, ::typeof(sort)) = @modify(f, obj[sortperm(obj)])
 

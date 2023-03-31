@@ -279,6 +279,9 @@ function modify(f, obj, w::If)
     end
 end
 
+# it doesn't seem possible to support delete(If) for collections
+delete(obj, o::If) = error("`delete(obj, ::If)` not supported, try using `filter` as an optic instead")
+
 """
     mapproperties(f, obj)
 

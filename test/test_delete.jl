@@ -29,6 +29,9 @@ using StaticArrays
             @test_throws BoundsError delete(A, @optic(_[10]))
             @test delete(A, @optic(_[end])) == [1, 2]
             @test A == [1, 2, 3]  # not changed
+
+            @test_throws ErrorException delete(A, @optic _ |> Elements() |> If(isodd))
+            @test delete(A, @optic filter(isodd, _)) == [2]
         end
         let A = Dict("a" => 1, "b" => 2, "c" => 3)
             @test delete(A, @optic(_["a"])) == Dict("b" => 2, "c" => 3)
