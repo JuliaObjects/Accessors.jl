@@ -30,7 +30,7 @@ julia> nt
 (a = 1, b = 2)
 ```
 
-To overwrite the old definition, we can rebind `nt` to the mutated version:
+To overwrite the old definition, we can rebind `nt` to the new version:
 ```julia
 julia> nt = @set nt.b=3
 (a = 1, b = 3)
