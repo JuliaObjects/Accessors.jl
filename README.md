@@ -23,7 +23,7 @@ julia> @set nt.b=3
 (a = 1, b = 3)
 ```
 
-Note that this only returns a updated copy of `nt`, and *does not overwrite or mutate* the 
+Note that this only returns an updated copy of `nt`, and *does not overwrite or mutate* the 
 value bound to `nt`:
 ```julia
 julia> nt
