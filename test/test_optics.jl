@@ -96,4 +96,10 @@ end
     @test PropertyLens(:a) === PropertyLens{:a}()
 end
 
+@testset "broadcasting" begin
+    @test PropertyLens(:a).([(a=1,), (a=2, b=3)]) == [1, 2]
+    @test IndexLens(2).([(1,2,3), (4,5)]) == [2, 5]
+    @test Accessors.DynamicIndexLens(lastindex).([(1,2,3), (4,5)]) == [3, 5]
+end
+
 end#module
