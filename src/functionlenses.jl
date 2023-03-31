@@ -42,6 +42,8 @@ function set(obj::NamedTuple, ::Type{NamedTuple{KS}}, val::NamedTuple) where {KS
     setproperties(obj, NamedTuple{KS}(val))
 end
 
+set(obj, ::typeof(getproperties), val::NamedTuple) = setproperties(obj, val)
+
 ################################################################################
 ##### eltype
 ################################################################################
