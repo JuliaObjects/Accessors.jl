@@ -101,6 +101,18 @@ end
     f.(t, Ref(val))
 end
 
+function getall(obj, or::Recursive)
+    recurse(o) = _walk_getall_rec(var"#self#", o, or)
+    _walk_getall_rec(recurse, obj, or)
+end
+_walk_getall_rec(recurse, obj, or::Recursive) =
+    if or.descent_condition(obj)
+        _getall_rec(recurse, obj, or.optic)
+    else
+        (obj,)
+    end
+_getall_rec(recurse, obj, optic) = map(recurse, getall(obj, optic)) |> _reduce_concat
+
 # A straightforward recursive approach doesn't actually infer,
 # see https://github.com/JuliaObjects/Accessors.jl/pull/64 and https://github.com/JuliaObjects/Accessors.jl/pull/68.
 # Instead, we need to generate separate functions for each recursion level.

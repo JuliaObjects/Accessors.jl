@@ -36,6 +36,10 @@ if VERSION >= v"1.6"  # for ComposedFunction
     # maximal supported composition length of 10 optics:
     # @test (2, 5, 10, 17, 26, 37) === @inferred getall(obj, @optic _ |> _[:] |> Elements() |> Elements() |> _[:] |> Elements() |> Elements() |> _[1]^2 + 1 |> only)
 
+    @test (1, 2, 3, 4, 5, 6) == @inferred getall(obj, Recursive(x->!(x isa Number), Properties()))
+    @test (3, 4, 5, 6) == @inferred getall(obj, Recursive(x->!(x isa Number), Properties()) ∘ @optic(_[1].b))
+
+
     # trickier types for Elements():
     obj = (a=("ab", "c"), b=([1 2; 3 4],), c=(SVector(1), SVector(2, 3)))
     @test ['b', 'c', 'd'] == @inferred getall(obj, @optic _.a |> Elements() |> Elements() |> _ + 1)
