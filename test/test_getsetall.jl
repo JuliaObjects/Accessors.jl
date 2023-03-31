@@ -45,9 +45,9 @@ if VERSION >= v"1.6"  # for ComposedFunction
     @test_broken SVector(2, 3, 4) === getall(obj, @optic _.c |> Elements() |> Elements() |> _ + 1)
 
     # composition order should not matter:
-    @test [2, 3, 4] == @inferred getall(obj, @optic(_.c) ⨟ (Elements() ⨟ Elements() ⨟ @optic(_ + 1)))
-    @test [2, 3, 4] == @inferred getall(obj, (@optic(_.c) ⨟ Elements()) ⨟ (Elements() ⨟ @optic(_ + 1)))
-    @test [2, 3, 4] == @inferred getall(obj, (@optic(_.c) ⨟ Elements() ⨟ Elements()) ⨟ @optic(_ + 1))
+    @test [2, 3, 4] == @inferred getall(obj, (@optic(_ + 1) ∘ Elements() ∘ Elements()) ∘ @optic(_.c))
+    @test [2, 3, 4] == @inferred getall(obj, (@optic(_ + 1) ∘ Elements()) ∘ (Elements() ∘ @optic(_.c)))
+    @test [2, 3, 4] == @inferred getall(obj, @optic(_ + 1) ∘ (Elements() ∘ Elements() ∘ @optic(_.c)))
 
     obj = ()
     @test () === @inferred getall(obj, @optic _ |> Elements() |> _ + 1)
@@ -106,9 +106,9 @@ end
     @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, @optic(_.b |> Elements() |> Properties() |> _ * 3), [-9, -12, -15, -18])
 
     # composition order should not matter:
-    @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, @optic(_.b) ⨟ (Elements() ⨟ Properties() ⨟ @optic(_ * 3)), [-9, -12, -15, -18])
-    @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, (@optic(_.b) ⨟ Elements()) ⨟ (Properties() ⨟ @optic(_ * 3)), [-9, -12, -15, -18])
-    @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, (@optic(_.b) ⨟ Elements() ⨟ Properties()) ⨟ @optic(_ * 3), [-9, -12, -15, -18])
+    @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, (@optic(_ * 3) ∘ Properties() ∘ Elements()) ∘ @optic(_.b), [-9, -12, -15, -18])
+    @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, (@optic(_ * 3) ∘ Properties()) ∘ (Elements() ∘ @optic(_.b)), [-9, -12, -15, -18])
+    @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, @optic(_ * 3) ∘ (Properties() ∘ Elements() ∘ @optic(_.b)), [-9, -12, -15, -18])
 
     obj = ([1, 2], 3:5, (6,))
     @test obj == setall(obj, @optic(_ |> Elements() |> Elements()), 1:6)
