@@ -31,6 +31,17 @@ function set(x::TX, f::Base.Fix1{typeof(convert)}, v) where {TX}
     convert(TX, v)
 end
 
+set(obj::Tuple, ::Type{Tuple}, val::Tuple) = val
+set(obj::NamedTuple{KS}, ::Type{Tuple}, val::Tuple) where {KS} = NamedTuple{KS}(val)
+set(obj::CartesianIndex, ::Type{Tuple}, val::Tuple) = CartesianIndex(val)
+set(obj::AbstractVector, ::Type{Tuple}, val::Tuple) = similar(obj, eltype(val)) .= val
+
+set(obj, ::Type{NamedTuple{KS}}, val::NamedTuple) where {KS} = set(obj, Tuple, values(NamedTuple{KS}(val)))
+function set(obj::NamedTuple, ::Type{NamedTuple{KS}}, val::NamedTuple) where {KS}
+    length(KS) == length(val) || throw(ArgumentError("Cannot assign NamedTuple with keys $KSV to NamedTuple with keys $KS"))
+    setproperties(obj, NamedTuple{KS}(val))
+end
+
 ################################################################################
 ##### eltype
 ################################################################################
@@ -47,7 +58,7 @@ set(obj::Type{<:Dict{<:Any,V}}, lens::typeof(keytype), ::Type{K}) where {K,V} = 
 set(obj::Type{<:Dict{K}}, lens::typeof(valtype), ::Type{V}) where {K,V} = Dict{K,V}
 
 ################################################################################
-##### array shapes
+##### arrays
 ################################################################################
 set(obj, ::typeof(size), v::Tuple) = reshape(obj, v)
 
@@ -65,6 +76,19 @@ function set(x::AbstractVector, ::typeof(reverse), v::AbstractVector)
     reverse!(res)
     res
 end
+
+
+set(obj, o::Base.Fix1{typeof(map)}, val) = map((ob, v) -> set(ob, o.x, v), obj, val)
+
+set(obj, o::Base.Fix1{typeof(filter)}, val) = @set obj[findall(o.x, obj)] = val
+modify(f, obj, o::Base.Fix1{typeof(filter)}) = @modify(f, obj[findall(o.x, obj)])
+delete(obj, o::Base.Fix1{typeof(filter)}) = filter(!o.x, obj)
+
+set(obj, o::typeof(skipmissing), val) = @set obj |> filter(!ismissing, _) = collect(val)
+modify(f, obj, o::typeof(skipmissing)) = @modify(f, obj |> filter(!ismissing, _))
+
+set(obj, ::typeof(sort), val) = @set obj[sortperm(obj)] = val
+modify(f, obj, ::typeof(sort)) = @modify(f, obj[sortperm(obj)])
 
 ################################################################################
 ##### os

@@ -3,8 +3,10 @@ using Test
 using Dates
 using Unitful
 using InverseFunctions: inverse
-using Accessors: test_getset_laws
+using Accessors: test_getset_laws, test_modify_law
 using Accessors
+using StaticArrays: SVector
+
 
 @testset "os" begin
     path = "hello.md"
@@ -76,11 +78,33 @@ end
     Accessors.test_getset_laws(Base.tail, obj, (123,), ("456", 7))
 end
 
-@testset "convert" begin
+@testset "change types" begin
     x = Second(180)
     @test @modify(m -> m + 1, x |> convert(Minute, _).value) === Second(240)
     @test_throws ArgumentError @set x |> convert(Minute, _) = 123
     test_getset_laws(@optic(convert(Minute, _)), x, Minute(10), Minute(20))
+
+    cmp(a::NamedTuple, b::NamedTuple) = Set(keys(a)) == Set(keys(b)) && NamedTuple{keys(b)}(a) === b
+    cmp(a::T, b::T) where {T} = a == b
+    
+    test_getset_laws(Tuple, (1, 'a'), ('x', 'y'), (1, 2))
+    test_getset_laws(Tuple, (a=1, b='a'), ('x', 'y'), (1, 2))
+    test_getset_laws(Tuple, [0, 1], ('x', 'y'), (1, 2); cmp=cmp)
+    test_getset_laws(Tuple, SVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
+    test_getset_laws(Tuple, CartesianIndex(1, 2), (3, 4), (5, 6))
+
+    test_getset_laws(NamedTuple{(:x, :y)}, (1, 'a'), (x='x', y='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, (1, 'a'), (y='x', x='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, (y=1, x='a'), (x='x', y='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, (y=1, x='a'), (y='x', x='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, (y=1, z=10, x='a'), (x='x', y='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, (y=1, z=10, x='a'), (y='x', x='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, [0, 1], (x='x', y='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, [0, 1], (y='x', x='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (x='x', y='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (y='x', x='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, CartesianIndex(1, 2), (x=3, y=4), (x=5, y=6); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, CartesianIndex(1, 2), (y=3, x=4), (x=5, y=6); cmp=cmp)
 end
 
 @testset "eltype on Number" begin
@@ -125,7 +149,7 @@ end
     @test typeof(@set eltype(obj) = Pair{UInt, Float64}) === Dict{UInt, Float64}
 end
 
-@testset "array shapes" begin
+@testset "arrays" begin
     A = [1 2 3; 4 5 6]
 
     B = @insert size(A)[2] = 1
@@ -146,6 +170,16 @@ end
     test_getset_laws(size, A, (1, 6), (3, 2))
     test_getset_laws(vec, A, 10:15, 21:26)
     test_getset_laws(reverse, collect(1:6), 10:15, 21:26)
+
+    @test @inferred(modify(x -> x ./ sum(x), [1, -2, 3], @optic filter(>(0), _))) == [0.25, -2, 0.75]
+    @test isequal(modify(x -> x ./ sum(x), [1, missing, 3], skipmissing), [0.25, missing, 0.75])
+    @test modify(cumsum, [2, 3, 1], sort) == [3, 6, 1]
+
+    test_getset_laws(@optic(map(first, _)), [(1,), (2,)], [(3,), (4,)], [(5,), (6,)])
+    test_getset_laws(@optic(filter(>(0), _)), [1, -2, 3, -4, 5, -6], [1, 2, 3], [1, 3, 5])
+    test_modify_law(reverse, @optic(filter(>(0), _)), [1, -2, 3, -4, 5, -6])
+    test_getset_laws(skipmissing, [1, missing, 3], [0, 1], [5, 6]; cmp=(x,y) -> isequal(collect(x), collect(y)))
+    test_modify_law(cumsum, sort, [1, -2, 3, -4, 5, -6])
 end
 
 @testset "math" begin
