@@ -469,6 +469,12 @@ end
     delete(obj, IndexLens(lens.f(obj)))
 end
 
+
+Broadcast.broadcastable(
+    o::Union{PropertyLens,IndexLens,DynamicIndexLens,Elements,Properties,If,Recursive}
+) = Ref(o)
+
+
 function make_salt(s64::UInt64)::UInt
     # used for faster hashes. See https://github.com/jw3126/Setfield.jl/pull/162
     if UInt === UInt64
