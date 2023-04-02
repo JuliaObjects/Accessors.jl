@@ -420,8 +420,9 @@ end
 
 @inline function delete(obj::Tuple, l::IndexLens)
     i = only(l.indices)
-    ntuple(length(obj) - 1) do j
-        obj[j < i ? j : j + 1]
+    (i isa UnitRange || i isa Integer) || throw(ArgumentError("only UnitRange and Integer indices are supported"))
+    ntuple(length(obj) - length(i)) do j
+        j < minimum(i) ? obj[j] : obj[j + length(i)]
     end
 end
 

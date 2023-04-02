@@ -10,8 +10,8 @@ insert(obj, ::typeof(first), val) = insert(obj, IndexLens((firstindex(obj),)), v
 
 set(obj, o::Base.Fix2{typeof(first)}, val) = @set obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
 set(obj, o::Base.Fix2{typeof(last)}, val) = @set obj[(lastindex(obj) - o.x + 1):lastindex(obj)] = val
-delete(obj, o::Base.Fix2{typeof(first)}) = obj[(firstindex(obj) + o.x):lastindex(obj)]
-delete(obj, o::Base.Fix2{typeof(last)}) = obj[firstindex(obj):(lastindex(obj) - o.x)]
+delete(obj, o::Base.Fix2{typeof(first)}) = @delete obj[firstindex(obj):(firstindex(obj) + o.x - 1)]
+delete(obj, o::Base.Fix2{typeof(last)}) = @delete obj[(lastindex(obj) - o.x + 1):lastindex(obj)]
 insert(obj, o::Base.Fix2{typeof(first)}, val) = @insert obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
 insert(obj, o::Base.Fix2{typeof(last)}, val) = @insert obj[(lastindex(obj) + 1):(lastindex(obj) + o.x)] = val
 
@@ -168,6 +168,11 @@ function set(s::AbstractString, o::Base.Fix2{typeof(last)}, v::AbstractString)
     length(v) == o.x || throw(DimensionMismatch("tried to assign $(length(v)) elements to $(o.x) destinations"))
     chop(s; head=0, tail=o.x) * v
 end
+
+delete(s::AbstractString, o::typeof(first)) = chop(s; head=1, tail=0)
+delete(s::AbstractString, o::typeof(last)) = chop(s; head=0, tail=1)
+delete(s::AbstractString, o::Base.Fix2{typeof(first)}) = chop(s; head=o.x, tail=0)
+delete(s::AbstractString, o::Base.Fix2{typeof(last)}) = chop(s; head=0, tail=o.x)
 
 if VERSION >= v"1.8"
     set(s::AbstractString, o::Base.Fix2{typeof(chopsuffix), <:AbstractString}, v) =

@@ -147,22 +147,14 @@ need_dynamic_optic(ex) =
 replace_underscore(ex, to) = postwalk(x -> x === :_ ? to : x, ex)
 
 function lower_index(collection::Symbol, index, dim)
-    if isexpr(index, :call)
-        return Expr(:call, lower_index.(collection, index.args, dim)...)
-    elseif index === :end
-        if dim === nothing
-            return :($(Base.lastindex)($collection))
-        else
-            return :($(Base.lastindex)($collection, $dim))
-        end
-    elseif (index === :begin)
-        if dim === nothing
-            return :($(Base.firstindex)($collection))
-        else
-            return :($(Base.firstindex)($collection, $dim))
-        end
-    end
-    return index
+    index = MacroTools.replace(
+        index, :end,
+        dim === nothing ? :($(Base.lastindex)($collection)) : :($(Base.lastindex)($collection, $dim))
+    )
+    index = MacroTools.replace(
+        index, :begin,
+        dim === nothing ? :($(Base.firstindex)($collection)) : :($(Base.firstindex)($collection, $dim))
+    )
 end
 
 function parse_obj_optics(ex)
