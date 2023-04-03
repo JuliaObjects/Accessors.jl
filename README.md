@@ -39,7 +39,7 @@ julia> nt
 (a = 1, b = 3)
 ```
 
-As this is a common use case, the convenience macro `@reset` overwrites what you are mutating:
+As this is a common use case, the convenience macro `@reset` rebinds the variable (`nt`) to the updated version:
 ```julia
 julia> @reset nt.b=4
 (a = 1, b = 4)
