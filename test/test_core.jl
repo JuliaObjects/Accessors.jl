@@ -45,6 +45,8 @@ end
     nt = (a=1,)
     @reset nt.a = 5
     @test nt === (a=5,)
+
+    @test_throws Exception eval(:(@reset func(x, y) = 100))
 end
 
 @testset "@set" begin
@@ -142,14 +144,16 @@ end
     x_orig = x
     @test (@set $(x)[2] = 100) == [1, 100, 3]
     @test (@set $(x[2]) = 100) == 100
-    @test (@set $(x)[2] + 2 = 100) == [1, 98, 3]  # impossible without $
-    @test (@set $(x[2]) + 2 = 100) == 98  # impossible without $
-    @test x_orig === x == [1, 2, 3]
+    # these are impossible with @set without $:
+    @test (@set $(x)[2] + 2 = 100) == [1, 98, 3]
+    @test (@set $(x[2]) + 2 = 100) == 98
+    @test (@set first($x, 2) = [10, 20]) == [10, 20, 3]
 
-    @test (@reset $(x[2]) = 100) == 100
-    @test x_orig === x == [1, 100, 3]
-    @test (@reset $(x)[2] = 200) == [1, 200, 3]
-    @test x_orig !== x == [1, 200, 3]
+    @test_throws Exception eval(:(@reset $(x[2]) = 100))
+    @test_throws Exception eval(:(@reset $(x)[2] = 200))
+
+    # ensure the object itself didn't change:
+    @test x_orig === x == [1, 2, 3]
 end
 
 
