@@ -448,33 +448,33 @@ end
     @test (@optic _ |> _[1] |> _[2] |> _[3]) === @optic _[1][2][3]
 end
 
+@testset "text/plain show" begin
+    @testset for lens in [
+        LensIfTextPlain()
+    ]
+        @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
+    end
+    @testset for lens in [
+        @optic _.a |> LensIfTextPlain()
+        @optic _ |> LensIfTextPlain() |> _.b
+        @optic _.a |> LensIfTextPlain() |> @optic _.b
+    ]
+        @test_broken occursin("I define text/plain.", sprint(show, "text/plain", lens))
+    end
+
+    @testset for lens in [
+        UserDefinedLens()
+        @optic _.a |> UserDefinedLens()
+        @optic _ |> UserDefinedLens() |> _.b
+        @optic _.a |> UserDefinedLens() |> _.b
+    ]
+        @test sprint(show, lens) == sprint(show, "text/plain", lens)
+    end
+end
+
 if !Accessors.BASE_COMPOSED_FUNCTION_HAS_SHOW
     @info "Skipping show tests, on old VERSION = $VERSION"
 else
-    @testset "text/plain show" begin
-        @testset for lens in [
-            LensIfTextPlain()
-        ]
-            @test occursin("I define text/plain.", sprint(show, "text/plain", lens))
-        end
-        @testset for lens in [
-            @optic _.a |> LensIfTextPlain()
-            @optic _ |> LensIfTextPlain() |> _.b
-            @optic _.a |> LensIfTextPlain() |> @optic _.b
-        ]
-            @test_broken occursin("I define text/plain.", sprint(show, "text/plain", lens))
-        end
-
-        @testset for lens in [
-            UserDefinedLens()
-            @optic _.a |> UserDefinedLens()
-            @optic _ |> UserDefinedLens() |> _.b
-            @optic _.a |> UserDefinedLens() |> _.b
-        ]
-            @test sprint(show, lens) == sprint(show, "text/plain", lens)
-        end
-    end
-
     @testset "show it like you build it " begin
         @testset for item in [
                 @optic _.a
@@ -503,6 +503,12 @@ else
             item2 = eval(Meta.parse(String(take!(buf))))
             @test item === item2
         end
+        
+        # base Julia, we cannot do anything here:
+        item = @optic _ + 1
+        buf = IOBuffer()
+        show(buf, item)
+        @test_broken (item === eval(Meta.parse(String(take!(buf)))); true)
     end
 end
 
