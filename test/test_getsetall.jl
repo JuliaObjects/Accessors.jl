@@ -77,6 +77,10 @@ end
         @test (a=2, b="3") === @inferred setall((a=1, b="2"), o, (2, "3"))
         @test (a=2, b=3) === @inferred setall((a=1, b="2"), o, [2, 3])
     end
+    for o in [Elements(), Properties()]
+        @test (2, 3) === @inferred setall((1, "2"), o, (2, 3))
+        @test (2, "3") === @inferred setall((1, "2"), o, (2, "3"))
+    end
     @test (2, 3) === @inferred setall((1, "2"), Elements(), (2, 3))
     @test (2, "3") === @inferred setall((1, "2"), Elements(), (2, "3"))
     @test (2, 3) === @inferred setall((1, "2"), Elements(), [2, 3])
