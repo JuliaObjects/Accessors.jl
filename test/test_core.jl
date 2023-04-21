@@ -319,12 +319,9 @@ end
 end
 
 @testset "flipped index" begin
-    obj = (a=2, b=nothing)
-    lens = @optic (4:10)[_.a]
-    @test @inferred(set(obj, lens, 4)).a == 1
-    @test_throws ArgumentError set(obj, lens, 12)
-    test_getset_laws(lens, obj, 5, 6)
-    test_modify_law(x -> x + 1, lens, obj)
+    lut = 4:10
+    @test (@optic lut[_.a]) === Base.Fix1(getindex, lut) ∘ PropertyLens(:a)
+    # set() should be implemented in packages for their types
 end
 
 @testset "StaticNumbers" begin

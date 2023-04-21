@@ -42,12 +42,6 @@ function set(obj::NamedTuple, ::Type{NamedTuple{KS}}, val::NamedTuple) where {KS
     setproperties(obj, NamedTuple{KS}(val))
 end
 
-function set(obj, f::Base.Fix1{typeof(getindex)}, val)
-    ix = findfirst(isequal(val), f.x)
-    ix === nothing && throw(ArgumentError("value $val not found in $(f.x)"))
-    return ix
-end
-
 ################################################################################
 ##### eltype
 ################################################################################
