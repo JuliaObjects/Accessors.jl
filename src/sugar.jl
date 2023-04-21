@@ -430,26 +430,26 @@ macro accessor(ex)
     end |> esc
 end
 
-
-_shortstring(prev, o::PropertyLens{field}) where {field} = "$prev.$field"
-_shortstring(prev, o::IndexLens) ="$prev[$(join(repr.(o.indices), ", "))]"
-_shortstring(prev, o::Function) = "$o($prev)"
-_shortstring(prev, o::Base.Fix1) = "$(o.f)($(o.x), $prev)"
-_shortstring(prev, o::Base.Fix2) = "$(o.f)($prev, $(o.x))"
-Base.show(io::IO, optic::Union{IndexLens, PropertyLens}) = print(io, "(@optic $(_shortstring("_", optic)))")
-function Base.show(io::IO, optic::ComposedFunction{<:Any, <:Union{IndexLens, PropertyLens}})
-    opts = deopcompose(optic)
-    inner = Iterators.takewhile(x -> applicable(_shortstring, "", x), opts)
-    outer = Iterators.dropwhile(x -> applicable(_shortstring, "", x), opts)
-    if !isempty(outer)
-        show(io, opcompose(outer...))
-        print(io, " ∘ ")
+if BASE_COMPOSED_FUNCTION_HAS_SHOW
+    _shortstring(prev, o::PropertyLens{field}) where {field} = "$prev.$field"
+    _shortstring(prev, o::IndexLens) ="$prev[$(join(repr.(o.indices), ", "))]"
+    _shortstring(prev, o::Function) = "$o($prev)"
+    _shortstring(prev, o::Base.Fix1) = "$(o.f)($(o.x), $prev)"
+    _shortstring(prev, o::Base.Fix2) = "$(o.f)($prev, $(o.x))"
+    Base.show(io::IO, optic::Union{IndexLens, PropertyLens}) = print(io, "(@optic $(_shortstring("_", optic)))")
+    function Base.show(io::IO, optic::ComposedFunction{<:Any, <:Union{IndexLens, PropertyLens}})
+        opts = deopcompose(optic)
+        inner = Iterators.takewhile(x -> applicable(_shortstring, "", x), opts)
+        outer = Iterators.dropwhile(x -> applicable(_shortstring, "", x), opts)
+        if !isempty(outer)
+            show(io, opcompose(outer...))
+            print(io, " ∘ ")
+        end
+        print(io, "(@optic ", reduce(_shortstring, inner; init="_"), ")")
     end
-    print(io, "(@optic ", reduce(_shortstring, inner; init="_"), ")")
+    Base.show(io::IO, ::MIME"text/plain", optic::Union{IndexLens, PropertyLens}) = show(io, optic)
+    Base.show(io::IO, ::MIME"text/plain", optic::ComposedFunction{<:Any, <:Union{IndexLens, PropertyLens}}) = show(io, optic)    
 end
-Base.show(io::IO, ::MIME"text/plain", optic::Union{IndexLens, PropertyLens}) = show(io, optic)
-Base.show(io::IO, ::MIME"text/plain", optic::ComposedFunction{<:Any, <:Union{IndexLens, PropertyLens}}) = show(io, optic)
-
 
 # debugging
 show_composition_order(optic) = (show_composition_order(stdout, optic); println())
