@@ -1,4 +1,4 @@
-module StructArraysExt
+module AccessorsStructArraysExt
 using Accessors
 using StructArrays
 
