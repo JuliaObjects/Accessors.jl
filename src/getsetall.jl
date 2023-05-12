@@ -135,7 +135,7 @@ _reduce_concat(xs::AbstractVector) = reduce(append!, xs; init=eltype(eltype(xs))
 _reduce_concat(xs::Tuple{AbstractVector, Vararg{AbstractVector}}) = reduce(vcat, xs)
 _reduce_concat(xs::AbstractVector{<:AbstractVector}) = reduce(vcat, xs)
 
-_staticlength(::NTuple{N, <:Any}) where {N} = Val(N)
+_staticlength(::NTuple{N, Any}) where {N} = Val(N)
 _staticlength(x::AbstractVector) = length(x)
 
 getall_lengths(obj, optics::Tuple{Any}) = _staticlength(getall(obj, only(optics)))
