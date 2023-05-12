@@ -113,6 +113,20 @@ end
     @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, (@optic(_ * 3) ∘ Properties()) ∘ (Elements() ∘ @optic(_.b)), [-9, -12, -15, -18])
     @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, @optic(_ * 3) ∘ (Properties() ∘ Elements() ∘ @optic(_.b)), [-9, -12, -15, -18])
 
+    # SVectors and nested Elements:
+    obj = (c=(SVector(1), SVector(2, 3)),)
+    @test setall(obj.c[1], Elements(), (5, 6)) === SVector(5, 6)
+    @test setall(obj.c[1], Elements(), (5,)) === SVector(5)
+    @test setall(obj.c[1], Elements(), [5, 6]) === SVector(5, 6)
+    @test setall(obj.c[1], Elements(), [5]) === SVector(5)
+    @testset for o in (
+        (@optic _.c |> Elements() |> Elements()),
+        (@optic _.c |> Elements() |> Elements() |> _ + 1),
+    )
+        @test setall(obj, o, getall(obj, o)) === obj
+        @test setall(obj, o, collect(getall(obj, o))) === obj
+    end
+
     obj = ([1, 2], 3:5, (6,))
     @test obj == setall(obj, @optic(_ |> Elements() |> Elements()), 1:6)
     @test ([2, 3], 4:6, (7,)) == setall(obj, @optic(_ |> Elements() |> Elements() |> _ - 1), 1:6)
