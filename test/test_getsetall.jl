@@ -40,14 +40,13 @@ if VERSION >= v"1.6"  # for ComposedFunction
     obj = (a=("ab", "c"), b=([1 2; 3 4],), c=(SVector(1), SVector(2, 3)))
     @test ['b', 'c', 'd'] == @inferred getall(obj, @optic _.a |> Elements() |> Elements() |> _ + 1)
     @test [2, 4, 3, 5] == @inferred getall(obj, @optic _.b |> Elements() |> Elements() |> _ + 1)
-    @test SVector(1, 2, 3) === @inferred getall(obj, @optic _.c |> Elements() |> Elements())
-    @test [2, 3, 4] == @inferred getall(obj, @optic _.c |> Elements() |> Elements() |> _ + 1)
-    @test_broken SVector(2, 3, 4) === getall(obj, @optic _.c |> Elements() |> Elements() |> _ + 1)
+    @test (1, 2, 3) === @inferred getall(obj, @optic _.c |> Elements() |> Elements())
+    @test (2, 3, 4) === @inferred getall(obj, @optic _.c |> Elements() |> Elements() |> _ + 1)
 
     # composition order should not matter:
-    @test [2, 3, 4] == @inferred getall(obj, (@optic(_ + 1) ∘ Elements() ∘ Elements()) ∘ @optic(_.c))
-    @test [2, 3, 4] == @inferred getall(obj, (@optic(_ + 1) ∘ Elements()) ∘ (Elements() ∘ @optic(_.c)))
-    @test [2, 3, 4] == @inferred getall(obj, @optic(_ + 1) ∘ (Elements() ∘ Elements() ∘ @optic(_.c)))
+    @test (2, 3, 4) === @inferred getall(obj, (@optic(_ + 1) ∘ Elements() ∘ Elements()) ∘ @optic(_.c))
+    @test (2, 3, 4) === @inferred getall(obj, (@optic(_ + 1) ∘ Elements()) ∘ (Elements() ∘ @optic(_.c)))
+    @test (2, 3, 4) === @inferred getall(obj, @optic(_ + 1) ∘ (Elements() ∘ Elements() ∘ @optic(_.c)))
 
     obj = ()
     @test () === @inferred getall(obj, @optic _ |> Elements() |> _ + 1)
