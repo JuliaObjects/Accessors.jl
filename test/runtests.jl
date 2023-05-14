@@ -1,7 +1,12 @@
 module TestAccessors
 import PerformanceTestTools
 import Accessors
-PerformanceTestTools.@include("perf.jl")
+import Aqua
+Aqua.test_all(Accessors, 
+    stale_deps=false,
+    project_toml_formatting=false,
+)
+PerformanceTestTools.@include("perf.jl", )
 
 include("test_examples.jl")
 include("test_core.jl")

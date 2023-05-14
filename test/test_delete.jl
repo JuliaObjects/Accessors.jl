@@ -5,6 +5,7 @@ using StaticArrays
 
 @testset "test delete" begin
     @testset "function" begin
+        @test @inferred(delete((a=1,b=2), @optic _[()])) === (a=1, b=2)
         @test @inferred(delete( (a=1, b=2, c=3), @optic(_.a) )) == (b=2, c=3)
         @test @inferred(delete( (a=1, b=2, c=3), @optic(_.xxxx) )) === (a=1, b=2, c=3)
         @test @inferred(delete( (a=1, b=(c=2, d=3)), @optic(_.b.c) )) == (a=1, b=(d=3,))
