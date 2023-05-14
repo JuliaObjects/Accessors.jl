@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Getting started · Accessors.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">Accessors.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li class="is-active"><a class="tocitem" href>Getting started</a></li></ul></li><li><span class="tocitem">Explanation</span><ul><li><a class="tocitem" href="../lenses/">Lenses</a></li></ul></li><li><span class="tocitem">Reference</span><ul><li><a class="tocitem" href="../docstrings/">Docstrings</a></li></ul></li><li><span class="tocitem">How-to guides</span><ul><li><a class="tocitem" href="../examples/custom_optics/">Custom Optics</a></li><li><a class="tocitem" href="../examples/custom_macros/">Custom Macros</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Getting started</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Getting started</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaObjects/Accessors.jl/blob/master/docs/src/getting_started.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Getting-started"><a class="docs-heading-anchor" href="#Getting-started">Getting started</a><a id="Getting-started-1"></a><a class="docs-heading-anchor-permalink" href="#Getting-started" title="Permalink"></a></h1><p>Say you have a <code>NamedTuple</code> and you want to update it:</p><pre><code class="language-julia-repl hljs">julia&gt; x = (greeting=&quot;Hello&quot;, name=&quot;World&quot;)
+(greeting = &quot;Hello&quot;, name = &quot;World&quot;)
+
+julia&gt; x.greeting = &quot;Hi&quot;
+ERROR: setfield!: immutable struct of type NamedTuple cannot be changed
+[...]</code></pre><p>This fails, because named tuples are immutable. Instead you can use Accessors to carry out the update:</p><pre><code class="language-julia-repl hljs">julia&gt; using Accessors
+
+julia&gt; @set x.greeting = &quot;Hi&quot;
+(greeting = &quot;Hi&quot;, name = &quot;World&quot;)
+
+julia&gt; x # still the same. Accessors did not overwrite x, it just created an updated copy
+(greeting = &quot;Hello&quot;, name = &quot;World&quot;)
+
+julia&gt; x_new = @set x.greeting = &quot;Hi&quot; # typically you will assign a name to the updated copy
+(greeting = &quot;Hi&quot;, name = &quot;World&quot;)</code></pre><p>Accessors.jl does not only support <code>NamedTuple</code>, but arbitrary structs and nested updates.</p><pre><code class="language-julia-repl hljs">julia&gt; struct HelloWorld
+           greeting::String
+           name::String
+       end
+
+julia&gt; x = HelloWorld(&quot;hi&quot;, &quot;World&quot;)
+HelloWorld(&quot;hi&quot;, &quot;World&quot;)
+
+julia&gt; @set x.name = &quot;Accessors&quot; # update a struct
+HelloWorld(&quot;hi&quot;, &quot;Accessors&quot;)
+
+julia&gt; x = (a=1, b=(c=3, d=4))
+(a = 1, b = (c = 3, d = 4))
+
+julia&gt; @set x.b.c = 10 # nested update
+(a = 1, b = (c = 10, d = 4))</code></pre><p>Accessors.jl does not only support updates of properties, but also index updates.</p><pre><code class="language-julia-repl hljs">julia&gt; x = (10,20,21)
+(10, 20, 21)
+
+julia&gt; @set x[3] = 30
+(10, 20, 30)</code></pre><p>In fact Accessors.jl supports many more notions of update:</p><pre><code class="language-julia-repl hljs">julia&gt; x = [1,2,3];
+
+julia&gt; x_new = @set eltype(x) = UInt8;
+
+julia&gt; @show x_new;
+x_new = UInt8[0x01, 0x02, 0x03]</code></pre><p>Accessors.jl is very composable, which means different updates can be nested and combined.</p><pre><code class="language-julia-repl hljs">julia&gt; data = (a = (b = (1,2),), c=3)
+(a = (b = (1, 2),), c = 3)
+
+julia&gt; @set data.a.b[end] = 20
+(a = (b = (1, 20),), c = 3)
+
+julia&gt; @set splitext(&quot;some_file.py&quot;)[2] = &quot;.jl&quot;
+&quot;some_file.jl&quot;</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../lenses/">Lenses »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Sunday 14 May 2023 22:41">Sunday 14 May 2023</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
