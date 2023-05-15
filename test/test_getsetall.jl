@@ -4,6 +4,10 @@ using Accessors
 using StaticNumbers
 using StaticArrays
 
+@static if VERSION < v"1.9-"
+    # for StaticArrays constructorof: ConstructionBase itself only supports it through 1.9 extension
+    using ConstructionBaseExtras
+end
 
 if VERSION >= v"1.6"  # for ComposedFunction
 @testset "getall" begin

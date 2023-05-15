@@ -31,6 +31,7 @@ AxisKeys = "0.1,0.2"  # extension tests only pass for AxisKeys 0.2, but 0.1 comp
 Compat = "3.18, 4"
 CompositionsBase = "0.1"
 ConstructionBase = "1.5"
+ConstructionBaseExtras = "0.1"
 IntervalSets = "0.5,0.7"  # extension tests only pass for IntervalSets 0.7, but 0.5 compat is required to run tests on Julia 1.3
 InverseFunctions = "0.1.5"
 MacroTools = "0.4.4, 0.5"
@@ -44,6 +45,7 @@ julia = "1.3"
 [extras]
 AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+ConstructionBaseExtras = "914cd950-b775-4282-9f32-54fc4544c321"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
 InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
@@ -57,4 +59,5 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 
 [targets]
-test = ["Test", "PerformanceTestTools", "QuickTypes", "InverseFunctions", "AxisKeys", "IntervalSets", "StaticArrays", "StructArrays", "BenchmarkTools", "InteractiveUtils", "StaticNumbers", "Unitful","Aqua"]
+test = ["Test", "PerformanceTestTools", "QuickTypes", "InverseFunctions", "AxisKeys", "IntervalSets", "StaticArrays", "StructArrays", "BenchmarkTools", "InteractiveUtils", "StaticNumbers", "Unitful", "Aqua", "ConstructionBaseExtras"]
+
