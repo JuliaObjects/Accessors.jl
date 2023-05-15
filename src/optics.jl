@@ -450,6 +450,8 @@ end
 @inline delete(obj::NamedTuple, l::IndexLens{<:Tuple{Tuple{Vararg{Symbol}}}}) = Base.structdiff(obj, NamedTuple{only(l.indices)})
 @inline delete(obj::NamedTuple, l::IndexLens{Tuple{Int}}) = Base.structdiff(obj, NamedTuple{(keys(obj)[only(l.indices)],)})
 @inline delete(obj::NamedTuple, l::IndexLens{<:Tuple{Tuple{Vararg{Int}}}}) = Base.structdiff(obj, NamedTuple{map(i -> keys(obj)[i], only(l.indices))})
+# resolve method ambiguity:
+@inline delete(obj::NamedTuple, l::IndexLens{<:Tuple{Tuple{}}}) = obj
 @inline insert(obj::NamedTuple, l::IndexLens{Tuple{Symbol}}, val) = merge(obj, NamedTuple{l.indices}((val,)))
 @inline insert(obj::NamedTuple, l::IndexLens{<:Tuple{Tuple{Vararg{Symbol}}}}, vals) = merge(obj, NamedTuple{only(l.indices)}(vals))
 

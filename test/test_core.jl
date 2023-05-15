@@ -497,6 +497,7 @@ else
                 (@optic _.a) ∘ UserDefinedLens()   ∘ (@optic _.b)
                 (@optic _.a) ∘ LensIfTextPlain() ∘ (@optic _.b)
                 @optic 2 * (abs(_.a.b[2].c) + 1)
+                @optic !(_.a) # issue 105
             ]
             buf = IOBuffer()
             show(buf, item)
