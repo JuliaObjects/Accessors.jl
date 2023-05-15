@@ -6,7 +6,7 @@ Aqua.test_all(Accessors,
     stale_deps=false,
     project_toml_formatting=false,
 )
-PerformanceTestTools.@include("perf.jl", )
+PerformanceTestTools.@include("perf.jl")
 
 include("test_examples.jl")
 include("test_core.jl")

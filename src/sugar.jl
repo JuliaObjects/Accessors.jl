@@ -436,7 +436,7 @@ if BASE_COMPOSED_FUNCTION_HAS_SHOW
     _shortstring(prev, o::Function) = "$o($prev)"
     _shortstring(prev, o::Base.Fix1) = "$(o.f)($(o.x), $prev)"
     _shortstring(prev, o::Base.Fix2) = "$(o.f)($prev, $(o.x))"
-    Base.show(io::IO, optic::Union{IndexLens, PropertyLens}) = print(io, "(@optic $(_shortstring("_", optic)))")
+
     function show_optic(io, optic)
         opts = deopcompose(optic)
         inner = Iterators.takewhile(x -> applicable(_shortstring, "", x), opts)
@@ -447,8 +447,13 @@ if BASE_COMPOSED_FUNCTION_HAS_SHOW
         end
         print(io, "(@optic ", reduce(_shortstring, inner; init="_"), ")")
     end
+
+    Base.show(io::IO, optic::Union{IndexLens, PropertyLens}) = print(io, "(@optic $(_shortstring("_", optic)))")
+
     Base.show(io::IO, optic::ComposedFunction{<:Any, <:Union{IndexLens, PropertyLens}}) = show_optic(io, optic)
+    # resolve method ambiguity:
     Base.show(io::IO, optic::ComposedFunction{typeof(!), <:Union{IndexLens, PropertyLens}}) = show_optic(io, optic)
+
     Base.show(io::IO, ::MIME"text/plain", optic::Union{IndexLens, PropertyLens}) = show(io, optic)
     Base.show(io::IO, ::MIME"text/plain", optic::ComposedFunction{<:Any, <:Union{IndexLens, PropertyLens}}) = show(io, optic)    
 end
