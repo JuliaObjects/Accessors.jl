@@ -4,6 +4,10 @@ using Accessors
 using StaticNumbers
 using StaticArrays
 
+@static if VERSION < v"1.9-"
+    # for StaticArrays constructorof: ConstructionBase itself only supports it through 1.9 extension
+    using ConstructionBaseExtras
+end
 
 if VERSION >= v"1.6"  # for ComposedFunction
 @testset "getall" begin
@@ -37,17 +41,16 @@ if VERSION >= v"1.6"  # for ComposedFunction
     @test (2, 5, 10, 17, 26, 37) === @inferred getall(obj, @optic _ |> _[:] |> Elements() |> Elements() |> _[:] |> Elements() |> Elements() |> _[1]^2 + 1 |> only)
 
     # trickier types for Elements():
-    obj = (a=("ab", "c"), b=([1 2; 3 4],), c=(SVector(1), SVector(2, 3)))
+    obj = (a=("ab", "c"), b=([1 2; 3 4],), c=(SVector(1.), SVector(2, 3)))
     @test ['b', 'c', 'd'] == @inferred getall(obj, @optic _.a |> Elements() |> Elements() |> _ + 1)
     @test [2, 4, 3, 5] == @inferred getall(obj, @optic _.b |> Elements() |> Elements() |> _ + 1)
-    @test SVector(1, 2, 3) === @inferred getall(obj, @optic _.c |> Elements() |> Elements())
-    @test [2, 3, 4] == @inferred getall(obj, @optic _.c |> Elements() |> Elements() |> _ + 1)
-    @test_broken SVector(2, 3, 4) === getall(obj, @optic _.c |> Elements() |> Elements() |> _ + 1)
+    @test (1., 2, 3) === @inferred getall(obj, @optic _.c |> Elements() |> Elements())
+    @test (2., 3, 4) === @inferred getall(obj, @optic _.c |> Elements() |> Elements() |> _ + 1)
 
     # composition order should not matter:
-    @test [2, 3, 4] == @inferred getall(obj, (@optic(_ + 1) ∘ Elements() ∘ Elements()) ∘ @optic(_.c))
-    @test [2, 3, 4] == @inferred getall(obj, (@optic(_ + 1) ∘ Elements()) ∘ (Elements() ∘ @optic(_.c)))
-    @test [2, 3, 4] == @inferred getall(obj, @optic(_ + 1) ∘ (Elements() ∘ Elements() ∘ @optic(_.c)))
+    @test (2., 3, 4) === @inferred getall(obj, (@optic(_ + 1) ∘ Elements() ∘ Elements()) ∘ @optic(_.c))
+    @test (2., 3, 4) === @inferred getall(obj, (@optic(_ + 1) ∘ Elements()) ∘ (Elements() ∘ @optic(_.c)))
+    @test (2., 3, 4) === @inferred getall(obj, @optic(_ + 1) ∘ (Elements() ∘ Elements() ∘ @optic(_.c)))
 
     obj = ()
     @test () === @inferred getall(obj, @optic _ |> Elements() |> _ + 1)
@@ -113,6 +116,20 @@ end
     @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, (@optic(_ * 3) ∘ Properties() ∘ Elements()) ∘ @optic(_.b), [-9, -12, -15, -18])
     @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, (@optic(_ * 3) ∘ Properties()) ∘ (Elements() ∘ @optic(_.b)), [-9, -12, -15, -18])
     @test (a=1, b=((c=-3., d=-4.), (c=-5., d=-6.))) === @inferred setall(obj, @optic(_ * 3) ∘ (Properties() ∘ Elements() ∘ @optic(_.b)), [-9, -12, -15, -18])
+
+    # SVectors and nested Elements:
+    obj = (c=(SVector(1.), SVector(2, 3)),)
+    @test setall(obj.c[1], Elements(), (5, 6)) === SVector(5, 6)
+    @test setall(obj.c[1], Elements(), (5,)) === SVector(5)
+    @test setall(obj.c[1], Elements(), [5, 6]) === SVector(5, 6)
+    @test setall(obj.c[1], Elements(), [5]) === SVector(5)
+    @testset for o in (
+        (@optic _.c |> Elements() |> Elements()),
+        (@optic _.c |> Elements() |> Elements() |> _ + 1),
+    )
+        @test setall(obj, o, getall(obj, o)) === obj
+        @test setall(obj, o, collect(getall(obj, o))) === obj
+    end
 
     obj = ([1, 2], 3:5, (6,))
     @test obj == setall(obj, @optic(_ |> Elements() |> Elements()), 1:6)

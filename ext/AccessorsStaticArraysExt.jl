@@ -10,4 +10,8 @@ import Accessors: setindex, delete, insert
 
 Accessors.set(obj::StaticArrays.SVector, ::Type{Tuple}, val::Tuple) = StaticArrays.SVector(val)
 
+Accessors.getall(obj::StaticArrays.StaticArray, ::Elements) = Tuple(obj)
+Accessors.setall(obj::StaticArrays.StaticArray, ::Elements, vs::AbstractArray) = constructorof(typeof(obj))(vs...)  # just for disambiguation
+Accessors.setall(obj::StaticArrays.StaticArray, ::Elements, vs) = constructorof(typeof(obj))(vs...)
+
 end
