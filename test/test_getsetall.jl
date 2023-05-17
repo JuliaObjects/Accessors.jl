@@ -9,7 +9,6 @@ using StaticArrays
     using ConstructionBaseExtras
 end
 
-if VERSION >= v"1.6"  # for ComposedFunction
 @testset "getall" begin
     obj = (a=1, b=2.0, c='3')
     @test (1,) === @inferred getall(obj, @optic _.a)
@@ -150,6 +149,4 @@ end
     end
 end
         
-end
-
 end
