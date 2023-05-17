@@ -59,10 +59,8 @@ end
 end
 
 @testset begin
-    if VERSION >= v"1.5.0"
-        _ = ref_alloc_test()
-        @test @allocated(ref_alloc_test()) == 0
-    end
+    _ = ref_alloc_test()
+    @test @allocated(ref_alloc_test()) == 0
 end
 
 end

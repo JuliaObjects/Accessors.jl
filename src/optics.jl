@@ -102,26 +102,7 @@ julia> lens(obj)
 """
 opcompose
 
-const BASE_COMPOSED_FUNCTION_HAS_SHOW = VERSION >= v"1.6.0-DEV.85"
-const BASE_COMPOSED_FUNCTION_IS_PUBLIC = VERSION >= v"1.6.0-DEV.1037"
-if !BASE_COMPOSED_FUNCTION_IS_PUBLIC
-    using Compat: ComposedFunction
-end
-if !BASE_COMPOSED_FUNCTION_HAS_SHOW
-    function show_composed_function(io::IO, c::ComposedFunction)
-        show(io, c.outer)
-        print(io, " ∘ ")
-        show(io, c.inner)
-    end
-    function Base.show(io::IO, c::ComposedFunction)
-        show_composed_function(io, c)
-    end
-    function Base.show(io::IO, ::MIME"text/plain", c::ComposedFunction)
-        show_composed_function(io, c)
-    end
-end
-
-const ComposedOptic{Outer,Inner}                                        = ComposedFunction{Outer,Inner}
+const ComposedOptic{Outer,Inner} = ComposedFunction{Outer,Inner}
 outertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Outer
 innertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Inner
 

@@ -4,14 +4,6 @@ using MacroTools: isstructdef, splitstructdef, postwalk
 using InverseFunctions
 
 
-if !isdefined(Base, :only)
-    # Julia pre-1.4
-    function only(x)
-        length(x) == 1 || throw(ArgumentError("Collection contains $(length(x)) elements, must contain exactly 1 element"))
-        first(x)
-    end
-end
-
 if !isdefined(Base, :get_extension)
     using Requires
 end

@@ -5,9 +5,6 @@ using Accessors: test_getset_laws, test_modify_law
 using Accessors: compose, get_update_op
 using ConstructionBase: ConstructionBase
 using StaticNumbers: StaticNumbers, static
-if !isdefined(Base, :only)
-    using Accessors: only
-end
 
 struct T
     a
@@ -287,32 +284,30 @@ end
     obj = (a=(1, (a=10, b=20), 3), b=4)
     @test l(obj) == 20
     @test set(obj, l, true) == (a=(1, (a=10, b=true), 3), b=4)
-    if VERSION ≥ v"1.5.0-DEV.666"
-        # parser is confused by x[begin] on older julia versions
-        l = eval(Meta.parse("@optic _[begin]"))
-        @test l isa Accessors.DynamicIndexLens
-        obj = (1,2,3)
-        @test l(obj) == 1
-        @test set(obj, l, true) == (true,2,3)
 
-        l = eval(Meta.parse("@optic _[2*begin]"))
-        @test l isa Accessors.DynamicIndexLens
-        obj = (1,2,3)
-        @test l(obj) == 2
-        @test set(obj, l, true) == (1,true,3)
+    l = eval(Meta.parse("@optic _[begin]"))
+    @test l isa Accessors.DynamicIndexLens
+    obj = (1,2,3)
+    @test l(obj) == 1
+    @test set(obj, l, true) == (true,2,3)
 
-        l = eval(Meta.parse(
-        """
-        let
-            one = 1
-            plustwo(x) = x + 2
-            @optic _.a[plustwo(begin) - one].b
-        end
-        """))
-        obj = (a=(1, (a=10, b=20), 3), b=4)
-        @test l(obj) == 20
-        @test set(obj, l, true) == (a=(1, (a=10, b=true), 3), b=4)
+    l = eval(Meta.parse("@optic _[2*begin]"))
+    @test l isa Accessors.DynamicIndexLens
+    obj = (1,2,3)
+    @test l(obj) == 2
+    @test set(obj, l, true) == (1,true,3)
+
+    l = eval(Meta.parse(
+    """
+    let
+        one = 1
+        plustwo(x) = x + 2
+        @optic _.a[plustwo(begin) - one].b
     end
+    """))
+    obj = (a=(1, (a=10, b=20), 3), b=4)
+    @test l(obj) == 20
+    @test set(obj, l, true) == (a=(1, (a=10, b=true), 3), b=4)
 
     @test set("a c", @optic(_[findfirst(' ', _)]), 'b') == "abc"
 end
@@ -472,45 +467,41 @@ end
     end
 end
 
-if !Accessors.BASE_COMPOSED_FUNCTION_HAS_SHOW
-    @info "Skipping show tests, on old VERSION = $VERSION"
-else
-    @testset "show it like you build it " begin
-        @testset for item in [
-                @optic _.a
-                @optic _[1]
-                @optic _[:a]
-                @optic _["a"]
-                @optic _[static(1)]
-                @optic _[static(1), static(1 + 1)]
-                @optic _.a.b[:c]["d"][2][static(3)]
-                @optic _
-                @optic first(_)
-                @optic last(first(_))
-                @optic last(first(_.a))[1]
-                UserDefinedLens()
-                @optic _ |> UserDefinedLens()
-                @optic UserDefinedLens()(_)
-                @optic _ |> ((x -> x)(first))
-                @optic _.a |> UserDefinedLens()
-                @optic _ |> UserDefinedLens() |> _.b
-                (@optic _.a) ∘ UserDefinedLens()   ∘ (@optic _.b)
-                (@optic _.a) ∘ LensIfTextPlain() ∘ (@optic _.b)
-                @optic 2 * (abs(_.a.b[2].c) + 1)
-                @optic !(_.a) # issue 105
-            ]
-            buf = IOBuffer()
-            show(buf, item)
-            item2 = eval(Meta.parse(String(take!(buf))))
-            @test item === item2
-        end
-        
-        # base Julia, we cannot do anything here:
-        item = @optic _ + 1
+@testset "show it like you build it " begin
+    @testset for item in [
+            @optic _.a
+            @optic _[1]
+            @optic _[:a]
+            @optic _["a"]
+            @optic _[static(1)]
+            @optic _[static(1), static(1 + 1)]
+            @optic _.a.b[:c]["d"][2][static(3)]
+            @optic _
+            @optic first(_)
+            @optic last(first(_))
+            @optic last(first(_.a))[1]
+            UserDefinedLens()
+            @optic _ |> UserDefinedLens()
+            @optic UserDefinedLens()(_)
+            @optic _ |> ((x -> x)(first))
+            @optic _.a |> UserDefinedLens()
+            @optic _ |> UserDefinedLens() |> _.b
+            (@optic _.a) ∘ UserDefinedLens()   ∘ (@optic _.b)
+            (@optic _.a) ∘ LensIfTextPlain() ∘ (@optic _.b)
+            @optic 2 * (abs(_.a.b[2].c) + 1)
+            @optic !(_.a) # issue 105
+        ]
         buf = IOBuffer()
         show(buf, item)
-        @test_broken (item === eval(Meta.parse(String(take!(buf)))); true)
+        item2 = eval(Meta.parse(String(take!(buf))))
+        @test item === item2
     end
+    
+    # base Julia, we cannot do anything here:
+    item = @optic _ + 1
+    buf = IOBuffer()
+    show(buf, item)
+    @test_broken (item === eval(Meta.parse(String(take!(buf)))); true)
 end
 
 @testset "@modify" begin
