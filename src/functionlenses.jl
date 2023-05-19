@@ -38,7 +38,7 @@ set(obj::AbstractVector, ::Type{Tuple}, val::Tuple) = similar(obj, eltype(val)) 
 
 set(obj, ::Type{NamedTuple{KS}}, val::NamedTuple) where {KS} = set(obj, Tuple, values(NamedTuple{KS}(val)))
 function set(obj::NamedTuple, ::Type{NamedTuple{KS}}, val::NamedTuple) where {KS}
-    length(KS) == length(val) || throw(ArgumentError("Cannot assign NamedTuple with keys $KSV to NamedTuple with keys $KS"))
+    length(KS) == length(val) || throw(ArgumentError("Cannot assign NamedTuple with keys $(keys(val)) to NamedTuple with keys $KS"))
     setproperties(obj, NamedTuple{KS}(val))
 end
 
