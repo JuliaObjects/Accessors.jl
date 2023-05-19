@@ -30,25 +30,6 @@ out = @set data |> Vals() |> Elements() |> Vals() |> If(iseven) += 1
 
 @test out == (a = [(aa = 1, bb = 3), (cc = 3,)], b = [(dd = 5,)])
 
-struct Filter{F}
-    keep_condition::F
-end
-OpticStyle(::Type{<:Filter}) = ModifyBased()
-(o::Filter)(x) = filter(o.keep_condition, x)
-function modify(f, obj, optic::Filter)
-    I = eltype(eachindex(obj))
-    inds = I[]
-    for i in eachindex(obj)
-        x = obj[i]
-        if optic.keep_condition(x)
-            push!(inds, i)
-        end
-    end
-    vals = f(obj[inds])
-    setindex(obj, vals, inds)
-end
-
-
 # ### Append to nested vector
 data = (a = 1:3,)
 out = @modify(v -> vcat(v, [4,5]), data.a)
@@ -58,7 +39,7 @@ out = @modify(v -> vcat(v, [4,5]), data.a)
 # ### Increment last odd number in a sequence
 
 data = 1:4
-out = @set data |> Filter(isodd) |> last += 1
+out = @set data |> filter(isodd, _) |> last += 1
 @test out == [1,2,4,4]
 
 ### Map over a sequence
@@ -80,31 +61,22 @@ out = @set data |> Elements() |> _[:a] += 1
 @test out == [Dict(:a => 2), Dict(:a => 3), Dict(:a => 5), Dict(:a => 4)]
 
 # ### Retrieve every number divisible by 3 out of a sequence of sequences
-
-function getall(obj, optic)
-    out = Any[]
-    modify(obj, optic) do val
-        push!(out, val)
-    end
-    out
-end
-
-data = [[1,2,3,4],[], [5,3,2,18],[2,4,6], [12]]
+data = [[1,2,3,4], Int[], [5,3,2,18], [2,4,6], [12]]
 optic = @optic _ |> Elements() |> Elements() |> If(x -> mod(x, 3) == 0)
 out = getall(data, optic)
 @test out == [3, 3, 18, 6, 12]
-@test_broken eltype(out) == Int
+@test eltype(out) == Int
 
 # ### Increment the last odd number in a sequence
 
 data = [2, 1, 3, 6, 9, 4, 8]
-out = @set data |> Filter(isodd) |> _[end] += 1
+out = @set data |> filter(isodd, _) |> _[end] += 1
 @test out == [2, 1, 3, 6, 10, 4, 8]
 @test eltype(out) == Int
 
 # ### Remove nils from a nested sequence
 
 data = (a = [1,2,missing, 3, missing],)
-optic = @optic _.a |> Filter(!ismissing)
+optic = @optic _.a |> filter(!ismissing, _)
 out = optic(data)
 @test out == [1,2,3]

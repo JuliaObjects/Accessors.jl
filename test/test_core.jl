@@ -176,7 +176,7 @@ end
     o21 = TT(o211, o212)
     o2 = TT(o21, o22)
     obj = TT(o1, o2)
-    @assert obj === TT(2, TT(TT(3,(4,4)), 2))
+    @test obj === TT(2, TT(TT(3,(4,4)), 2))
     i = 1
     @testset "$lens" for (lens, val) ∈ [
           ((@optic _.a           ),   o1 ),
