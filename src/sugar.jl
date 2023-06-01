@@ -444,7 +444,12 @@ function show_optic(io, optic)
         show(io, opcompose(outer...))
         print(io, " ∘ ")
     end
-    print(io, "(@optic ", reduce(_shortstring, inner; init="_"), ")")
+    shortstr = reduce(_shortstring, inner; init="_")
+    if get(io, :compact, false)
+        print(io, shortstr)
+    else
+        print(io, "(@optic ", shortstr, ")")
+    end
 end
 
 Base.show(io::IO, optic::Union{IndexLens, PropertyLens}) = show_optic(io, optic)
