@@ -447,14 +447,13 @@ function show_optic(io, optic)
     print(io, "(@optic ", reduce(_shortstring, inner; init="_"), ")")
 end
 
-Base.show(io::IO, optic::Union{IndexLens, PropertyLens}) = print(io, "(@optic $(_shortstring("_", optic)))")
-
-Base.show(io::IO, optic::ComposedFunction{<:Any, <:Union{IndexLens, PropertyLens}}) = show_optic(io, optic)
-# resolve method ambiguity:
-Base.show(io::IO, optic::ComposedFunction{typeof(!), <:Union{IndexLens, PropertyLens}}) = show_optic(io, optic)
-
+Base.show(io::IO, optic::Union{IndexLens, PropertyLens}) = show_optic(io, optic)
 Base.show(io::IO, ::MIME"text/plain", optic::Union{IndexLens, PropertyLens}) = show(io, optic)
-Base.show(io::IO, ::MIME"text/plain", optic::ComposedFunction{<:Any, <:Union{IndexLens, PropertyLens}}) = show(io, optic)
+
+# only need show(io, optic) here because Base defines show(io::IO, ::MIME"text/plain", c::ComposedFunction) = show(io, c)
+Base.show(io::IO, optic::ComposedFunction{<:Any, <:Union{IndexLens, PropertyLens}}) = show_optic(io, optic)
+# resolve method ambiguity with Base:
+Base.show(io::IO, optic::ComposedFunction{typeof(!), <:Union{IndexLens, PropertyLens}}) = show_optic(io, optic)
 
 # debugging
 show_composition_order(optic) = (show_composition_order(stdout, optic); println())
