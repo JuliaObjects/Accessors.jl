@@ -443,6 +443,13 @@ end
     @test (@optic _ |> _[1] |> _[2] |> _[3]) === @optic _[1][2][3]
 end
 
+@testset "full and compact show" begin
+    @test sprint(show, (@optic _.a)) == "(@optic _.a)"
+    @test sprint(show, (@optic log(_.a[2]))) == "(@optic log(_.a[2]))"
+    @test sprint(show, (@optic log(_).a[2])) == "(@optic _.a[2]) ∘ log"  # could be shorter, but difficult to dispatch correctly without piracy
+    @test sprint(show, (@optic log(_.a[2])); context=:compact => true) == "log(_.a[2])"
+end
+
 @testset "text/plain show" begin
     @testset for lens in [
         LensIfTextPlain()
