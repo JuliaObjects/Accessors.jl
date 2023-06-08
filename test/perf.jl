@@ -101,11 +101,11 @@ is_fast_composition_order(lens::ComposedOptic{<:Any, <:ComposedOptic}) = false
 is_fast_composition_order(lens::ComposedOptic{<:ComposedOptic, <:ComposedOptic}) = false
 
 @testset "default composition orders are fast" begin
-    @assert is_fast_composition_order(∘(first, last, eltype))
-    @assert is_fast_composition_order((first ∘ last) ∘ eltype)
-    @assert !is_fast_composition_order(first ∘ (last ∘ eltype))
+    @test is_fast_composition_order(∘(first, last, eltype))
+    @test is_fast_composition_order((first ∘ last) ∘ eltype)
+    @test !is_fast_composition_order(first ∘ (last ∘ eltype))
     @test is_fast_composition_order(opcompose(eltype, last, first))
-    # @test_broken is_fast_composition_order(first ⨟ last ⨟ eltype)
+    @test_broken is_fast_composition_order(first ⨟ last ⨟ eltype)
     @test is_fast_composition_order(first ∘ last ∘ eltype)
     @test is_fast_composition_order(@optic _)
     @test is_fast_composition_order(@optic _ |> first |> last |> eltype)
