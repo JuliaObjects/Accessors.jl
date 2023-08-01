@@ -126,6 +126,8 @@ set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # should we check val i
 
 set(f, ::typeof(inverse), invf) = setinverse(f, invf)
 
+set(obj, ::typeof(Base.splat(atan)), val) = @set Tuple(obj) = norm(obj) .* (sin(val), cos(val))
+
 ################################################################################
 ##### dates
 ################################################################################

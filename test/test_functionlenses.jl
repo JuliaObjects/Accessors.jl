@@ -194,6 +194,9 @@ end
     test_getset_laws(mod2pi, 5.3, 1, 2; cmp=isapprox)
     test_getset_laws(mod2pi, -5.3, 1, 2; cmp=isapprox)
 
+    test_getset_laws(Base.splat(atan), (3, 4), 1, 2)
+    test_getset_laws(Base.splat(atan), (a=3, b=4), 1, 2)
+
     test_getset_laws(!, true, true, false)
     @testset for o in [
             # invertible lenses below: no need for extensive testing, simply forwarded to InverseFunctions
