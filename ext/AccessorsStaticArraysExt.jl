@@ -8,6 +8,7 @@ import Accessors: setindex, delete, insert
 @inline insert(obj::StaticArrays.SVector, l::IndexLens, val) = StaticArrays.insert(obj, only(l.indices), val)
 
 Accessors.set(obj::StaticArrays.SVector, ::Type{Tuple}, val::Tuple) = StaticArrays.SVector(val)
+Accessors.set(obj::Tuple, ::Type{StaticArrays.SVector}, val::StaticArrays.SVector) = Tuple(val)
 
 Accessors.getall(obj::StaticArrays.StaticArray, ::Elements) = Tuple(obj)
 Accessors.setall(obj::StaticArrays.StaticArray, ::Elements, vs::AbstractArray) = constructorof(typeof(obj))(vs...)  # just for disambiguation
