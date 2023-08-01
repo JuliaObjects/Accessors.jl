@@ -18,9 +18,6 @@ insert(obj, o::Base.Fix2{typeof(last)}, val) = @insert obj[(lastindex(obj) + 1):
 set(obj::Tuple, ::typeof(Base.front), val::Tuple) = (val..., last(obj))
 set(obj::Tuple, ::typeof(Base.tail), val::Tuple) = (first(obj), val...)
 
-set(obj, ::typeof(identity), val) = val
-set(obj, ::typeof(inv), new_inv) = inv(new_inv)
-
 function set(obj, ::typeof(only), val)
     only(obj) # error check
     set(obj, first, val)
