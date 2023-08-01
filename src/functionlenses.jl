@@ -1,12 +1,12 @@
 using LinearAlgebra: norm, normalize
 using Dates
 
-set(obj, ::typeof(last), val) = @set obj[lastindex(obj)] = val
 set(obj, ::typeof(first), val) = @set obj[firstindex(obj)] = val
-delete(obj, ::typeof(last)) = delete(obj, IndexLens((lastindex(obj),)))
+set(obj, ::typeof(last), val) = @set obj[lastindex(obj)] = val
 delete(obj, ::typeof(first)) = delete(obj, IndexLens((firstindex(obj),)))
-insert(obj, ::typeof(last), val) = insert(obj, IndexLens((lastindex(obj) + 1,)), val)
+delete(obj, ::typeof(last)) = delete(obj, IndexLens((lastindex(obj),)))
 insert(obj, ::typeof(first), val) = insert(obj, IndexLens((firstindex(obj),)), val)
+insert(obj, ::typeof(last), val) = insert(obj, IndexLens((lastindex(obj) + 1,)), val)
 
 set(obj, o::Base.Fix2{typeof(first)}, val) = @set obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
 set(obj, o::Base.Fix2{typeof(last)}, val) = @set obj[(lastindex(obj) - o.x + 1):lastindex(obj)] = val
