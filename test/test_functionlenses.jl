@@ -86,6 +86,10 @@ end
 
     cmp(a::NamedTuple, b::NamedTuple) = Set(keys(a)) == Set(keys(b)) && NamedTuple{keys(b)}(a) === b
     cmp(a::T, b::T) where {T} = a == b
+
+    test_getset_laws(Base.splat(=>), (1, 'a'), 'b' => 2, 3 => 'c'; cmp=cmp)
+    test_getset_laws(Base.splat(Pair), (1, 'a'), 'b' => 2, 3 => 'c'; cmp=cmp)
+    test_getset_laws(Base.splat(=>), [1, 2], 3 => 2, 3 => 4; cmp=cmp)
     
     test_getset_laws(Tuple, (1, 'a'), ('x', 'y'), (1, 2))
     test_getset_laws(Tuple, (a=1, b='a'), ('x', 'y'), (1, 2))
