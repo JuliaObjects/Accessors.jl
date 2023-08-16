@@ -1,6 +1,7 @@
 using LinearAlgebra: norm, normalize
 using Dates
 
+# first and last on general indexable collections
 set(obj, ::typeof(first), val) = @set obj[firstindex(obj)] = val
 set(obj, ::typeof(last), val) = @set obj[lastindex(obj)] = val
 delete(obj, ::typeof(first)) = delete(obj, IndexLens((firstindex(obj),)))
@@ -14,6 +15,14 @@ delete(obj, o::Base.Fix2{typeof(first)}) = @delete obj[firstindex(obj):(firstind
 delete(obj, o::Base.Fix2{typeof(last)}) = @delete obj[(lastindex(obj) - o.x + 1):lastindex(obj)]
 insert(obj, o::Base.Fix2{typeof(first)}, val) = @insert obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
 insert(obj, o::Base.Fix2{typeof(last)}, val) = @insert obj[(lastindex(obj) + 1):(lastindex(obj) + o.x)] = val
+
+# first and last on ranges
+# they don't support delete() with arbitrary index, so special casing is needed
+delete(obj::AbstractRange, ::typeof(first)) = obj[begin+1:end]
+delete(obj::AbstractRange, ::typeof(last)) = obj[begin:end-1]
+delete(obj::AbstractRange, o::Base.Fix2{typeof(first)}) = obj[begin+o.x:end]
+delete(obj::AbstractRange, o::Base.Fix2{typeof(last)}) = obj[begin:end-o.x]
+
 
 set(obj::Tuple, ::typeof(Base.front), val::Tuple) = (val..., last(obj))
 set(obj::Tuple, ::typeof(Base.tail), val::Tuple) = (first(obj), val...)
