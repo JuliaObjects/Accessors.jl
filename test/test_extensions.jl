@@ -1,6 +1,7 @@
 module TestExtensions
 using Test
 using Accessors
+using Accessors: test_getset_laws
 using AxisKeys
 using IntervalSets
 using StaticArrays, StaticNumbers
