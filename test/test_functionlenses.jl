@@ -247,8 +247,8 @@ end
     @test inverse(f)(0.5) == asin(0.5) + 2π
 
     @test set([3, 4], norm, 10) == [6, 8]
-    @test set((3, 4), norm, 10) === (6, 8)
-    @test set((a=3, b=4), norm, 10) === (a=6, b=8)
+    @test set((3, 4), norm, 10) === (6., 8.)
+    @test set((a=3, b=4), norm, 10) === (a=6., b=8.)
     test_getset_laws(norm, (3, 4), 10, 12)
     test_getset_laws(Base.splat(hypot), (3, 4), 10, 12)
 end

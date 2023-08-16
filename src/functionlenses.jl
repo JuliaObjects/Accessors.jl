@@ -133,7 +133,7 @@ set(x, f::Base.Fix2{typeof(rem)}, y) = set(x, @optic(last(divrem(_, f.x))), y)
 set(x::AbstractString, f::Base.Fix1{typeof(parse), Type{T}}, y::T) where {T} = string(y)
 
 set(arr, ::typeof(normalize), val) = norm(arr) * val
-set(arr, ::typeof(norm), val)      = (val / norm(arr)) .* arr # should we check val is positive?
+set(arr, ::typeof(norm), val)      = map(x -> x * (val / norm(arr)), arr) # should we check val is positive?
 
 set(f, ::typeof(inverse), invf) = setinverse(f, invf)
 

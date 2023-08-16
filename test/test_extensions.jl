@@ -113,12 +113,15 @@ end
     cmp(a::NamedTuple, b::NamedTuple) = Set(keys(a)) == Set(keys(b)) && NamedTuple{keys(b)}(a) === b
     cmp(a::T, b::T) where {T} = a == b
 
-    test_getset_laws(Tuple, SVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
-    test_getset_laws(Tuple, MVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
+    if VERSION >= v"1.9-"
+        # require ConstructionBase extension
+        test_getset_laws(Tuple, SVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
+        test_getset_laws(Tuple, MVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
+        test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (x='x', y='y'), (x=1, y=2); cmp=cmp)
+        test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (y='x', x='y'), (x=1, y=2); cmp=cmp)
+    end
     test_getset_laws(SVector, (0, 1), SVector('x', 'y'), SVector(1, 2); cmp=cmp)
     test_getset_laws(MVector, (0, 1), MVector('x', 'y'), MVector(1, 2); cmp=cmp)
-    test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (x='x', y='y'), (x=1, y=2); cmp=cmp)
-    test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (y='x', x='y'), (x=1, y=2); cmp=cmp)
 end
 
 
