@@ -222,21 +222,21 @@ end
 
 @testset "IndexLens" begin
     l = @optic _[]
-    @test l isa Accessors.IndexLens
+    @test l isa IndexLens
     x = randn()
     obj = Ref(x)
     @test l(obj) == x
 
     l = @optic _[][]
-    @test l.outer isa Accessors.IndexLens
-    @test l.inner isa Accessors.IndexLens
+    @test l.outer isa IndexLens
+    @test l.inner isa IndexLens
     inner = Ref(x)
     obj = Base.RefValue{typeof(inner)}(inner)
     @test l(obj) == x
 
     obj = (1,2,3)
     l = @optic _[1]
-    @test l isa Accessors.IndexLens
+    @test l isa IndexLens
     @test l(obj) == 1
     @test set(obj, l, 6) == (6,2,3)
 
@@ -257,7 +257,7 @@ end
 
     nt = (a=1, b=2, c=3)
     l = @optic _[(:a, :c)]
-    @test l isa Accessors.IndexLens
+    @test l isa IndexLens
     VERSION >= v"1.7" && @test l(nt) === (a=1, c=3)
     @test set(nt, l, ('1', '2')) === (a='1', b=2, c='2')
     @test set(nt, l, (c='2', a='1')) === (a='1', b=2, c='2')
@@ -588,14 +588,14 @@ end
     @test strip(string(@doc(my_x))) == "Documentation for my_x"
     @test (@set my_x(s) = 456) === MyStruct(456)
     @test (@set +s = 456) === MyStruct((a=5-456,))
-    Accessors.test_getset_laws(my_x, s, 456, "1")
-    Accessors.test_getset_laws(+, s, 456, 1.0)
+    test_getset_laws(my_x, s, 456, "1")
+    test_getset_laws(+, s, 456, 1.0)
 
     s = MyStruct((1, 2.0))
-    Accessors.test_getset_laws(Int, s, 1, 2)
-    Accessors.test_getset_laws(Float64, s, 1., 2.)
+    test_getset_laws(Int, s, 1, 2)
+    test_getset_laws(Float64, s, 1., 2.)
 
-    Accessors.test_getset_laws(MyStruct(2), MyStruct(1), 1, 2)
+    test_getset_laws(MyStruct(2), MyStruct(1), 1, 2)
 end
 
 end

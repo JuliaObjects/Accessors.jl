@@ -3,11 +3,11 @@ using Accessors
 using StructArrays
 
 # set: all eltypes
-Accessors.set(x::StructArray, o::Accessors.PropertyLens, v) = set(x, o ∘ StructArrays.components, v)
+Accessors.set(x::StructArray, o::PropertyLens, v) = set(x, o ∘ StructArrays.components, v)
 
 # insert, delete: only (named)tuples
-Accessors.insert(x::StructArray{<:Union{Tuple, NamedTuple}}, o::Accessors.PropertyLens, v) = insert(x, o ∘ StructArrays.components, v)
-Accessors.delete(x::StructArray{<:Union{Tuple, NamedTuple}}, o::Accessors.PropertyLens) = delete(x, o ∘ StructArrays.components)
+Accessors.insert(x::StructArray{<:Union{Tuple, NamedTuple}}, o::PropertyLens, v) = insert(x, o ∘ StructArrays.components, v)
+Accessors.delete(x::StructArray{<:Union{Tuple, NamedTuple}}, o::PropertyLens) = delete(x, o ∘ StructArrays.components)
 
 # (named)tuple eltypes: only component arrays themselves are needed in the constructor
 # can change component number/names

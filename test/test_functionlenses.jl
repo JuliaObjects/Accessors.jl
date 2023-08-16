@@ -44,8 +44,8 @@ end
     @test set("абв", @optic(first(_, 2)), "xж") == "xжв"
     @test_throws DimensionMismatch set("абв", @optic(first(_, 2)), "x")
 
-    Accessors.test_getset_laws(first, obj, 123, "456")
-    Accessors.test_getset_laws(first, "abc", 'x', ' ')
+    test_getset_laws(first, obj, 123, "456")
+    test_getset_laws(first, "abc", 'x', ' ')
 end
 
 @testset "last" begin
@@ -65,8 +65,8 @@ end
     @test set("абв", @optic(last(_, 2)), "xж") == "аxж"
     @test_throws DimensionMismatch set("абв", @optic(last(_, 2)), "x")
 
-    Accessors.test_getset_laws(last, obj, 123, "456")
-    Accessors.test_getset_laws(last, "abc", 'x', ' ')
+    test_getset_laws(last, obj, 123, "456")
+    test_getset_laws(last, "abc", 'x', ' ')
 end
 
 @testset "front, tail" begin
@@ -74,8 +74,8 @@ end
     @test (@set Base.front(obj) = ("5", 6)) === ("5", 6, '3')
     @test set(obj, Base.tail, ("5", 6)) === (1, "5", 6)
 
-    Accessors.test_getset_laws(Base.front, obj, (), ("456", 7))
-    Accessors.test_getset_laws(Base.tail, obj, (123,), ("456", 7))
+    test_getset_laws(Base.front, obj, (), ("456", 7))
+    test_getset_laws(Base.tail, obj, (123,), ("456", 7))
 end
 
 @testset "change types" begin
@@ -232,8 +232,8 @@ end
         @test @inferred(modify(x -> -2x, "3", @optic parse(Int, _))) == "-6"
         @test_throws ErrorException modify(log10, "100", @optic parse(Int, _))
         @test modify(log10, "100", @optic parse(Float64, _)) == "2.0"
-        Accessors.test_getset_laws(@optic(parse(Int, _)), "3", -10, 123)
-        Accessors.test_getset_laws(@optic(parse(Float64, _)), "3.0", -10., 123.)
+        test_getset_laws(@optic(parse(Int, _)), "3", -10, 123)
+        test_getset_laws(@optic(parse(Float64, _)), "3.0", -10., 123.)
     end
 
     # setting inverse
@@ -266,15 +266,15 @@ end
 
     l = @optic DateTime(_, dateformat"yyyy_mm_dd")
     @test @inferred(set("2020_03_04", month ∘ l, 10)) == "2020_10_04"
-    Accessors.test_getset_laws(month ∘ l, "2020_03_04", 10, 11)
+    test_getset_laws(month ∘ l, "2020_03_04", 10, 11)
 
     l = @optic Date(_, dateformat"yyyy/mm/dd")
     @test set("2020/03/04", day ∘ l, 10) == "2020/03/10"
-    Accessors.test_getset_laws(day ∘ l, "2020/03/04", 10, 11)
+    test_getset_laws(day ∘ l, "2020/03/04", 10, 11)
     @test_throws ArgumentError set("2020_03_04", month ∘ l, 10)
 
     l = @optic Time(_, dateformat"HH:MM")
-    Accessors.test_getset_laws(hour ∘ l, "12:34", 10, 11)
+    test_getset_laws(hour ∘ l, "12:34", 10, 11)
 end
 
 @testset "strings" begin
