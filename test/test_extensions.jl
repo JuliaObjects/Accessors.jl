@@ -54,16 +54,16 @@ VERSION >= v"1.9-" && @testset "IntervalSets" begin
     @test Interval{:open, :closed}(-2, 5) === @set leftendpoint(int) = -2
     @test Interval{:open, :closed}(1, 2) === @set rightendpoint(int) = 2
     @test Interval{:closed, :closed}(1, 5) === @set first(closedendpoints(int)) = true
-    Accessors.test_getset_laws(endpoints, int, (10, 11), (-3, 2))
-    Accessors.test_getset_laws(closedendpoints, int, (true, true), (true, false))
-    Accessors.test_getset_laws(leftendpoint, int, 2, 3)
-    Accessors.test_getset_laws(rightendpoint, int, 2, 3)
+    test_getset_laws(endpoints, int, (10, 11), (-3, 2))
+    test_getset_laws(closedendpoints, int, (true, true), (true, false))
+    test_getset_laws(leftendpoint, int, 2, 3)
+    test_getset_laws(rightendpoint, int, 2, 3)
 
     @test 1 === @set 2 |> mod(_, 0..3) = 1
     @test 31 === @set 32 |> mod(_, 0..3) = 1
     @test 2 === @set 2 |> mod(_, 20..23) = 20
     @test 33 === @set 32 |> mod(_, 20..23) = 21
-    Accessors.test_getset_laws(@optic(mod(_, 5..8)), 20, 6, 5)
+    test_getset_laws(@optic(mod(_, 5..8)), 20, 6, 5)
 end
 
 @testset "StaticArrays" begin
