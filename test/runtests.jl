@@ -2,7 +2,7 @@ module TestAccessors
 import PerformanceTestTools
 import Accessors
 import Aqua
-Aqua.test_all(Accessors)
+VERSION ≥ v"1.9-" && Aqua.test_all(Accessors)
 PerformanceTestTools.@include("perf.jl")
 
 include("test_examples.jl")
