@@ -436,6 +436,9 @@ end
 @inline insert(obj::NamedTuple, l::IndexLens{Tuple{Symbol}}, val) = merge(obj, NamedTuple{l.indices}((val,)))
 @inline insert(obj::NamedTuple, l::IndexLens{<:Tuple{Tuple{Vararg{Symbol}}}}, vals) = merge(obj, NamedTuple{only(l.indices)}(vals))
 
+@inline delete(obj::CartesianIndex, l::IndexLens{Tuple{Int}}) = delete(obj, l ∘ Tuple)
+@inline insert(obj::CartesianIndex, l::IndexLens{Tuple{Int}}, val) = insert(obj, l ∘ Tuple, val)
+
 struct DynamicIndexLens{F}
     f::F
 end

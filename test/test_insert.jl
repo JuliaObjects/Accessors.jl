@@ -17,6 +17,7 @@ using Accessors: insert
             @test insert(A, @optic(last(_, 2)), [3, 4]) == [1, 2, 3, 4]
             @test A == [1, 2]  # not changed
         end
+        @test @inferred(insert(CartesianIndex(1, 2, 3), @optic(_[2]), 4)) == CartesianIndex(1, 4, 2, 3)
         @test insert((1,2), last, 3) == (1, 2, 3)
         @inferred(insert((1,2), last, 3))
         @test @inferred(insert(SVector(1,2), @optic(_[1]), 3)) == SVector(3, 1, 2)
