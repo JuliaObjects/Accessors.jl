@@ -133,11 +133,11 @@ set(x, f::Base.Fix2{typeof(rem)}, y) = set(x, @optic(last(divrem(_, f.x))), y)
 set(x::AbstractString, f::Base.Fix1{typeof(parse), Type{T}}, y::T) where {T} = string(y)
 
 set(arr, ::typeof(normalize), val) = norm(arr) * val
-set(arr, ::typeof(norm), val)      = map(x -> x * (val / norm(arr)), arr) # should we check val is positive?
+set(arr, ::typeof(norm), val)      = map(Base.Fix2(*, val / norm(arr)), arr) # should we check val is positive?
 
 set(f, ::typeof(inverse), invf) = setinverse(f, invf)
 
-set(obj, ::typeof(Base.splat(atan)), val) = @set Tuple(obj) = norm(obj) .* (sin(val), cos(val))
+set(obj, ::typeof(Base.splat(atan)), val) = @set Tuple(obj) = norm(obj) .* sincos(val)
 set(obj, ::typeof(Base.splat(hypot)), val) = @set norm(obj) = val
 
 ################################################################################
