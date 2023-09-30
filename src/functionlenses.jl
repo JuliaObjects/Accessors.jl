@@ -147,6 +147,11 @@ set(x::DateTime, ::Type{Date}, y) = DateTime(y, Time(x))
 set(x::DateTime, ::Type{Time}, y) = DateTime(Date(x), y)
 set(x::T, ::Type{T}, y) where {T <: Union{Date, Time}} = y
 
+# directly mirrors Dates.value implementation in stdlib
+set(x::Date, ::typeof(Dates.value), y) = @set x.instant.periods.value = y
+set(x::DateTime, ::typeof(Dates.value), y) = @set x.instant.periods.value = y
+set(x::Time, ::typeof(Dates.value), y) = @set x.instant.value = y
+
 set(x::Date, ::typeof(year),                    y) = Date(y,       month(x), day(x))
 set(x::Date, ::typeof(month),                   y) = Date(year(x),        y, day(x))
 set(x::Date, ::typeof(day),                     y) = Date(year(x), month(x),      y)

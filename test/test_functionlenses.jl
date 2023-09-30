@@ -274,6 +274,10 @@ end
         test_getset_laws(yearmonthday, x, (rand(1:5000), rand(1:12), rand(1:28)), (rand(1:5000), rand(1:12), rand(1:28)))
     end
 
+    @testset for x in [DateTime(2020, 1, 2, 3, 4, 5, 6), Date(2020, 1, 2), Time(1, 2, 3, 4, 5, 6)]
+        test_getset_laws(Dates.value, x, 123, 456)
+    end
+
     l = @optic DateTime(_, dateformat"yyyy_mm_dd")
     @test @inferred(set("2020_03_04", month ∘ l, 10)) == "2020_10_04"
     Accessors.test_getset_laws(month ∘ l, "2020_03_04", 10, 11)
