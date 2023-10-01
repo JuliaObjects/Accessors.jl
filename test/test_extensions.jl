@@ -83,6 +83,9 @@ end
     # requires ConstructionBase extension:
     VERSION >= v"1.9-" && @test (@set v.x = 10) === @SVector [10.,2,3]
 
+    v = @MVector [1.,2,3]
+    @test (@set v[1] = 10)::MVector == @MVector [10.,2,3]
+
     @testset "Multi-dynamic indexing" begin
         two = 2
         plusone(x) = x + 1
@@ -106,6 +109,19 @@ end
     v = @set StaticArrays.normalize(@SVector [10, 0,0]) = @SVector[0,1,0]
     @test v ≈ @SVector[0,10,0]
     @test @set(StaticArrays.norm([1,0]) = 20) ≈ [20, 0]
+
+    cmp(a::NamedTuple, b::NamedTuple) = Set(keys(a)) == Set(keys(b)) && NamedTuple{keys(b)}(a) === b
+    cmp(a::T, b::T) where {T} = a == b
+
+    if VERSION >= v"1.9-"
+        # require ConstructionBase extension
+        test_getset_laws(Tuple, SVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
+        test_getset_laws(Tuple, MVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
+        test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (x='x', y='y'), (x=1, y=2); cmp=cmp)
+        test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (y='x', x='y'), (x=1, y=2); cmp=cmp)
+    end
+    test_getset_laws(SVector, (0, 1), SVector('x', 'y'), SVector(1, 2); cmp=cmp)
+    test_getset_laws(MVector, (0, 1), MVector('x', 'y'), MVector(1, 2); cmp=cmp)
 end
 
 

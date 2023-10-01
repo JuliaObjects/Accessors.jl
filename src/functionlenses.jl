@@ -1,12 +1,13 @@
 using LinearAlgebra: norm, normalize
 using Dates
 
-set(obj, ::typeof(last), val) = @set obj[lastindex(obj)] = val
+# first and last on general indexable collections
 set(obj, ::typeof(first), val) = @set obj[firstindex(obj)] = val
-delete(obj, ::typeof(last)) = delete(obj, IndexLens((lastindex(obj),)))
+set(obj, ::typeof(last), val) = @set obj[lastindex(obj)] = val
 delete(obj, ::typeof(first)) = delete(obj, IndexLens((firstindex(obj),)))
-insert(obj, ::typeof(last), val) = insert(obj, IndexLens((lastindex(obj) + 1,)), val)
+delete(obj, ::typeof(last)) = delete(obj, IndexLens((lastindex(obj),)))
 insert(obj, ::typeof(first), val) = insert(obj, IndexLens((firstindex(obj),)), val)
+insert(obj, ::typeof(last), val) = insert(obj, IndexLens((lastindex(obj) + 1,)), val)
 
 set(obj, o::Base.Fix2{typeof(first)}, val) = @set obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
 set(obj, o::Base.Fix2{typeof(last)}, val) = @set obj[(lastindex(obj) - o.x + 1):lastindex(obj)] = val
@@ -15,11 +16,16 @@ delete(obj, o::Base.Fix2{typeof(last)}) = @delete obj[(lastindex(obj) - o.x + 1)
 insert(obj, o::Base.Fix2{typeof(first)}, val) = @insert obj[firstindex(obj):(firstindex(obj) + o.x - 1)] = val
 insert(obj, o::Base.Fix2{typeof(last)}, val) = @insert obj[(lastindex(obj) + 1):(lastindex(obj) + o.x)] = val
 
+# first and last on ranges
+# they don't support delete() with arbitrary index, so special casing is needed
+delete(obj::AbstractRange, ::typeof(first)) = obj[begin+1:end]
+delete(obj::AbstractRange, ::typeof(last)) = obj[begin:end-1]
+delete(obj::AbstractRange, o::Base.Fix2{typeof(first)}) = obj[begin+o.x:end]
+delete(obj::AbstractRange, o::Base.Fix2{typeof(last)}) = obj[begin:end-o.x]
+
+
 set(obj::Tuple, ::typeof(Base.front), val::Tuple) = (val..., last(obj))
 set(obj::Tuple, ::typeof(Base.tail), val::Tuple) = (first(obj), val...)
-
-set(obj, ::typeof(identity), val) = val
-set(obj, ::typeof(inv), new_inv) = inv(new_inv)
 
 function set(obj, ::typeof(only), val)
     only(obj) # error check
@@ -41,6 +47,8 @@ function set(obj::NamedTuple, ::Type{NamedTuple{KS}}, val::NamedTuple) where {KS
     length(KS) == length(val) || throw(ArgumentError("Cannot assign NamedTuple with keys $(keys(val)) to NamedTuple with keys $KS"))
     setproperties(obj, NamedTuple{KS}(val))
 end
+
+set(obj, ::typeof(Base.splat(=>)), val::Pair) = @set Tuple(obj) = Tuple(val)
 
 set(obj, ::typeof(getproperties), val::NamedTuple) = setproperties(obj, val)
 
@@ -125,9 +133,12 @@ set(x, f::Base.Fix2{typeof(rem)}, y) = set(x, @optic(last(divrem(_, f.x))), y)
 set(x::AbstractString, f::Base.Fix1{typeof(parse), Type{T}}, y::T) where {T} = string(y)
 
 set(arr, ::typeof(normalize), val) = norm(arr) * val
-set(arr, ::typeof(norm), val)      = val/norm(arr) * arr # should we check val is positive?
+set(arr, ::typeof(norm), val)      = map(Base.Fix2(*, val / norm(arr)), arr) # should we check val is positive?
 
 set(f, ::typeof(inverse), invf) = setinverse(f, invf)
+
+set(obj, ::typeof(Base.splat(atan)), val) = @set Tuple(obj) = norm(obj) .* sincos(val)
+set(obj, ::typeof(Base.splat(hypot)), val) = @set norm(obj) = val
 
 ################################################################################
 ##### dates
@@ -135,6 +146,11 @@ set(f, ::typeof(inverse), invf) = setinverse(f, invf)
 set(x::DateTime, ::Type{Date}, y) = DateTime(y, Time(x))
 set(x::DateTime, ::Type{Time}, y) = DateTime(Date(x), y)
 set(x::T, ::Type{T}, y) where {T <: Union{Date, Time}} = y
+
+# directly mirrors Dates.value implementation in stdlib
+set(x::Date, ::typeof(Dates.value), y) = @set x.instant.periods.value = y
+set(x::DateTime, ::typeof(Dates.value), y) = @set x.instant.periods.value = y
+set(x::Time, ::typeof(Dates.value), y) = @set x.instant.value = y
 
 set(x::Date, ::typeof(year),                    y) = Date(y,       month(x), day(x))
 set(x::Date, ::typeof(month),                   y) = Date(year(x),        y, day(x))

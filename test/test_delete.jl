@@ -20,6 +20,11 @@ using StaticArrays
         @test @inferred(delete( [1, 2, 3], @optic(first(_, 2)))) == [3]
         @test @inferred(delete( [1, 2, 3], @optic(last(_, 2)))) == [1]
 
+        @test @inferred(delete(CartesianIndex(1, 2, 3), @optic(_[1]))) == CartesianIndex(2, 3)
+
+        @test @inferred(delete(1:4, last)) === 1:3
+        @test @inferred(delete(1:4, (@optic first(_, 2)))) === 3:4
+
         l = @optic first(_, 2)
         @test l((1,2,3)) == [1,2]
         @test delete((1,2,3), l) === (3,)

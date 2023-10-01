@@ -2,10 +2,10 @@ module TestFunctionLenses
 using Test
 using Dates
 using Unitful
+using LinearAlgebra: norm
 using InverseFunctions: inverse
 using Accessors: test_getset_laws, test_modify_law
 using Accessors
-using StaticArrays: SVector
 
 
 @testset "os" begin
@@ -86,11 +86,14 @@ end
 
     cmp(a::NamedTuple, b::NamedTuple) = Set(keys(a)) == Set(keys(b)) && NamedTuple{keys(b)}(a) === b
     cmp(a::T, b::T) where {T} = a == b
+
+    test_getset_laws(Base.splat(=>), (1, 'a'), 'b' => 2, 3 => 'c'; cmp=cmp)
+    test_getset_laws(Base.splat(Pair), (1, 'a'), 'b' => 2, 3 => 'c'; cmp=cmp)
+    test_getset_laws(Base.splat(=>), [1, 2], 3 => 2, 3 => 4; cmp=cmp)
     
     test_getset_laws(Tuple, (1, 'a'), ('x', 'y'), (1, 2))
     test_getset_laws(Tuple, (a=1, b='a'), ('x', 'y'), (1, 2))
     test_getset_laws(Tuple, [0, 1], ('x', 'y'), (1, 2); cmp=cmp)
-    test_getset_laws(Tuple, SVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
     test_getset_laws(Tuple, CartesianIndex(1, 2), (3, 4), (5, 6))
 
     test_getset_laws(NamedTuple{(:x, :y)}, (1, 'a'), (x='x', y='y'), (x=1, y=2); cmp=cmp)
@@ -101,8 +104,6 @@ end
     test_getset_laws(NamedTuple{(:x, :y)}, (y=1, z=10, x='a'), (y='x', x='y'), (x=1, y=2); cmp=cmp)
     test_getset_laws(NamedTuple{(:x, :y)}, [0, 1], (x='x', y='y'), (x=1, y=2); cmp=cmp)
     test_getset_laws(NamedTuple{(:x, :y)}, [0, 1], (y='x', x='y'), (x=1, y=2); cmp=cmp)
-    test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (x='x', y='y'), (x=1, y=2); cmp=cmp)
-    test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (y='x', x='y'), (x=1, y=2); cmp=cmp)
     test_getset_laws(NamedTuple{(:x, :y)}, CartesianIndex(1, 2), (x=3, y=4), (x=5, y=6); cmp=cmp)
     test_getset_laws(NamedTuple{(:x, :y)}, CartesianIndex(1, 2), (y=3, x=4), (x=5, y=6); cmp=cmp)
 
@@ -198,6 +199,9 @@ end
     test_getset_laws(mod2pi, 5.3, 1, 2; cmp=isapprox)
     test_getset_laws(mod2pi, -5.3, 1, 2; cmp=isapprox)
 
+    test_getset_laws(Base.splat(atan), (3, 4), 1, 2)
+    test_getset_laws(Base.splat(atan), (a=3, b=4), 1, 2)
+
     test_getset_laws(!, true, true, false)
     @testset for o in [
             # invertible lenses below: no need for extensive testing, simply forwarded to InverseFunctions
@@ -241,6 +245,12 @@ end
     f = @set inverse(sin) = myasin
     @test f(2) == sin(2)
     @test inverse(f)(0.5) == asin(0.5) + 2π
+
+    @test set([3, 4], norm, 10) == [6, 8]
+    @test set((3, 4), norm, 10) === (6., 8.)
+    @test set((a=3, b=4), norm, 10) === (a=6., b=8.)
+    test_getset_laws(norm, (3, 4), 10, 12)
+    test_getset_laws(Base.splat(hypot), (3, 4), 10, 12)
 end
 
 @testset "dates" begin
@@ -262,6 +272,10 @@ end
         test_getset_laws(yearmonth, x, (rand(1:5000), rand(1:12)), (rand(1:5000), rand(1:12)))
         test_getset_laws(monthday, x, (rand(1:12), rand(1:28)), (rand(1:12), rand(1:28)))
         test_getset_laws(yearmonthday, x, (rand(1:5000), rand(1:12), rand(1:28)), (rand(1:5000), rand(1:12), rand(1:28)))
+    end
+
+    @testset for x in [DateTime(2020, 1, 2, 3, 4, 5, 6), Date(2020, 1, 2), Time(1, 2, 3, 4, 5, 6)]
+        test_getset_laws(Dates.value, x, 123, 456)
     end
 
     l = @optic DateTime(_, dateformat"yyyy_mm_dd")
