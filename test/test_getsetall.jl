@@ -41,6 +41,8 @@ end
     @test (2, 5, 10, 17, 26, 37) === @inferred getall(obj, @optic _ |> _[:] |> Elements() |> Elements() |> _[:] |> Elements() |> Elements() |> _[1]^2 + 1 |> only)
 
     # trickier types for Elements():
+    @test issetequal(["x", "y"], @inferred getall(Set(["x", "y"]), Elements()))
+    @test issetequal([1 => "x", 2 => "y"], @inferred getall(Dict(1 => "x", 2 => "y"), Elements()))
     obj = (a=("ab", "c"), b=([1 2; 3 4],), c=(SVector(1.), SVector(2, 3)))
     @test ['b', 'c', 'd'] == @inferred getall(obj, @optic _.a |> Elements() |> Elements() |> _ + 1)
     @test [2, 4, 3, 5] == @inferred getall(obj, @optic _.b |> Elements() |> Elements() |> _ + 1)
@@ -90,6 +92,8 @@ end
     @test [2, 3] == @inferred setall([1, "2"], Elements(), (2, 3))
     @test [2, "3"] == @inferred setall([1, "2"], Elements(), (2, "3"))
     @test [2, 3] == @inferred setall([1, "2"], Elements(), [2, 3])
+    @test Set([2, 3]) == @inferred setall(Set(["1", "2"]), Elements(), (2, 3))
+    @test Dict(1 => 2, 3 => 4) == @inferred setall(Dict(:a => :b, :c => :d), Elements(), [1 => 2, 3 => 4])
     @test_throws ErrorException setall("abc", Elements(), [2, 3])
 
     @test 2 === @inferred setall(1, If(>(0)), (2,))

@@ -227,9 +227,10 @@ $EXPERIMENTAL
 struct Elements end
 OpticStyle(::Type{<:Elements}) = ModifyBased()
 
-function modify(f, obj, ::Elements)
-    map(f, obj)
-end
+modify(f, obj, ::Elements) = map(f, obj)
+# sets and dicts don't support map(), but still have the concept of elements:
+modify(f, obj::Set, ::Elements) = Set(f(p) for p in obj)
+modify(f, obj::Dict, ::Elements) = Dict(f(p)::Pair for p in obj)
 
 """
     If(modify_condition)
