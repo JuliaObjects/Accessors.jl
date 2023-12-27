@@ -55,18 +55,20 @@ end
 end
 
 @testset "Elements" begin
-
     @test [0,0,0] == @set 1:3 |> Elements() = 0
 
     arr = 1:3
     @test 2:4 == (@set arr |> Elements() += 1)
     @test map(cos, arr) == modify(cos, arr, Elements())
 
-
     @test modify(cos, (), Elements()) === ()
 
     @inferred modify(cos, arr, Elements())
     @inferred modify(cos, (), Elements())
+
+    @test Set([2,3,4]) == @inferred modify(x->x+1, Set([1,2,3]), Elements())
+    # not @inferred because Tuple(::Pair) is type unstable:
+    @test Dict(1 => 2, 2 => 3, 3 => 4) == modify(x->x+1, Dict(1 => 1, 2 => 2, 3 => 3), last ∘ Elements())
 end
 
 @testset "Recursive" begin

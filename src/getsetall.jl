@@ -54,6 +54,8 @@ function setall end
 getall(obj::Union{Tuple, AbstractVector}, ::Elements) = obj
 getall(obj::Union{NamedTuple}, ::Elements) = values(obj)
 getall(obj::AbstractArray, ::Elements) = vec(obj)
+getall(obj::AbstractSet, ::Elements) = collect(obj)
+getall(obj::AbstractDict, ::Elements) = collect(obj)
 getall(obj::Number, ::Elements) = (obj,)
 getall(obj::AbstractString, ::Elements) = collect(obj)
 getall(obj, ::Elements) = error("Elements() not supported for $(typeof(obj))")
@@ -70,6 +72,8 @@ setall(obj::NamedTuple{NS}, ::Elements, vs) where {NS} = NamedTuple{NS}(NTuple{l
 setall(obj::NTuple{N, Any}, ::Elements, vs) where {N} = (@assert length(vs) == N; NTuple{N}(vs))
 setall(obj::AbstractArray, ::Elements, vs::AbstractArray) = (@assert length(obj) == length(vs); reshape(vs, size(obj)))
 setall(obj::AbstractArray, ::Elements, vs) = setall(obj, Elements(), collect(vs))
+setall(obj::Set, ::Elements, vs) = Set(vs)
+setall(obj::Dict, ::Elements, vs) = Dict(vs)
 setall(obj, ::Elements, vs) = error("Elements() not supported for $(typeof(obj))")
 function setall(obj, o::If, vs)
     if o.modify_condition(obj)
