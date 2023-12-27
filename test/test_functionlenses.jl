@@ -3,6 +3,7 @@ using Test
 using Dates
 using Unitful
 using LinearAlgebra: norm, diag
+using AxisKeys
 using InverseFunctions: inverse
 using Accessors: test_getset_laws, test_modify_law
 using Accessors
@@ -169,6 +170,10 @@ end
 
     B = @set reverse(vec(A)) = 1:6
     @test B == [6 4 2; 5 3 1]
+
+    C = KeyedArray([1,2,3], x=[:a, :b, :c])
+    @test (@set vec(C) = [5,6,7])::KeyedArray == KeyedArray([5,6,7], x=[:a, :b, :c])
+    @test (@set reverse(C) = [5,6,7])::KeyedArray == KeyedArray([7,6,5], x=[:a, :b, :c])
 
     test_getset_laws(size, A, (1, 6), (3, 2))
     test_getset_laws(vec, A, 10:15, 21:26)
