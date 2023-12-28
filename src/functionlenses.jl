@@ -1,6 +1,3 @@
-using LinearAlgebra: norm, normalize, diag, diagind
-using Dates
-
 # first and last on general indexable collections
 set(obj, ::typeof(first), val) = @set obj[firstindex(obj)] = val
 set(obj, ::typeof(last), val) = @set obj[lastindex(obj)] = val
@@ -102,8 +99,6 @@ modify(f, obj, o::typeof(skipmissing)) = @modify(f, obj |> filter(!ismissing, _)
 set(obj, ::typeof(sort), val) = @set obj[sortperm(obj)] = val
 modify(f, obj, ::typeof(sort)) = @modify(f, obj[sortperm(obj)])
 
-set(A, ::typeof(diag), val) = @set A[diagind(A)] = val
-
 ################################################################################
 ##### os
 ################################################################################
@@ -136,46 +131,10 @@ set(x, f::Base.Fix2{typeof(rem)}, y) = set(x, @optic(last(divrem(_, f.x))), y)
 
 set(x::AbstractString, f::Base.Fix1{typeof(parse), Type{T}}, y::T) where {T} = string(y)
 
-set(arr, ::typeof(normalize), val) = norm(arr) * val
-set(arr, ::typeof(norm), val)      = map(Base.Fix2(*, val / norm(arr)), arr) # should we check val is positive?
-
 set(f, ::typeof(inverse), invf) = setinverse(f, invf)
 
-set(obj, ::typeof(Base.splat(atan)), val) = @set Tuple(obj) = norm(obj) .* sincos(val)
-set(obj, ::typeof(Base.splat(hypot)), val) = @set norm(obj) = val
-
-################################################################################
-##### dates
-################################################################################
-set(x::DateTime, ::Type{Date}, y) = DateTime(y, Time(x))
-set(x::DateTime, ::Type{Time}, y) = DateTime(Date(x), y)
-set(x::T, ::Type{T}, y) where {T <: Union{Date, Time}} = y
-
-# directly mirrors Dates.value implementation in stdlib
-set(x::Date, ::typeof(Dates.value), y) = @set x.instant.periods.value = y
-set(x::DateTime, ::typeof(Dates.value), y) = @set x.instant.periods.value = y
-set(x::Time, ::typeof(Dates.value), y) = @set x.instant.value = y
-
-set(x::Date, ::typeof(year),                    y) = Date(y,       month(x), day(x))
-set(x::Date, ::typeof(month),                   y) = Date(year(x),        y, day(x))
-set(x::Date, ::typeof(day),                     y) = Date(year(x), month(x),      y)
-set(x::Date, ::typeof(yearmonth),    y::NTuple{2}) = Date(y...,              day(x))
-set(x::Date, ::typeof(monthday),     y::NTuple{2}) = Date(year(x),             y...)
-set(x::Date, ::typeof(yearmonthday), y::NTuple{3}) = Date(y...)
-set(x::Date, ::typeof(dayofweek),               y) = firstdayofweek(x) + Day(y - 1)
-
-set(x::Time, ::typeof(hour),        y) = Time(y,       minute(x), second(x), millisecond(x), microsecond(x), nanosecond(x))
-set(x::Time, ::typeof(minute),      y) = Time(hour(x),         y, second(x), millisecond(x), microsecond(x), nanosecond(x))
-set(x::Time, ::typeof(second),      y) = Time(hour(x), minute(x),         y, millisecond(x), microsecond(x), nanosecond(x))
-set(x::Time, ::typeof(millisecond), y) = Time(hour(x), minute(x), second(x),              y, microsecond(x), nanosecond(x))
-set(x::Time, ::typeof(microsecond), y) = Time(hour(x), minute(x), second(x), millisecond(x),              y, nanosecond(x))
-set(x::Time, ::typeof(nanosecond),  y) = Time(hour(x), minute(x), second(x), millisecond(x), microsecond(x),             y)
-
-set(x::DateTime, optic::Union{typeof.((year, month, day, yearmonth, monthday, yearmonthday, dayofweek))...}, y) = modify(d -> set(d, optic, y), x, Date)
-set(x::DateTime, optic::Union{typeof.((hour, minute, second, millisecond))...}, y) = modify(d -> set(d, optic, y), x, Time)
-
-
-set(x::AbstractString, optic::Base.Fix2{Type{T}}, dt::T) where {T <: Union{Date, Time, DateTime}} = Dates.format(dt, optic.x)
+set(obj, ::typeof(Base.splat(atan)), val) = @set Tuple(obj) = hypot(obj...) .* sincos(val)
+set(obj, ::typeof(Base.splat(hypot)), val) = map(Base.Fix2(*, val / hypot(obj...)), obj)
 
 ################################################################################
 ##### strings

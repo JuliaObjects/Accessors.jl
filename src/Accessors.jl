@@ -20,4 +20,10 @@ include("sugar.jl")
 include("functionlenses.jl")
 include("testing.jl")
 
+@static if !isdefined(Base, :get_extension)
+    include("../ext/AccessorsDatesExt.jl")
+    include("../ext/AccessorsLinearAlgebraExt.jl")
+    include("../ext/AccessorsTestExt.jl")
+end
+
 end
