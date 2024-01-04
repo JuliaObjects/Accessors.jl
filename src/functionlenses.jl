@@ -1,4 +1,4 @@
-using LinearAlgebra: norm, normalize
+using LinearAlgebra: norm, normalize, diag, diagind
 using Dates
 
 # first and last on general indexable collections
@@ -99,6 +99,8 @@ modify(f, obj, o::typeof(skipmissing)) = @modify(f, obj |> filter(!ismissing, _)
 
 set(obj, ::typeof(sort), val) = @set obj[sortperm(obj)] = val
 modify(f, obj, ::typeof(sort)) = @modify(f, obj[sortperm(obj)])
+
+set(A, ::typeof(diag), val) = @set A[diagind(A)] = val
 
 ################################################################################
 ##### os

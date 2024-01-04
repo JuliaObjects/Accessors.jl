@@ -2,7 +2,7 @@ module TestFunctionLenses
 using Test
 using Dates
 using Unitful
-using LinearAlgebra: norm
+using LinearAlgebra: norm, diag
 using InverseFunctions: inverse
 using Accessors: test_getset_laws, test_modify_law
 using Accessors
@@ -183,6 +183,9 @@ end
     test_modify_law(reverse, @optic(filter(>(0), _)), [1, -2, 3, -4, 5, -6])
     test_getset_laws(skipmissing, [1, missing, 3], [0, 1], [5, 6]; cmp=(x,y) -> isequal(collect(x), collect(y)))
     test_modify_law(cumsum, sort, [1, -2, 3, -4, 5, -6])
+
+    test_getset_laws(diag, [1 2; 3 4], [1., 2.5], [0, 1])
+    test_getset_laws(diag, [1 2 3; 4 5 6], [1., 2.5], [0, 1])
 end
 
 @testset "math" begin
