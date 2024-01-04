@@ -254,6 +254,10 @@ end
     @test set((a=3, b=4), norm, 10) === (a=6., b=8.)
     test_getset_laws(norm, (3, 4), 10, 12)
     test_getset_laws(Base.splat(hypot), (3, 4), 10, 12)
+
+    test_getset_laws(!(@optic _.a), (a=true,), false, true)
+    test_getset_laws(!(@optic _[1]), (a=true,), false, true)
+    test_getset_laws(!(@optic _[end]), (a=true,), false, true)
 end
 
 @testset "dates" begin
