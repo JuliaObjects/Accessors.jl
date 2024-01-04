@@ -123,14 +123,19 @@ end
     @test setall(obj.c[1], Elements(), (5,)) === SVector(5)
     @test setall(obj.c[1], Elements(), [5, 6]) === SVector(5, 6)
     @test setall(obj.c[1], Elements(), [5]) === SVector(5)
-    @testset for o in (
+    @testset for (i,o) in (
         (@optic _.c |> Elements() |> Elements()),
         (@optic _.c |> Elements() |> Elements() |> _ + 1),
-    )
+    ) |> enumerate
         @test (@inferred setall(obj, o, getall(obj, o))) === obj
         @test setall(obj, o, collect(getall(obj, o))) === obj
-        @test (@inferred setall(obj, o, Vector{Float64}(collect(getall(obj, o))))) == obj
-        @test (@inferred setall(obj, o, SVector(getall(obj, o)))) == obj
+        if VERSION ≥ v"1.10" || i == 2
+            @test (@inferred setall(obj, o, Vector{Float64}(collect(getall(obj, o))))) == obj
+            @test (@inferred setall(obj, o, SVector(getall(obj, o)))) == obj
+        else
+            @test setall(obj, o, Vector{Float64}(collect(getall(obj, o)))) == obj
+            @test setall(obj, o, SVector(getall(obj, o))) == obj
+        end
     end
 
     obj = ([1, 2], 3:5, (6,))
