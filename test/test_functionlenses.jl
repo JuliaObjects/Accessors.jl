@@ -3,6 +3,7 @@ using Test
 using Dates
 using Unitful
 using LinearAlgebra: norm, diag
+using AxisKeys
 using InverseFunctions: inverse
 using Accessors: test_getset_laws, test_modify_law
 using Accessors
@@ -169,10 +170,18 @@ end
 
     B = @set reverse(vec(A)) = 1:6
     @test B == [6 4 2; 5 3 1]
+    @test set([1, 2], reverse, (3, 4)) == [4, 3]
+    @test set((1, 2), reverse, [3, 4]) === (4, 3)
+    @test set((a=1, b=2), reverse, [3, 4]) === (a=4, b=3)
+
+    C = KeyedArray([1,2,3], x=[:a, :b, :c])
+    @test (@set vec(C) = [5,6,7])::KeyedArray == KeyedArray([5,6,7], x=[:a, :b, :c])
+    @test (@set reverse(C) = [5,6,7])::KeyedArray == KeyedArray([7,6,5], x=[:a, :b, :c])
 
     test_getset_laws(size, A, (1, 6), (3, 2))
     test_getset_laws(vec, A, 10:15, 21:26)
     test_getset_laws(reverse, collect(1:6), 10:15, 21:26)
+    test_getset_laws(reverse, [3, 4], (1, 2), (:a, :b); cmp=(x,y) -> collect(x) == collect(y))
 
     @test @inferred(modify(x -> x ./ sum(x), [1, -2, 3], @optic filter(>(0), _))) == [0.25, -2, 0.75]
     @test isequal(modify(x -> x ./ sum(x), [1, missing, 3], skipmissing), [0.25, missing, 0.75])

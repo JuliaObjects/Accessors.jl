@@ -79,8 +79,10 @@ function set(x::AbstractArray, ::typeof(vec), v::AbstractVector)
     res
 end
 
-# set reverse(): keep vector type, change its values
-function set(x::AbstractVector, ::typeof(reverse), v::AbstractVector)
+# set reverse(): keep collection type, change its values
+set(::Tuple, ::typeof(reverse), v) = reverse(Tuple(v))
+set(x::NamedTuple, ::typeof(reverse), v) = @set reverse(Tuple(x)) = v
+function set(x::AbstractVector, ::typeof(reverse), v)
     res = similar(x, eltype(v))
     res .= v
     reverse!(res)
