@@ -127,20 +127,32 @@ end
     @test setall(obj.c[1], Elements(), (5,)) === SVector(5)
     @test setall(obj.c[1], Elements(), [5, 6]) === SVector(5, 6)
     @test setall(obj.c[1], Elements(), [5]) === SVector(5)
-    @testset for o in (
+    @testset for (i,o) in (
         (@optic _.c |> Elements() |> Elements()),
         (@optic _.c |> Elements() |> Elements() |> _ + 1),
-    )
-        @test setall(obj, o, getall(obj, o)) === obj
+    ) |> enumerate
+        @test (@inferred setall(obj, o, getall(obj, o))) === obj
         @test setall(obj, o, collect(getall(obj, o))) === obj
+        if VERSION ≥ v"1.10" || i == 2
+            @test (@inferred setall(obj, o, Vector{Float64}(collect(getall(obj, o))))) == obj
+            @test (@inferred setall(obj, o, SVector(getall(obj, o)))) == obj
+        else
+            @test setall(obj, o, Vector{Float64}(collect(getall(obj, o)))) == obj
+            @test setall(obj, o, SVector(getall(obj, o))) == obj
+        end
     end
 
     obj = ([1, 2], 3:5, (6,))
     @test obj == setall(obj, @optic(_ |> Elements() |> Elements()), 1:6)
     @test ([2, 3], 4:6, (7,)) == setall(obj, @optic(_ |> Elements() |> Elements() |> _ - 1), 1:6)
-    # can this infer?..
-    @test_broken obj == @inferred setall(obj, @optic(_ |> Elements() |> Elements()), 1:6)
-    @test_broken ([2, 3], 4:6, (7,)) == @inferred setall(obj, @optic(_ |> Elements() |> Elements() |> _ - 1), 1:6)
+
+    @test obj == @inferred setall(obj, @optic(_ |> Elements() |> Elements()), 1:6)
+    @test ([2, 3], 4:6, (7,)) == @inferred setall(obj, @optic(_ |> Elements() |> Elements() |> _ - 1), 1:6)
+    @test obj == @inferred setall(obj, @optic(_ |> Elements() |> Elements()), ntuple(identity, 6))
+    @test obj == @inferred setall(obj, @optic(_ |> identity |> Elements() |> Elements()), ntuple(identity, 6))
+    @test obj[1] == @inferred setall(obj[1], @optic(_ |> Elements() |> _ + 1), (2, 3))
+    # impossible to infer:
+    @test_broken ([1, 2], [3.0, 4.0, 5.0], ("6",)) == @inferred setall(obj, @optic(_ |> Elements() |> Elements()), (1, 2, 3., 4., 5., "6"))
 end
 
 @testset "getall/setall consistency" begin
