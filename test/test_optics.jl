@@ -102,4 +102,10 @@ end
     @test Accessors.DynamicIndexLens(lastindex).([(1,2,3), (4,5)]) == [3, 5]
 end
 
+@testset "shortcuts" begin
+    @test (@o _.a[2]) === (@optic _.a[2])
+    @test (@optic _[∗]) === Elements()
+    @test (@optic _.a[∗][2]) === (@optic _.a |> Elements() |> _[2])
+end
+
 end#module

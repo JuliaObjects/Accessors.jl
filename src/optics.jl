@@ -210,6 +210,7 @@ end
     Elements
 
 Access all elements of a collection that implements `map`.
+An alias for `Elements()` is available as `∗` (`\\ast`). This optic can also be written as `@optic _[∗]`.
 
 ```jldoctest
 julia> using Accessors
@@ -295,7 +296,8 @@ end
 """
     Properties()
 
-Access all properties of an objects.
+Access all properties of an object.
+An alias for `Properties()` is available as `∗ₚ` (`\\ast\\_p`). This optic can also be written as `@optic _[∗ₚ]`.
 
 ```jldoctest
 julia> using Accessors

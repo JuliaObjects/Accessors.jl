@@ -1,4 +1,4 @@
-export @set, @optic, @o, @reset, @modify, @delete, @insert, @accessor
+export @set, @optic, @o, @reset, @modify, @delete, @insert, @accessor, ∗, ∗ₚ
 using MacroTools
 
 """
