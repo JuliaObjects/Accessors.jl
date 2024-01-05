@@ -1,4 +1,4 @@
-export @set, @optic, @reset, @modify, @delete, @insert, @accessor
+export @set, @optic, @o, @reset, @modify, @delete, @insert, @accessor
 using MacroTools
 
 """
@@ -430,12 +430,17 @@ macro accessor(ex)
     end |> esc
 end
 
-# shortcuts:
+### shortcuts:
+# optic macro
+const var"@o" = var"@optic"
+
+# Elements, Properties
 const ∗ = Elements()
 const ∗ₚ = Properties()
 IndexLens(::Tuple{Elements}) = Elements()
 IndexLens(::Tuple{Properties}) = Properties()
 
+### nice show() for optics
 _shortstring(prev, o::PropertyLens{field}) where {field} = "$prev.$field"
 _shortstring(prev, o::IndexLens) ="$prev[$(join(repr.(o.indices), ", "))]"
 _shortstring(prev, o::Function) = "$o($prev)"
