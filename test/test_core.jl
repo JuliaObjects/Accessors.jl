@@ -201,13 +201,10 @@ end
           ((@optic _.b.a.b[end]),     4.0),
           ((@optic _.b.a.b[end÷2+1]), 4.0),
          ]
-        if VERSION < v"1.7"
-            @test begin
-                @inferred lens(obj)
-                @inferred set(obj, lens, val)
-                @inferred modify(identity, obj, lens)
-                true
-            end
+        if VERSION < v"1.7" || VERSION >= v"1.10-"
+            @inferred lens(obj)
+            @inferred set(obj, lens, val)
+            @inferred modify(identity, obj, lens)
         else
             @inferred lens(obj)
             @inferred set(obj, lens, val)

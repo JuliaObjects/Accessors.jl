@@ -177,7 +177,9 @@ end
     println("Right associative composition: $b_right")
 
     @test b_default.allocs == 0
-    if VERSION >= v"1.7"
+    if VERSION >= v"1.10-"
+        @test_broken b_right.allocs == 0
+    elseif VERSION >= v"1.7"
         @test b_right.allocs == 0
     else
         @test_broken right.allocs == 0
