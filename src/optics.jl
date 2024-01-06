@@ -9,7 +9,7 @@ using CompositionsBase
 using Base: getproperty
 using Base
 
-const EXPERIMENTAL = """This function/method/type is experimental. It can be changed or deleted at any point without warning"""
+const EXPERIMENTAL = """This function/type is experimental. It can be changed or deleted at any point without warning"""
 
 """
     modify(f, obj, optic)
@@ -223,7 +223,6 @@ julia> set(obj, Elements(), 0)
 julia> modify(x -> 2x, obj, Elements())
 (2, 4, 6)
 ```
-$EXPERIMENTAL
 """
 struct Elements end
 OpticStyle(::Type{<:Elements}) = ModifyBased()
@@ -313,8 +312,6 @@ julia> modify(x -> 2x, obj, Properties())
 (a = 2, b = 4, c = 6)
 ```
 Based on [`mapproperties`](@ref).
-
-$EXPERIMENTAL
 """
 struct Properties end
 OpticStyle(::Type{<:Properties}) = ModifyBased()
