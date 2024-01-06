@@ -1,4 +1,4 @@
-export @set, @optic, @reset, @modify, @delete, @insert, @accessor
+export @set, @optic, @o, @reset, @modify, @delete, @insert, @accessor, ∗, ∗ₚ
 using MacroTools
 
 """
@@ -453,11 +453,24 @@ macro accessor(ex)
     end |> esc
 end
 
+### shortcuts:
+# optic macro
+const var"@o" = var"@optic"
+
+# Elements, Properties
+const ∗ = Elements()
+const ∗ₚ = Properties()
+IndexLens(::Tuple{Elements}) = Elements()
+IndexLens(::Tuple{Properties}) = Properties()
+
+### nice show() for optics
 _shortstring(prev, o::PropertyLens{field}) where {field} = "$prev.$field"
 _shortstring(prev, o::IndexLens) ="$prev[$(join(repr.(o.indices), ", "))]"
 _shortstring(prev, o::Function) = "$o($prev)"
 _shortstring(prev, o::Base.Fix1) = "$(o.f)($(o.x), $prev)"
 _shortstring(prev, o::Base.Fix2) = "$(o.f)($prev, $(o.x))"
+_shortstring(prev, o::Elements) = "$prev[∗]"
+_shortstring(prev, o::Properties) = "$prev[∗ₚ]"
 
 function show_optic(io, optic)
     opts = deopcompose(optic)
@@ -475,13 +488,15 @@ function show_optic(io, optic)
     end
 end
 
-Base.show(io::IO, optic::Union{IndexLens, PropertyLens}) = show_optic(io, optic)
-Base.show(io::IO, ::MIME"text/plain", optic::Union{IndexLens, PropertyLens}) = show(io, optic)
+const _OpticsTypes = Union{IndexLens,PropertyLens,Elements,Properties}
+
+Base.show(io::IO, optic::_OpticsTypes) = show_optic(io, optic)
+Base.show(io::IO, ::MIME"text/plain", optic::_OpticsTypes) = show(io, optic)
 
 # only need show(io, optic) here because Base defines show(io::IO, ::MIME"text/plain", c::ComposedFunction) = show(io, c)
-Base.show(io::IO, optic::ComposedFunction{<:Any, <:Union{IndexLens, PropertyLens}}) = show_optic(io, optic)
+Base.show(io::IO, optic::ComposedFunction{<:Any, <:_OpticsTypes}) = show_optic(io, optic)
 # resolve method ambiguity with Base:
-Base.show(io::IO, optic::ComposedFunction{typeof(!), <:Union{IndexLens, PropertyLens}}) = show_optic(io, optic)
+Base.show(io::IO, optic::ComposedFunction{typeof(!), <:_OpticsTypes}) = show_optic(io, optic)
 
 # debugging
 show_composition_order(optic) = (show_composition_order(stdout, optic); println())

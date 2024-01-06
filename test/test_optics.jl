@@ -104,4 +104,16 @@ end
     @test Accessors.DynamicIndexLens(lastindex).([(1,2,3), (4,5)]) == [3, 5]
 end
 
+@testset "shortcuts" begin
+    @test (@o _.a[2]) === (@optic _.a[2])
+    @test (@optic _[∗]) === Elements()
+    @test (@optic _.a[∗][2]) === (@optic _.a |> Elements() |> _[2])
+    @test (@optic _.a[∗ₚ][2]) === (@optic _.a |> Properties() |> _[2])
+    # user-defined symbols have priority, same as elsewhere in Julia
+    let ∗ = 3
+        o = @optic _[∗]
+        @test o([1,2,42]) == 42
+    end
+end
+
 end#module
