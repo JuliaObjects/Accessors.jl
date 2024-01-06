@@ -4,7 +4,7 @@
 Extract all parts of `obj` that are selected by `optic`.
 Returns a flat `Tuple` of values, or an `AbstractVector` if the selected parts contain arrays.
 
-This function is experimental and we might change the precise output container in the future.
+The details of `getall` behavior are consireded experimental: in particular, the precise output container type might change in the future.
 
 See also [`setall`](@ref).
 
@@ -29,7 +29,7 @@ function getall end
 Replace a part of `obj` that is selected by `optic` with `values`.
 The `values` collection should have the same number of elements as selected by `optic`.
 
-This function is experimental and might change in the future.
+The details of `setall` behavior are consireded experimental: in particular, supported container types for the `values` argument might change in the future.
 
 See also [`getall`](@ref), [`set`](@ref). The former is dual to `setall`:
 
