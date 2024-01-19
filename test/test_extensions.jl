@@ -166,6 +166,11 @@ VERSION >= v"1.9-" && @testset "StructArrays" begin
     s = StructArray([S(1, 2), S(3, 4)])
     @test @inferred(set(s, PropertyLens(:a), 10:11))::StructArray == StructArray([S(10, 2), S(11, 4)])
     @test @inferred(set(s, PropertyLens(:a), [:a, :b]))::StructArray == StructArray([S(:a, 2), S(:b, 4)])
+
+    @test_throws "need to overload" set(s, propertynames, (:x, :y))
+    s = StructArray(x=[1, 2], y=[:a, :b])
+    test_getset_laws(propertynames, s, (:u, :v), (1, 2))
+    test_getset_laws(propertynames, s, (1, 2), (:u, :v))
 end
 
 VERSION ≥ v"1.9-" && @testset "Unitful" begin

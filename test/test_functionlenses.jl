@@ -109,6 +109,11 @@ end
     test_getset_laws(NamedTuple{(:x, :y)}, CartesianIndex(1, 2), (y=3, x=4), (x=5, y=6); cmp=cmp)
 
     test_getset_laws(Accessors.getproperties, 1+2im, (im=4., re=3.), (re=5, im=6); cmp=cmp)
+
+    test_getset_laws(propertynames, (10, 20.), (:a, :b), (1, 2); cmp=(===))
+    test_getset_laws(propertynames, (10, 20.), (1, 2), (:a, :b); cmp=(===))
+    test_getset_laws(propertynames, (a=10, b=20.), (:x, :y), (1, 2); cmp=(===))
+    test_getset_laws(propertynames, (a=10, b=20.), (1, 2), (:x, :y); cmp=(===))
 end
 
 @testset "eltype on Number" begin

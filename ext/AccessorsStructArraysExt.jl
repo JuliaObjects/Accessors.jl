@@ -9,6 +9,8 @@ Accessors.set(x::StructArray, o::PropertyLens, v) = set(x, o ∘ StructArrays.co
 Accessors.insert(x::StructArray{<:Union{Tuple, NamedTuple}}, o::PropertyLens, v) = insert(x, o ∘ StructArrays.components, v)
 Accessors.delete(x::StructArray{<:Union{Tuple, NamedTuple}}, o::PropertyLens) = delete(x, o ∘ StructArrays.components)
 
+Accessors.set(x::StructArray{<:Union{Tuple, NamedTuple}}, ::typeof(propertynames), names) = set(x, propertynames ∘ StructArrays.components, names)
+
 # (named)tuple eltypes: only component arrays themselves are needed in the constructor
 # can change component number/names
 Accessors.set(x::StructArray{<:Union{Tuple, NamedTuple}}, ::typeof(StructArrays.components), v) = StructArray(v)
