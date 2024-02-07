@@ -8,7 +8,7 @@ using Accessors: insert
     @testset "function" begin
         @test @inferred(insert( (b=2, c=3), @optic(_.a), 1 )) == (b=2, c=3, a=1)
         @test insert( (b=2, c=3), @optic(_[:a]), 1 ) == (b=2, c=3, a=1)
-        @test insert( (2, 3), @optic(_[end]), 1) == (2, 3, 1)
+        @test insert( (2, 3), @optic(_[end]), 1) == (2, 1, 3)
         let A = [1, 2]
             @test insert(A, @optic(_[2]), 3) == [1, 3, 2]
             @test_throws BoundsError insert(A, @optic(_[4]), 3)
@@ -45,7 +45,7 @@ using Accessors: insert
         x = [1, 2]
         @test @insert(x[3] = 3) == [1, 2, 3]
         @test @insert(x[end+1] = 3) == [1, 2, 3]
-        @test @insert(x[end] = 3) == [1, 3]
+        @test @insert(x[end] = 3) == [1, 3, 2]
         x = (a=(b=(1, 2),), c=1)
         @test @insert(x.a.b[1] = 0) == (a=(b=(0, 1, 2),), c=1)
 
