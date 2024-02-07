@@ -455,6 +455,10 @@ end
     delete(obj, IndexLens(lens.f(obj)))
 end
 
+Base.@propagate_inbounds function insert(obj, lens::DynamicIndexLens, x)
+    insert(obj, IndexLens(lens.f(obj)), x)
+end
+
 
 Broadcast.broadcastable(
     o::Union{PropertyLens,IndexLens,DynamicIndexLens,Elements,Properties,If,Recursive}
