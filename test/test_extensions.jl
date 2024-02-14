@@ -6,6 +6,7 @@ using AxisKeys
 using IntervalSets
 using StaticArrays, StaticNumbers
 using StructArrays
+using Unitful
 
 
 # most of the tests run on Julia 1.9 and later because of package extensions support
@@ -165,6 +166,11 @@ VERSION >= v"1.9-" && @testset "StructArrays" begin
     s = StructArray([S(1, 2), S(3, 4)])
     @test @inferred(set(s, PropertyLens(:a), 10:11))::StructArray == StructArray([S(10, 2), S(11, 4)])
     @test @inferred(set(s, PropertyLens(:a), [:a, :b]))::StructArray == StructArray([S(:a, 2), S(:b, 4)])
+end
+
+VERSION ≥ v"1.9-" && @testset "Unitful" begin
+    test_getset_laws(ustrip, 1u"m", 2., 3)
+    test_getset_laws(ustrip, 1u"m/mm", 2., 3)
 end
 
 end
