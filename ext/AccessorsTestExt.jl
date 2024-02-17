@@ -26,6 +26,15 @@ function Accessors.test_modify_law(f, lens, obj)
     @test obj_modify == obj_setfget
 end
 
+function Accessors.test_insertdelete_laws(lens, obj, val; cmp=(==))
+    obj1 = insert(obj, lens, val)
+    @test cmp(lens(obj1), val)
+    obj2 = set(obj1, lens, val)
+    @test cmp(obj1, obj2)
+    obj3 = delete(obj1, lens)
+    @test cmp(obj, obj3)
+end
+
 function Accessors.test_getsetall_laws(optic, obj, vals1, vals2; cmp=(==))
     # setall ⨟ getall
     vals = getall(obj, optic)

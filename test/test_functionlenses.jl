@@ -5,7 +5,7 @@ using Unitful
 using LinearAlgebra: norm, diag
 using AxisKeys
 using InverseFunctions: inverse
-using Accessors: test_getset_laws, test_modify_law
+using Accessors: test_getset_laws, test_modify_law, test_insertdelete_laws
 using Accessors
 
 
@@ -159,6 +159,7 @@ end
     B = @insert size(A)[2] = 1
     @test reshape(A, (2, 1, 3)) == B
     @test A == @delete size(B)[2]
+    test_insertdelete_laws((@optic size(_)[2]), A, 1)
     @test_throws Exception @set size(A)[1] = 1
     @test_throws Exception @insert size(A)[2] = 2
 

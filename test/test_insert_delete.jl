@@ -3,6 +3,8 @@ using Test
 using StaticArrays
 using Accessors
 using Accessors: insert
+using Accessors: test_insertdelete_laws
+
 
 @testset "test insert" begin
     @testset "function" begin
@@ -135,6 +137,17 @@ end
         A = [(x=1, y=2), (x=3, y=4)]
         @test @delete(Elements()(A).x) == [(y=2,), (y=4,)]
     end
+end
+
+@testset "insert-delete laws" begin
+    test_insertdelete_laws((@o _.c), (a=1, b=2), "3")
+    @testset for o in ((@o _[2]), (@o _[3]), first, last), obj in ((1, 2), [1, 2])
+        test_insertdelete_laws(o, obj, 3)
+    end
+    @testset for o in ((@o _.a[2]), (@o _.a[3]), (@o first(_.a)), (@o last(_.a)))
+        test_insertdelete_laws(o, (a=(1, 2),), "3")
+    end
+    test_insertdelete_laws((@o first(_, 2)), [1, 2, 3], [4, 5])
 end
 
 end
