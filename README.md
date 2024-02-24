@@ -54,4 +54,4 @@ For more detail, see [this tutorial](https://juliaobjects.github.io/Accessors.jl
 
 # Featured extensions
 
-- [AccessorsExtra.jl](https://gitlab.com/aplavin/AccessorsExtra.jl) [[docs](https://aplavin.github.io/AccessorsExtra.jl/test/notebook.html)] introduces additional optics and related functions, that are considered too experimental for inclusion in `Accessors`. For Julia 1.8 and older, `AccessorsExtra` also provides integrations with other packages; for Julia 1.9+, these are mostly included in `Accessors` itself.
+- [AccessorsExtra.jl](https://github.com/JuliaAPlavin/AccessorsExtra.jl) [[docs](https://aplavin.github.io/AccessorsExtra.jl/test/notebook.html)] introduces additional optics and related functions, that are considered too experimental for inclusion in `Accessors`. For Julia 1.8 and older, `AccessorsExtra` also provides integrations with other packages; for Julia 1.9+, these are mostly included in `Accessors` itself.
