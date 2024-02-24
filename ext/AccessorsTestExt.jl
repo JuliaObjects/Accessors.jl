@@ -18,12 +18,12 @@ function Accessors.test_getset_laws(lens, obj, val1, val2; cmp=(==))
     @test cmp(obj12, obj2)
 end
 
-function Accessors.test_modify_law(f, lens, obj)
+function Accessors.test_modify_law(f, lens, obj; cmp=(==))
     obj_modify = modify(f, obj, lens)
-    old_val = lens(obj)
-    val = f(old_val)
-    obj_setfget = set(obj, lens, val)
-    @test obj_modify == obj_setfget
+    old_vals = getall(obj, lens)
+    vals = map(f, old_vals)
+    setall(obj, lens, vals)
+    @test cmp(obj_modify, obj_setfget)
 end
 
 function Accessors.test_insertdelete_laws(lens, obj, val; cmp=(==))
