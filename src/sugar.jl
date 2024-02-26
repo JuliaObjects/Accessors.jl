@@ -157,11 +157,20 @@ function lower_index(collection::Symbol, index, dim)
     )
 end
 
+_secondarg(_, x) = x
+
 _esc_and_dot_name_to_broadcasted(f) = esc(f)
 _esc_and_dot_name_to_broadcasted(f::Symbol) =
-    startswith(string(f), '.') ?
-        :(Base.BroadcastFunction($(esc(Symbol(string(f)[2:end]))))) :
+    if f == :.
+        # eg, in @set a[:] .= 1
+        # the returned function will be called as func(a, 1)
+        :(Base.BroadcastFunction($_secondarg))
+    elseif startswith(string(f), '.')
+        # eg, in @set a[:] .+= 1 or @optic _ .+ 1
+        :(Base.BroadcastFunction($(esc(Symbol(string(f)[2:end])))))
+    else
         esc(f)
+    end
 
 function parse_obj_optics(ex)
     dollar_exprs = foldtree([], ex) do exs, x
@@ -307,7 +316,7 @@ function setmacro(optictransform, ex::Expr; overwrite::Bool=false)
         :($set($obj, ($optictransform)($optic), $val))
     else
         op = get_update_op(ex.head)
-        f = :($Base.Fix2($op, $val))
+        f = :($Base.Fix2($(_esc_and_dot_name_to_broadcasted(op)), $val))
         :($modify($f, $obj, ($optictransform)($optic)))
     end
     return _macro_expression_result(obj, ret; overwrite=overwrite)

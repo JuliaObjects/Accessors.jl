@@ -208,6 +208,10 @@ end
     test_getset_laws((@optic _ .- 1), [1, 2], [3., 4.], [5, 6])
     test_getset_laws((@optic 1 .- _), [1, 2], [3., 4.], [5, 6])
     test_getset_laws((@optic [10, 20] .* first.(_)), [[1,2], [1,2,3]], [3., 4.], [5, 6])
+
+    @test (@set A .= 1) == [1, 1, 1]
+    @test (@set A[1] .= 1) == [[1,1], [1,2,3], [1,2,3,4]]
+    @test (@set A[1] .= [10, 20]) == [[10,20], [1,2,3], [1,2,3,4]]
 end
 
 @testset "math" begin
