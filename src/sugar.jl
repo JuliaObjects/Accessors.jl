@@ -484,7 +484,7 @@ function show_optic(io, optic)
     if get(io, :compact, false)
         print(io, shortstr)
     else
-        print(io, "(@optic ", shortstr, ")")
+        print(io, "(@o ", shortstr, ")")
     end
 end
 
