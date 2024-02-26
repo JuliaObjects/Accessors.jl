@@ -89,6 +89,10 @@ end
 
 set(obj, o::Base.Fix1{typeof(map)}, val) = map((ob, v) -> set(ob, o.x, v), obj, val)
 
+set(obj, o::Base.BroadcastFunction, val) = set.(obj, Ref(o.f), val)
+set(obj, o::Base.Fix1{<:Base.BroadcastFunction}, val) = set.(obj, Base.Fix1.(Ref(o.f.f), o.x), val)
+set(obj, o::Base.Fix2{<:Base.BroadcastFunction}, val) = set.(obj, Base.Fix2.(Ref(o.f.f), o.x), val)
+
 set(obj, o::Base.Fix1{typeof(filter)}, val) = @set obj[findall(o.x, obj)] = val
 modify(f, obj, o::Base.Fix1{typeof(filter)}) = @modify(f, obj[findall(o.x, obj)])
 delete(obj, o::Base.Fix1{typeof(filter)}) = filter(!o.x, obj)

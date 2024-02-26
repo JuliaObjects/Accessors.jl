@@ -157,6 +157,12 @@ function lower_index(collection::Symbol, index, dim)
     )
 end
 
+_esc_and_dot_name_to_broadcasted(f) = esc(f)
+_esc_and_dot_name_to_broadcasted(f::Symbol) =
+    startswith(string(f), '.') ?
+        :(Base.BroadcastFunction($(esc(Symbol(string(f)[2:end]))))) :
+        esc(f)
+
 function parse_obj_optics(ex)
     dollar_exprs = foldtree([], ex) do exs, x
         x isa Expr && x.head == :$ ?
@@ -206,9 +212,15 @@ function parse_obj_optics(ex)
         obj, frontoptic = parse_obj_optics(front)
         optic = :($PropertyLens{$(QuoteNode(property))}())
     elseif @capture(ex, f_(front_))
+        # regular function call
         obj, frontoptic = parse_obj_optics(front)
-        optic = esc(f) # function optic
+        optic = _esc_and_dot_name_to_broadcasted(f)  # broadcasted operators like .- fall here
+    elseif @capture(ex, f_.(front_))
+        # broadcasted function call (not operator)
+        obj, frontoptic = parse_obj_optics(front)
+        optic = :(Base.BroadcastFunction($(esc(f))))
     elseif @capture(ex, f_(args__))
+        # function call with multiple arguments
         args_contain_under = map(args) do arg
             foldtree((yes, x) -> yes || x === :_, false, arg)
         end
@@ -219,12 +231,13 @@ function parse_obj_optics(ex)
         end
         length(args) == 2 || error("Only 1- and 2-argument functions are supported")
         sum(args_contain_under) == 1 || error("Only a single function argument can be the optic target")
+        f = _esc_and_dot_name_to_broadcasted(f)  # multi-arg broadcasted fall here, no matter if regular function or operator
         if args_contain_under[1]
             obj, frontoptic = parse_obj_optics(args[1])
-            optic = :(Base.Fix2($(esc(f)), $(esc(args[2]))))
+            optic = :(Base.Fix2($f, $(esc(args[2]))))
         elseif args_contain_under[2]
             obj, frontoptic = parse_obj_optics(args[2])
-            optic = :(Base.Fix1($(esc(f)), $(esc(args[1]))))
+            optic = :(Base.Fix1($f, $(esc(args[1]))))
         end
     else
         obj = esc(ex)
