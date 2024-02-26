@@ -274,12 +274,6 @@ function get_update_op(sym::Symbol)
     Symbol(s[1:end-1])
 end
 
-struct _UpdateOp{OP,V}
-    op::OP
-    val::V
-end
-(u::_UpdateOp)(x) = u.op(x, u.val)
-
 """
     setmacro(optictransform, ex::Expr; overwrite::Bool=false)
 
@@ -313,7 +307,7 @@ function setmacro(optictransform, ex::Expr; overwrite::Bool=false)
         :($set($obj, ($optictransform)($optic), $val))
     else
         op = get_update_op(ex.head)
-        f = :($_UpdateOp($op,$val))
+        f = :($Base.Fix2($op, $val))
         :($modify($f, $obj, ($optictransform)($optic)))
     end
     return _macro_expression_result(obj, ret; overwrite=overwrite)
