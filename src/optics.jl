@@ -34,6 +34,8 @@ function modify end
 
 Replace a part according to `optic` of `obj` by `val`.
 
+For a callable `optic`, this law defines the `set` operation: `optic(set(obj, optic, val)) == val` (for an appropriate notion of equality).
+
 ```jldoctest
 julia> using Accessors
 
@@ -41,6 +43,11 @@ julia> obj = (a=1, b=2); lens=@optic _.a; val = 100;
 
 julia> set(obj, lens, val)
 (a = 100, b = 2)
+
+julia> lens = Elements()
+
+julia> set(obj, lens, val)
+(a = 100, b = 100)
 ```
 See also [`modify`](@ref).
 """
@@ -51,14 +58,29 @@ function set end
 
 Delete a part according to `optic` of `obj`.
 
+Note that `optic(delete(obj, optic))` can still have a valid value: for example, when deleting an element from a `Tuple` or `Vector`.
+
 ```jldoctest
 julia> using Accessors
 
 julia> obj = (a=1, b=2); lens=@optic _.a;
 
-julia> delete(obj, lens)
+julia> obj_d = delete(obj, lens)
 (b = 2,)
+
+julia> lens(obj_d)
+# error
+
+
+julia> obj = (1, 2); lens=first;
+
+julia> obj_d = delete(obj, lens)
+(2,)
+
+julia> lens(obj_d)
+2
 ```
+See also [`set`](@ref), [`insert`](@ref).
 """
 function delete end
 
@@ -66,6 +88,8 @@ function delete end
     insert(obj, optic, val)
 
 Insert a part according to `optic` into `obj` with the value `val`.
+
+For a callable `optic`, this law defines the `insert` operation: `optic(insert(obj, optic, val)) == val` (for an appropriate notion of equality).
 
 ```jldoctest
 julia> using Accessors
@@ -75,7 +99,7 @@ julia> obj = (a=1, b=2); lens=@optic _.c; val = 100;
 julia> insert(obj, lens, val)
 (a = 1, b = 2, c = 100)
 ```
-See also [`set`](@ref).
+See also [`set`](@ref), [`delete`](@ref).
 """
 function insert end
 
