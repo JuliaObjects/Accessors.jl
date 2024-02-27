@@ -49,7 +49,7 @@ set(obj, ::typeof(Base.splat(=>)), val::Pair) = @set Tuple(obj) = Tuple(val)
 
 set(obj, ::typeof(getproperties), val::NamedTuple) = setproperties(obj, val)
 
-set(x::Union{Tuple,NamedTuple}, ::typeof(propertynames), names) = set(x, ::typeof(propertynames), Tuple(names))
+set(x::Union{Tuple,NamedTuple}, ::typeof(propertynames), names) = set(x, propertynames, Tuple(names))
 function set(x::Union{Tuple,NamedTuple}, ::typeof(propertynames), names::Tuple)
     length(names) == length(x) || throw(ArgumentError("Got $(length(names)) for $(length(x)) properties"))
     if eltype(names) === Symbol
