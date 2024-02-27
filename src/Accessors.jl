@@ -26,7 +26,7 @@ include("../ext/AccessorsLinearAlgebraExt.jl")
 include("../ext/AccessorsTestExt.jl")
 
 function __init__()
-    if VERSION >= 1.9
+    if VERSION >= v"1.9"
         Base.Experimental.register_error_hint(MethodError) do io, exc, argtypes, kwargs
             if exc.f === insert && argtypes[2] <: Accessors.DynamicIndexLens
                 println(io)
