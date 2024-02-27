@@ -34,7 +34,7 @@ function __init__()
                    `insert` with a `DynamicIndexLens` is not supported, this can happen when you write
                    code such as `@insert a[end] = 1` or `@insert a[begin] = 1` since `end` and `begin`
                    are functions of `a`. The reason we do not support these with `insert` is that 
-                   Accessors.jl tries to guarentee that `f(insert(obj, f, val)) == val`, but 
+                   Accessors.jl tries to guarantee that `f(insert(obj, f, val)) == val`, but 
                    `@insert a[end] = 1` and `@insert a[begin] = 1` will violate that invariant.
                    
                    Instead, you can use `first` and `last` directly, e.g.
