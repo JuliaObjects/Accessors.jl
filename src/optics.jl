@@ -44,7 +44,7 @@ julia> obj = (a=1, b=2); lens=@optic _.a; val = 100;
 julia> set(obj, lens, val)
 (a = 100, b = 2)
 
-julia> lens = Elements()
+julia> lens = Elements();
 
 julia> set(obj, lens, val)
 (a = 100, b = 100)
@@ -69,7 +69,7 @@ julia> obj_d = delete(obj, lens)
 (b = 2,)
 
 julia> lens(obj_d)
-# error
+ERROR: type NamedTuple has no field a
 
 
 julia> obj = (1, 2); lens=first;

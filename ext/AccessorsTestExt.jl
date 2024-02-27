@@ -22,7 +22,7 @@ function Accessors.test_modify_law(f, lens, obj; cmp=(==))
     obj_modify = modify(f, obj, lens)
     old_vals = getall(obj, lens)
     vals = map(f, old_vals)
-    setall(obj, lens, vals)
+    obj_setfget = setall(obj, lens, vals)
     @test cmp(obj_modify, obj_setfget)
 end
 
