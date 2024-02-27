@@ -383,10 +383,11 @@ julia> t = ("one", "two")
 julia> set(t, (@o _[1]), "1")
 ("1", "two")
 
-julia> l = @optic _[∗].a
+julia> l = @o _[∗].a
+(@o _[∗].a)
 
 julia> modify(x -> x + 1, ((a=1,), (a=2,)), l)
-((a=2,), (a=3,))
+((a = 2,), (a = 3,))
 ```
 
 See also [`@set`](@ref).
