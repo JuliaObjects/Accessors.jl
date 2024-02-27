@@ -12,7 +12,7 @@ julia> struct T;a;b; end
 julia> obj = T("AA", "BB");
 
 julia> lens = @optic _.a
-(@optic _.a)
+(@o _.a)
 
 julia> lens(obj)
 "AA"
@@ -36,7 +36,7 @@ julia> v = (a = 1:3, )
 (a = 1:3,)
 
 julia> l = opcompose(PropertyLens(:a), IndexLens(1))
-(@optic _.a[1])
+(@o _.a[1])
 
 julia> l ≡ @optic _.a[1]   # equivalent to macro form
 true
