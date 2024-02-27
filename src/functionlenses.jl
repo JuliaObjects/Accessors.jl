@@ -49,14 +49,16 @@ set(obj, ::typeof(Base.splat(=>)), val::Pair) = @set Tuple(obj) = Tuple(val)
 
 set(obj, ::typeof(getproperties), val::NamedTuple) = setproperties(obj, val)
 
-set(x::Union{Tuple,NamedTuple}, ::typeof(propertynames), names) =
+function set(x::Union{Tuple,NamedTuple}, ::typeof(propertynames), names)
+    length(names) == length(x) || throw(ArgumentError("Got $(length(names)) for $(length(x)) properties"))
     if eltype(names) === Symbol
         NamedTuple{names}(Tuple(x))
     elseif eltype(names) <: Integer && names == ntuple(identity, length(names))
         Tuple(x)
     else
-        error("invalid property names: $names")
+        throw(ArgumentError("invalid property names: $names"))
     end
+end
 
 ################################################################################
 ##### eltype

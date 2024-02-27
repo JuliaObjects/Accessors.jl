@@ -110,6 +110,15 @@ end
 
     test_getset_laws(Accessors.getproperties, 1+2im, (im=4., re=3.), (re=5, im=6); cmp=cmp)
 
+    @testset for obj in [(10, 20.), (x=10, y=20.)]
+        @test (@set propertynames(obj) == 1:2) === obj
+        @test (@set propertynames(obj) == (:a, :b)) === (a=10, b=20.)
+        @test_throws Exception (@set propertynames(obj) == 1:3)
+        @test_throws Exception (@set propertynames(obj) == (2, 3))
+        @test_throws Exception (@set propertynames(obj) == (:a, :b, :c))
+        @test_throws Exception (@set propertynames(obj) == (1, :b))
+        @test_throws Exception (@set propertynames(obj) == ("a", "b"))
+    end
     test_getset_laws(propertynames, (10, 20.), (:a, :b), (1, 2); cmp=(===))
     test_getset_laws(propertynames, (10, 20.), (1, 2), (:a, :b); cmp=(===))
     test_getset_laws(propertynames, (a=10, b=20.), (:x, :y), (1, 2); cmp=(===))
