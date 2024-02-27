@@ -7,11 +7,7 @@ using Markdown: Markdown, @md_str, term
 if !isdefined(Base, :get_extension)
     using Requires
 end
-@static if !isdefined(Base, :get_extension)
-    function __init__()
-        @require StaticArrays = "90137ffa-7385-5640-81b9-e52037218182" include("../ext/AccessorsStaticArraysExt.jl")
-    end
-end
+
 
 include("setindex.jl")
 include("optics.jl")
@@ -26,7 +22,10 @@ include("../ext/AccessorsLinearAlgebraExt.jl")
 include("../ext/AccessorsTestExt.jl")
 
 function __init__()
-    if VERSION >= v"1.9"
+    @static if !isdefined(Base, :get_extension)
+        @require StaticArrays = "90137ffa-7385-5640-81b9-e52037218182" include("../ext/AccessorsStaticArraysExt.jl")
+    end
+    if isdefined(Base.Experimental, :register_error_hint)
         Base.Experimental.register_error_hint(MethodError) do io, exc, argtypes, kwargs
             if exc.f === insert && argtypes[2] <: Accessors.DynamicIndexLens
                 println(io)
@@ -34,7 +33,7 @@ function __init__()
                    `insert` with a `DynamicIndexLens` is not supported, this can happen when you write
                    code such as `@insert a[end] = 1` or `@insert a[begin] = 1` since `end` and `begin`
                    are functions of `a`. The reason we do not support these with `insert` is that 
-                   Accessors.jl tries to guarantee that `f(insert(obj, f, val)) == val`, but 
+                   Accessors.jl tries to guarentee that `f(insert(obj, f, val)) == val`, but 
                    `@insert a[end] = 1` and `@insert a[begin] = 1` will violate that invariant.
                    
                    Instead, you can use `first` and `last` directly, e.g.
