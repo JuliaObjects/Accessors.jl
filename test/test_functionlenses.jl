@@ -198,6 +198,7 @@ end
 end
 
 @testset "broadcast" begin
+    # in optic definiton
     @test (@optic exp.(_)) === Base.BroadcastFunction(exp)
     @test (@optic .-_) === Base.BroadcastFunction(-)
     @test (@optic 1 .+ _) === Base.Fix1(Base.BroadcastFunction(+), 1)
@@ -209,9 +210,14 @@ end
     test_getset_laws((@optic 1 .- _), [1, 2], [3., 4.], [5, 6])
     test_getset_laws((@optic [10, 20] .* first.(_)), [[1,2], [1,2,3]], [3., 4.], [5, 6])
 
+    # in @set update operation
     @test (@set A .= 1) == [1, 1, 1]
     @test (@set A[1] .= 1) == [[1,1], [1,2,3], [1,2,3,4]]
     @test (@set A[1] .= [10, 20]) == [[10,20], [1,2,3], [1,2,3,4]]
+
+    # broadcasting in both optic and set, with a user-defined function
+    @accessor f(x) = x+1
+    @test (@set f.(first.(A)) .= [10, 20]) == [[9,19], [1,2,3], [1,2,3,4]]
 end
 
 @testset "math" begin
