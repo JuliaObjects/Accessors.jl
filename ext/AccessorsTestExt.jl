@@ -16,6 +16,8 @@ function Accessors.test_getset_laws(lens, obj, val1, val2; cmp=(==))
     obj12 = set(obj1, lens, val2)
     obj2 = set(obj12, lens, val2)
     @test cmp(obj12, obj2)
+
+    Accessors.test_modify_law(identity, lens, obj; cmp)
 end
 
 function Accessors.test_modify_law(f, lens, obj; cmp=(==))
@@ -48,6 +50,8 @@ function Accessors.test_getsetall_laws(optic, obj, vals1, vals2; cmp=(==))
     obj12 = setall(obj1, optic, vals2)
     obj2 = setall(obj12, optic, vals2)
     @test obj12 == obj2
+
+    Accessors.test_modify_law(identity, optic, obj; cmp)
 end
 
 end
