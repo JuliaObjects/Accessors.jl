@@ -94,7 +94,7 @@ julia> la = @optic _.a
        lb = @optic _.b
        lc = @optic _.c
        lens = la ⨟ lb ⨟ lc
-(@optic _.c) ∘ (@optic _.a.b)
+(@o _.c) ∘ (@o _.a.b)
 
 julia> lens(obj)
 1
@@ -210,7 +210,7 @@ end
     Elements
 
 Access all elements of a collection that implements `map`.
-An alias for `Elements()` is available as `∗` (`\\ast`). This optic can also be written as `@optic _[∗]`.
+An alias for `Elements()` is available as `∗` (`\\ast`). This optic can also be written as `@o _[∗]`.
 
 ```jldoctest
 julia> using Accessors
@@ -297,7 +297,7 @@ end
     Properties()
 
 Access all properties of an object.
-An alias for `Properties()` is available as `∗ₚ` (`\\ast\\_p`). This optic can also be written as `@optic _[∗ₚ]`.
+An alias for `Properties()` is available as `∗ₚ` (`\\ast\\_p`). This optic can also be written as `@o _[∗ₚ]`.
 
 ```jldoctest
 julia> using Accessors
