@@ -1,7 +1,7 @@
 module TestExtensions
 using Test
 using Accessors
-using Accessors: test_getset_laws
+using Accessors: test_getset_laws, test_insertdelete_laws
 using AxisKeys
 using IntervalSets
 using StaticArrays, StaticNumbers
@@ -122,6 +122,9 @@ end
     end
     test_getset_laws(SVector, (0, 1), SVector('x', 'y'), SVector(1, 2); cmp=cmp)
     test_getset_laws(MVector, (0, 1), MVector('x', 'y'), MVector(1, 2); cmp=cmp)
+
+    test_insertdelete_laws((@optic _[1]), SVector(1), 2)
+    test_insertdelete_laws((@optic _[2]), SVector(1), 2)
 end
 
 
@@ -139,6 +142,7 @@ VERSION >= v"1.9-" && @testset "StructArrays" begin
     @test sb.:2 === 10:12
     ss = @delete sb.:2
     @test ss.:1 === s.:1
+    test_insertdelete_laws((@optic _.:2), s, 10:12)
 
     s = StructArray(a=[1, 2, 3])
     sb = @insert StructArrays.components(s).b = 10:12
@@ -161,6 +165,7 @@ VERSION >= v"1.9-" && @testset "StructArrays" begin
     @test @insert(s.b = 10:11)::StructArray == [(a=(x=1, y=:abc), b=10), (a=(x=2, y=:def), b=11)]
     @test @insert(s.a.z = 10:11)::StructArray == [(a=(x=1, y=:abc, z=10),), (a=(x=2, y=:def, z=11),)]
     @test @delete(s.a.y)::StructArray == [(a=(x=1,),), (a=(x=2,),)]
+    test_insertdelete_laws((@optic _.a.z), s, ["a", "b"])
 
     s = StructArray([S(1, 2), S(3, 4)])
     @test @inferred(set(s, PropertyLens(:a), 10:11))::StructArray == StructArray([S(10, 2), S(11, 4)])

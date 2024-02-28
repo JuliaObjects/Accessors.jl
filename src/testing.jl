@@ -3,3 +3,4 @@
 function test_getset_laws end
 function test_modify_law end
 function test_getsetall_laws end
+function test_insertdelete_laws end
