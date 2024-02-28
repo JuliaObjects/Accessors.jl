@@ -217,7 +217,7 @@ end
 
     # broadcasting in both optic and set, with a user-defined function
     @accessor f(x) = x+1
-    @test (@set f.(first.(A)) .= [10, 20]) == [[9,19], [1,2,3], [1,2,3,4]]
+    @test (@set f.(first.(A)) .= [10, 20, 30]) == [[9,2], [19,2,3], [29,2,3,4]]
 end
 
 @testset "math" begin
