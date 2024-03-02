@@ -69,7 +69,7 @@ function setall(obj, ::Properties, vs)
 end
 setall(obj::Tuple, ::Properties, vs) = setproperties(obj, vs)
 setall(obj::NamedTuple{NS}, ::Elements, vs) where {NS} = NamedTuple{NS}(NTuple{length(NS)}(vs))
-setall(obj::NTuple{N, Any}, ::Elements, vs) where {N} = (@assert length(vs) == N; NTuple{N}(vs))
+setall(obj::NTuple{N, Any}, ::Elements, vs) where {N} = (@assert length(vs) == N; ntuple(i -> vs[i], Val(N)))
 setall(obj::AbstractArray, ::Elements, vs::AbstractArray) = (@assert length(obj) == length(vs); reshape(vs, size(obj)))
 setall(obj::AbstractArray, ::Elements, vs) = setall(obj, Elements(), collect(vs))
 setall(obj::Set, ::Elements, vs) = Set(vs)
