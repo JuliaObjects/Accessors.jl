@@ -160,11 +160,12 @@ end
 @inline modify(f, obj, optic::ComposedOptic) = _modifyc(f, obj, decompose(optic))
 
 @inline _modifyc(f, obj, os::Tuple{}) = f(obj)
-@inline _modifyc(f, obj, os::Tuple{Any}) = modify(f, obj, only(os))
-@inline _modifyc(f, obj, os::Tuple) =
-    modify(obj, last(os)) do o1
-        _modifyc(f, o1, Base.front(os))
-    end
+for N in [1:10; :(<: Any)]
+    @eval @inline _modifyc(f, obj, os::NTuple{$N,Any}) =
+        modify(obj, last(os)) do o1
+            _modifyc(f, o1, Base.front(os))
+        end
+end
 
 function delete(obj, optic::ComposedOptic)
     modify(obj, optic.inner) do inner_obj
