@@ -61,7 +61,7 @@ getall(obj::AbstractString, ::Elements) = collect(obj)
 getall(obj, ::Elements) = error("Elements() not supported for $(typeof(obj))")
 getall(obj, ::Properties) = getproperties(obj) |> values
 getall(obj, o::If) = o.modify_condition(obj) ? (obj,) : ()
-getall(obj, o) = OpticStyle(o) == SetBased() ? (o(obj),) : error("`getall` not supported for $o")
+getall(obj, o) = (o(obj),)
 
 function setall(obj, ::Properties, vs)
     names = propertynames(obj)
@@ -84,7 +84,7 @@ function setall(obj, o::If, vs)
         obj
     end
 end
-setall(obj, o, vs) = OpticStyle(o) == SetBased() ? set(obj, o, only(vs)) : error("`setall` not supported for $o")
+setall(obj, o, vs) = set(obj, o, only(vs))
 
 
 # implementations for composite optics

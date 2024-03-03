@@ -130,49 +130,12 @@ const ComposedOptic{Outer,Inner} = ComposedFunction{Outer,Inner}
 outertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Outer
 innertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Inner
 
-# TODO better name
-# also better way to organize traits will
-# probably only emerge over time
-#
-# TODO
-# There is an inference regression as of Julia v1.7.0
-# if recursion is combined with trait based dispatch
-# https://github.com/JuliaLang/julia/issues/43296
-
-abstract type OpticStyle end
-struct ModifyBased <: OpticStyle end
-struct SetBased <: OpticStyle end
-# Base.@pure OpticStyle(obj) = OpticStyle(typeof(obj))
-function OpticStyle(optic::T) where {T}
-    OpticStyle(T)
-end
-# defining lenses should be very lightweight
-# e.g. only a single `set` implementation
-# so we choose this as the default trait
-OpticStyle(::Type{T}) where {T} = SetBased()
-
-function OpticStyle(::Type{ComposedOptic{O,I}}) where {O,I}
-    composed_optic_style(OpticStyle(O), OpticStyle(I))
-end
-composed_optic_style(::SetBased, ::SetBased) = SetBased()
-composed_optic_style(::ModifyBased, ::SetBased) = ModifyBased()
-composed_optic_style(::SetBased, ::ModifyBased) = ModifyBased()
-composed_optic_style(::ModifyBased, ::ModifyBased) = ModifyBased()
-
 @inline function set(obj, optic::O, val) where {O}
-    _set(obj, optic, val, OpticStyle(O))
-end
-
-function _set(obj, optic, val, ::SetBased)
     inv_func = inverse(optic)
     if !(inv_func isa NoInverse)
         return inv_func(val)
     end
-    Optic = typeof(optic)
-    error("""
-    This should be unreachable. You probably need to overload
-    `Accessors.set(obj, ::$Optic, val)
-    """)
+    modify(Returns(val), obj, optic)
 end
 
 if VERSION < v"1.7"
@@ -184,39 +147,24 @@ else
     using Base: Returns
 end
 
-@inline function _set(obj, optic, val, ::ModifyBased)
-    modify(Returns(val), obj, optic)
-end
-
-@inline function _set(obj, optic::ComposedOptic, val, ::SetBased)
-    inner_obj = optic.inner(obj)
-    inner_val = set(inner_obj, optic.outer, val)
-    set(obj, optic.inner, inner_val)
-end
-
 @inline function modify(f, obj, optic::O) where {O}
-    _modify(f, obj, optic, OpticStyle(O))
-end
-
-function _modify(f, obj, optic, ::ModifyBased)
-    Optic = typeof(optic)
-    error("""
-          This should be unreachable. You probably need to overload:
-          `Accessors.modify(f, obj, ::$Optic)`
-          """)
-end
-
-function _modify(f, obj, optic::ComposedOptic, ::ModifyBased)
-    otr = optic.outer
-    inr = optic.inner
-    modify(obj, inr) do o1
-        modify(f, o1, otr)
-    end
-end
-
-@inline function _modify(f, obj, optic, ::SetBased)
     set(obj, optic, f(optic(obj)))
 end
+
+@inline function set(obj, optic::ComposedOptic, val)
+    optics = decompose(optic)
+    _modifyc(obj, Base.tail(optics)) do o1
+        set(o1, first(optics), val)
+    end
+end
+@inline modify(f, obj, optic::ComposedOptic) = _modifyc(f, obj, decompose(optic))
+
+@inline _modifyc(f, obj, os::Tuple{}) = f(obj)
+@inline _modifyc(f, obj, os::Tuple{Any}) = modify(f, obj, only(os))
+@inline _modifyc(f, obj, os::Tuple) =
+    modify(obj, last(os)) do o1
+        _modifyc(f, o1, Base.front(os))
+    end
 
 function delete(obj, optic::ComposedOptic)
     modify(obj, optic.inner) do inner_obj
@@ -249,7 +197,6 @@ julia> modify(x -> 2x, obj, Elements())
 ```
 """
 struct Elements end
-OpticStyle(::Type{<:Elements}) = ModifyBased()
 
 modify(f, obj, ::Elements) = map(f, obj)
 # sets and dicts don't support map(), but still have the concept of elements:
@@ -275,7 +222,6 @@ $EXPERIMENTAL
 struct If{C}
     modify_condition::C
 end
-OpticStyle(::Type{<:If}) = ModifyBased()
 
 function modify(f, obj, w::If)
     if w.modify_condition(obj)
@@ -338,7 +284,6 @@ julia> modify(x -> 2x, obj, Properties())
 Based on [`mapproperties`](@ref).
 """
 struct Properties end
-OpticStyle(::Type{<:Properties}) = ModifyBased()
 modify(f, o, ::Properties) = mapproperties(f, o)
 
 """
@@ -365,9 +310,8 @@ struct Recursive{Descent,Optic}
     descent_condition::Descent
     optic::Optic
 end
-OpticStyle(::Type{Recursive{D,O}}) where {D,O} = ModifyBased() # Is this a good idea?
 
-function _modify(f, obj, r::Recursive, ::ModifyBased)
+function modify(f, obj, r::Recursive)
     modify(obj, r.optic) do o
         if r.descent_condition(o)
             modify(f, o, r)
