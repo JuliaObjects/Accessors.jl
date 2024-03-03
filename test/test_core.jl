@@ -220,19 +220,9 @@ end
           ((@optic _.b.a.b[end]),     4.0),
           ((@optic _.b.a.b[end÷2+1]), 4.0),
          ]
-        if VERSION < v"1.7" || VERSION >= v"1.10-"
-            @inferred lens(obj)
-            @inferred set(obj, lens, val)
-            @inferred modify(identity, obj, lens)
-        else
-            @inferred lens(obj)
-            @inferred set(obj, lens, val)
-            @test_broken begin
-                # https://github.com/JuliaLang/julia/issues/43296
-                @inferred modify(identity, obj, lens)
-                true
-            end
-        end
+        @inferred lens(obj)
+        @inferred set(obj, lens, val)
+        @inferred modify(identity, obj, lens)
     end
 end
 

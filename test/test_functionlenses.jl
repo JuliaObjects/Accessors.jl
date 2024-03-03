@@ -391,4 +391,12 @@ end
     test_getset_laws(o2, x, 2, -3)
 end
 
+@testset "non-callable" begin
+    struct MyF end
+    Accessors.set(x, ::MyF, y) = y + 1
+    Accessors.modify(f, x, ::MyF) = f(x)
+    @test set(1, (@o _ + 2 |> MyF()), 3) == 2
+    @test modify(x -> 10x, 1, (@o _ + 2 |> MyF())) == 28
+end
+
 end # module
