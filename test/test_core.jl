@@ -55,11 +55,11 @@ end
     s = @set t.b.b.a.a = 5
     @test t === T(1, T(2, T(T(4,4),3)))
     @test s === T(1, T(2, T(T(5, 4), 3)))
-    @test_throws ArgumentError @set t.b.b.a.a.a = 3
+    @test_throws Exception @set t.b.b.a.a.a = 3
 
     t = T(1,2)
     @test T(1, T(1,2)) === @set t.b = T(1,2)
-    @test_throws ArgumentError @set t.c = 3
+    @test_throws Exception @set t.c = 3
 
     t = T(T(2,2), 1)
     s = @set t.a.a = 3

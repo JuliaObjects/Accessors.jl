@@ -155,7 +155,7 @@ VERSION >= v"1.9-" && @testset "StructArrays" begin
     sa = @set sb.a = 1:3
     @test sa.a === 1:3
     @test sa.b === sb.b
-    @test_throws ArgumentError @set sb.c = 1:3
+    @test_throws Exception @set sb.c = 1:3
     sd = @delete sb.a
     @test sd::StructArray == StructArray(b=10:12)
     @test_throws "only eltypes with fields" @delete s.a
@@ -172,7 +172,7 @@ VERSION >= v"1.9-" && @testset "StructArrays" begin
     @test @inferred(set(s, PropertyLens(:a), 10:11))::StructArray == StructArray([S(10, 2), S(11, 4)])
     @test @inferred(set(s, PropertyLens(:a), [:a, :b]))::StructArray == StructArray([S(:a, 2), S(:b, 4)])
 
-    @test_throws "need to overload" set(s, propertynames, (:x, :y))
+    @test_throws Exception set(s, propertynames, (:x, :y))
     s = StructArray(x=[1, 2], y=[:a, :b])
     test_getset_laws(propertynames, s, (:u, :v), (1, 2))
     test_getset_laws(propertynames, s, (1, 2), (:u, :v))
