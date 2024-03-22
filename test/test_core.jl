@@ -223,7 +223,7 @@ end
         @test l1 != l2
     end
 
-    # equality with non-equal range types (#165)
+    # equality with non-equal range types (Setfield #165)
     for (l1, l2) ∈ [
         @optic(_[1:10]) => @optic(_[Base.OneTo(10)]),
         @optic(_.a[1:10]) => @optic(_.a[Base.OneTo(10)]),
