@@ -9,7 +9,16 @@ using CompositionsBase
 using Base: getproperty
 using Base
 
-import Base: ==
+import Base: ==, hash
+
+function make_salt(s64::UInt64)::UInt
+    # used for faster hashes. See https://github.com/jw3126/Setfield.jl/pull/162
+    if UInt === UInt64
+        return s64
+    else
+        return UInt32(s64 >> 32)^UInt32(s64 & 0x00000000ffffffff)
+    end
+end
 
 const EXPERIMENTAL = """This function/type is experimental. It can be changed or deleted at any point without warning"""
 
@@ -131,6 +140,11 @@ opcompose
 const ComposedOptic{Outer,Inner} = ComposedFunction{Outer,Inner}
 outertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Outer
 innertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Inner
+
+const SALT_COMPOSEDOPTIC = make_salt(0xcf7322dcc2129a31)
+Base.hash(l::ComposedOptic, h::UInt) = hash(l.outer, hash(l.inner, SALT_COMPOSEDOPTIC + h))
+
+Base.:(==)(l::ComposedOptic, r::ComposedOptic) = l.outer == r.outer && l.inner == r.inner
 
 # TODO better name
 # also better way to organize traits will
@@ -490,14 +504,5 @@ Broadcast.broadcastable(
 
 Base.:(!)(f::Union{PropertyLens,IndexLens,DynamicIndexLens}) = (!) ∘ f
 
-
-function make_salt(s64::UInt64)::UInt
-    # used for faster hashes. See https://github.com/jw3126/Setfield.jl/pull/162
-    if UInt === UInt64
-        return s64
-    else
-        return UInt32(s64 >> 32)^UInt32(s64 & 0x00000000ffffffff)
-    end
-end
 const SALT_INDEXLENS = make_salt(0x8b4fd6f97c6aeed6)
 Base.hash(l::IndexLens, h::UInt) = hash(l.indices, SALT_INDEXLENS + h)
