@@ -187,6 +187,71 @@ Base.show(io::IO, ::MIME"text/plain", ::LensIfTextPlain) =
     end
 end
 
+@testset "equality & hashing" begin
+    # singletons (identity and property optic) are egal
+    for (l1, l2) ∈ [
+        @optic(_) => @optic(_),
+        @optic(_.a) => @optic(_.a),
+    ]
+        @test l1 === l2
+        @test l1 == l2
+        @test hash(l1) == hash(l2)
+    end
+
+    # composite and index optics are structurally equal
+    for (l1, l2) ∈ [
+        @optic(_[1]) => @optic(_[1]),
+        @optic(_.a[2]) => @optic(_.a[2]),
+        @optic(_.a.b[3]) => @optic(_.a.b[3]),
+        @optic(_[1:10]) => @optic(_[1:10]),
+        @optic(_.a[2:20]) => @optic(_.a[2:20]),
+        @optic(_.a.b[3:30]) => @optic(_.a.b[3:30]),
+    ]
+        @test l1 == l2
+        @test hash(l1) == hash(l2)
+    end
+
+    # inequality
+    for (l1, l2) ∈ [
+        @optic(_[1]) => @optic(_[2]),
+        @optic(_.a[1]) => @optic(_.a[2]),
+        @optic(_.a[1]) => @optic(_.b[1]),
+        @optic(_[1:10]) => @optic(_[2:20]),
+        @optic(_.a[1:10]) => @optic(_.a[2:20]),
+        @optic(_.a[1:10]) => @optic(_.b[1:10]),
+    ]
+        @test l1 != l2
+    end
+
+    # equality with non-equal range types (Setfield #165)
+    for (l1, l2) ∈ [
+        @optic(_[1:10]) => @optic(_[Base.OneTo(10)]),
+        @optic(_.a[1:10]) => @optic(_.a[Base.OneTo(10)]),
+        @optic(_.a.b[1:10]) => @optic(_.a.b[Base.OneTo(10)]),
+        @optic(_.a[Base.StepRange(1, 1, 5)].b[1:10]) => @optic(_.a[1:5].b[Base.OneTo(10)]),
+        @optic(_.a.b[1:3]) => @optic(_.a.b[[1, 2, 3]]),
+    ]
+        @test l1 == l2
+        @test hash(l1) == hash(l2)
+    end
+
+    # Hash property: equality implies equal hashes, or in other terms:
+    # optics either have equal hashes or are unequal
+    # Because collisions can occur theoretically (though unlikely), this is a property test,
+    # not a unit test.
+    random_optics = (@optic(_.a[rand(Int)]) for _ in 1:1000)
+    @test all((hash(l2) == hash(l1)) || (l1 != l2)
+              for (l1, l2) in zip(random_optics, random_optics))
+
+    # Optics should hash differently from the underlying tuples, to avoid confusion.
+    # To account for potential collisions, we check that the property holds with high
+    # probability.  
+    @test all(hash(@optic(_[i])) != hash((i,)) for i = 1:1000)
+
+    # Same for tuples of tuples (√(1000) ≈ 32).
+    @test all(hash(@optic(_[i][j])) != hash(((i,), (j,))) for i = 1:32, j = 1:32)
+end
+
 @testset "type stability" begin
     o1 = 2
     o22 = 2
