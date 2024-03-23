@@ -249,7 +249,7 @@ end
     @test all(hash(@optic(_[i])) != hash((i,)) for i = 1:1000)
 
     # Same for tuples of tuples (√(1000) ≈ 32).
-    @test count(hash(@optic(_[i][j])) != hash(((i,), (j,))) for i = 1:32, j = 1:32) > 900
+    @test all(hash(@optic(_[i][j])) != hash(((i,), (j,))) for i = 1:32, j = 1:32)
 end
 
 @testset "type stability" begin
