@@ -40,6 +40,7 @@ Markdown = "1"
 Requires = "0.5, 1.0"
 StaticArrays = "1"
 StructArrays = "0.6"
+Unitful = "1"
 julia = "1.6"
 
 [extras]
