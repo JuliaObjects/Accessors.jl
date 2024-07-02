@@ -493,11 +493,22 @@ IndexLens(::Tuple{Properties}) = Properties()
 ### nice show() for optics
 _shortstring(prev, o::PropertyLens{field}) where {field} = "$prev.$field"
 _shortstring(prev, o::IndexLens) ="$prev[$(join(repr.(o.indices), ", "))]"
-_shortstring(prev, o::Function) = "$o($prev)"
-_shortstring(prev, o::Base.Fix1) = "$(o.f)($(o.x), $prev)"
-_shortstring(prev, o::Base.Fix2) = "$(o.f)($prev, $(o.x))"
+_shortstring(prev, o::Function) = _isoperator(o) ? "$o$prev" : "$o($prev)"
+_shortstring(prev, o::Base.Fix1) = _isoperator(o.f) ? "$(o.x) $(o.f) $prev" : "$(o.f)($(o.x), $prev)"
+_shortstring(prev, o::Base.Fix2) = _isoperator(o.f) ? "$prev $(o.f) $(o.x)" : "$(o.f)($prev, $(o.x))"
 _shortstring(prev, o::Elements) = "$prev[∗]"
 _shortstring(prev, o::Properties) = "$prev[∗ₚ]"
+
+# can f be stringfied using the operator (infix) syntax?
+# otherwise uses regular function call syntax
+_isoperator(f::Function) = Base.isoperator(nameof(f))
+_isoperator(f) = false
+
+# does o need parens when nested in another such o?
+# let's be conservative and always put parens around operators-in-operators
+_need_parens(o::Base.Fix1) = _isoperator(o.f)
+_need_parens(o::Base.Fix2) = _isoperator(o.f)
+_need_parens(o) = _isoperator(o)
 
 function show_optic(io, optic)
     opts = deopcompose(optic)
@@ -507,7 +518,13 @@ function show_optic(io, optic)
         show(io, opcompose(outer...))
         print(io, " ∘ ")
     end
-    shortstr = reduce(_shortstring, inner; init="_")
+    shortstr = reduce(inner; init=("_", false)) do (prev, need_parens_prev), o
+        # if _need_parens is true for this o and the one before, wrap the previous one in parentheses
+        if need_parens_prev && _need_parens(o)
+            prev = "($prev)"
+        end
+        _shortstring(prev, o), _need_parens(o)
+    end |> first
     if get(io, :compact, false)
         print(io, shortstr)
     else
