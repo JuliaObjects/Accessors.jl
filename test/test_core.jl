@@ -462,6 +462,8 @@ end
 @testset "full and compact show" begin
     @test sprint(show, (@optic _.a)) == "(@o _.a)"
     @test sprint(show, (@optic _.a + 1)) == "(@o _.a + 1)"
+    @test sprint(show, (@optic (_.a + 1) * 2)) == "(@o (_.a + 1) * 2)"
+    @test sprint(show, (@optic (_.a * 2) + 1)) == "(@o (_.a * 2) + 1)"
     @test sprint(show, (@optic log(_.a[2]))) == "(@o log(_.a[2]))"
     @test sprint(show, (@optic log(_).a[2])) == "(@o _.a[2]) ∘ log"  # could be shorter, but difficult to dispatch correctly without piracy
     @test sprint(show, (@optic log(_.a[2])); context=:compact => true) == "log(_.a[2])"
