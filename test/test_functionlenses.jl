@@ -257,7 +257,7 @@ end
             # invertible lenses below: no need for extensive testing, simply forwarded to InverseFunctions
             inv, +, exp, sqrt, @optic(2 + _), @optic(_ * 3), @optic(log(2, _)),
             # non-invertible lenses, indirectly forwarded to InverseFunctions
-            @optic(mod(_, 21)), @optic(fld(_, 3)), @optic(rem(_, 21)), @optic(div(_, 3)),
+            @optic(mod(_, 21)), @optic(fld(_, 3)), @optic(rem(_, 21)), @optic(div(_, 3)), @optic(mod(_, 1:22)),
         ]
         x = 5
         test_getset_laws(o, x, 10, 20; cmp=isapprox)
@@ -272,6 +272,7 @@ end
     @test set(0+0im, abs, 10) == 10
     @test set(0+1e-100im, abs, 10) == 10im
     @test_throws DomainError @set(abs(x) = -10)
+    test_getset_laws(abs2, 1+2im, 3, 4, cmp=(≈))
 
     # composition
     o = @optic 1/(1 + exp(-_))
@@ -362,6 +363,9 @@ end
     test_getset_laws(@optic(lstrip(==(' '), _)), " abc  ", "def", "")
     test_getset_laws(@optic(rstrip(==(' '), _)), " abc  ", "def", "")
     test_getset_laws(@optic(strip(==(' '), _)), " abc  ", "def", "")
+    test_getset_laws(chomp, "abc", "def", "")
+    test_getset_laws(chomp, "abc\n", "def", "")
+    test_getset_laws(chomp, "abc\n\n", "def\n", "")
 
     if VERSION >= v"1.8"
         test_getset_laws(@optic(chopprefix(_, "def")), "def abc", "xyz", "")
