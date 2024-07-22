@@ -392,6 +392,8 @@ The second constructor may not be type stable when `fieldname` is not a constant
 """
 @inline PropertyLens(fieldname) = PropertyLens{fieldname}()
 
+ConstructionBase.constructorof(::Type{PropertyLens{P}}) where {P} = PropertyLens{P}
+
 function (l::PropertyLens{field})(obj) where {field}
     getproperty(obj, field)
 end
