@@ -396,6 +396,27 @@ end
     @test_throws ArgumentError set(" abc def ", @optic(split(_, ' ')), [" ", "y"])
 end
 
+VERSION ≥ v"1.11" && @testset "AnnotatedStrings" begin
+    using Base: AnnotatedChar, AnnotatedString, annotations
+
+    s = Base.AnnotatedString("good bad", [(region=1:4, label=:sentiment, value=+1), (region=6:8, label=:sentiment, value=-1)])
+    
+    @test (@delete annotations(s))::String == "good bad"
+    
+    snew = @delete annotations(s)[2]
+    @test String(snew) == "good bad"
+    @test annotations(snew) == [(region=1:4, label=:sentiment, value=+1)]
+
+    snew = (@set Base.annotations(s)[1].region = 2:6)
+    @test String(snew) == "good bad"
+    @test annotations(snew) == [(region=2:6, label=:sentiment, value=+1), (region=6:8, label=:sentiment, value=-1)]
+
+    test_getset_laws((@o annotations(_)[2].region), s, 5:5, 1:3)
+    test_getset_laws((@o annotations(_)[2].label), s, :abc, :def)
+    test_getset_laws((@o annotations(_)[2].value), s, "sad", +2)
+    test_insertdelete_laws((@o annotations(_)[2]), s, (region=2:2, label=:mylabel, value=+1))
+end
+
 @testset "custom binary function" begin
     ↑(x, y) = x - y
     Accessors.set(x, f::Base.Fix1{typeof(↑)}, y) = f.x - y

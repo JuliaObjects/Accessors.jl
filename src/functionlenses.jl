@@ -204,3 +204,12 @@ function set(s::AbstractString, o::Base.Fix2{typeof(split), <:Union{AbstractChar
     any(c -> occursin(o.x, c), v) && throw(ArgumentError("split components cannot contain the delimiter $(repr(o.x))"))
     join(v, o.x)
 end
+
+if isdefined(Base, :AnnotatedString)
+    # 1.11+
+    using Base: AnnotatedString, annotations
+    set(s::AbstractString, ::typeof(annotations), anns) = AnnotatedString(s, anns)
+    set(s::AnnotatedString, ::typeof(annotations), anns) = AnnotatedString(s.string, anns)
+    delete(s::AnnotatedString, ::typeof(annotations)) = s.string
+    insert(s::AbstractString, ::typeof(annotations), anns) = AnnotatedString(s, anns)
+end
