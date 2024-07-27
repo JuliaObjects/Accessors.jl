@@ -121,4 +121,9 @@ end
     end
 end
 
+@testset "Cannot parse optic _ && true #160" begin
+    res = @test_throws "The && operator is not supported inside optics." Accessors.opticmacro(identity, :(_ && true))
+    res = @test_throws "The || operator is not supported inside optics." Accessors.opticmacro(identity, :(f(g(_) || a(x))))
+end
+
 end#module
