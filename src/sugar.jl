@@ -249,7 +249,7 @@ function parse_obj_optics(ex)
             optic = :(Base.Fix1($f, $(esc(args[1]))))
         end
     else
-        for bad_symbol in [Symbol("&&"), Symbol("||")]
+        for bad_symbol in (:&&, :||)
             if isexpr(ex, bad_symbol)
                 msg = """The $bad_symbol operator is not supported inside optics.
                       See also https://github.com/JuliaObjects/Accessors.jl/issues/160."
