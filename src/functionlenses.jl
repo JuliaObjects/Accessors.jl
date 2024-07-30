@@ -150,7 +150,10 @@ set(x::AbstractString, f::Base.Fix1{typeof(parse), Type{T}}, y::T) where {T} = s
 set(f, ::typeof(inverse), invf) = setinverse(f, invf)
 
 set(obj, ::typeof(Base.splat(atan)), val) = @set Tuple(obj) = hypot(obj...) .* sincos(val)
-set(obj, ::typeof(Base.splat(hypot)), val) = map(Base.Fix2(*, val / hypot(obj...)), obj)
+function set(obj, ::typeof(Base.splat(hypot)), val)
+    omul = iszero(val) ? one(hypot(obj...)) : hypot(obj...)
+    map(Base.Fix2(*, val / omul), obj)
+end
 
 ################################################################################
 ##### strings

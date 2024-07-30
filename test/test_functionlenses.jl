@@ -268,7 +268,9 @@ end
     @test @set(abs(-2u"m") = 1u"m") === -1u"m"
     @test @set(abs(x) = 10) ≈ 6 + 8im
     @test @set(angle(x) = π/2) ≈ 5im
+    @test set(0, abs, 0) == 0
     @test set(0, abs, 10) == 10
+    @test set(0+0im, abs, 0) == 0+0im
     @test set(0+0im, abs, 10) == 10
     @test set(0+1e-100im, abs, 10) == 10im
     @test_throws DomainError @set(abs(x) = -10)
@@ -300,7 +302,9 @@ end
     @test set((3, 4), norm, 10) === (6., 8.)
     @test set((a=3, b=4), norm, 10) === (a=6., b=8.)
     test_getset_laws(norm, (3, 4), 10, 12)
+    test_getset_laws(norm, (0, 0), 0, 0)
     test_getset_laws(Base.splat(hypot), (3, 4), 10, 12)
+    test_getset_laws(Base.splat(hypot), (0, 0), 0, 0.)
 
     test_getset_laws(!(@optic _.a), (a=true,), false, true)
     test_getset_laws(!(@optic _[1]), (a=true,), false, true)
