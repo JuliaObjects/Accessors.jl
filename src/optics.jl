@@ -9,6 +9,8 @@ using CompositionsBase
 using Base: getproperty
 using Base
 
+import Base: ==
+
 const EXPERIMENTAL = """This function/type is experimental. It can be changed or deleted at any point without warning"""
 
 """
@@ -418,6 +420,8 @@ Construct a lens for accessing an element of an object at `indices` via `[]`.
 """
 IndexLens(indices::Integer...) = IndexLens(indices)
 
+Base.:(==)(l::IndexLens, r::IndexLens) = l.indices == r.indices
+
 Base.@propagate_inbounds function (lens::IndexLens)(obj)
     getindex(obj, lens.indices...)
 end
@@ -487,7 +491,6 @@ Broadcast.broadcastable(
 ) = Ref(o)
 
 Base.:(!)(f::Union{PropertyLens,IndexLens,DynamicIndexLens}) = (!) ∘ f
-
 
 function make_salt(s64::UInt64)::UInt
     # used for faster hashes. See https://github.com/jw3126/Setfield.jl/pull/162
