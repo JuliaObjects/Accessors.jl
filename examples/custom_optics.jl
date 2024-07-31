@@ -56,7 +56,6 @@ end
 #
 using Accessors
 struct Keys end
-Accessors.OpticStyle(::Type{Keys}) = ModifyBased()
 Accessors.modify(f, obj, ::Keys) = mapkeys(f, obj)
 # It can be used as follows:
 obj = Dict("A" =>1, "B" => 2, "C" => 3)
