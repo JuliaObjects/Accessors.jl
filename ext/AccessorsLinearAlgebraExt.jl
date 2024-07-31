@@ -5,7 +5,7 @@ using LinearAlgebra: norm, normalize, diag, diagind
 
 set(arr, ::typeof(normalize), val) = norm(arr) * val
 function set(arr, ::typeof(norm), val)
-    omul = iszero(val) ? one(norm(arr)) : norm(arr)
+    omul = iszero(val) ? oneunit(norm(arr)) : norm(arr)
     map(Base.Fix2(*, val / omul), arr)
 end
 
