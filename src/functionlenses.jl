@@ -138,12 +138,14 @@ function set(x, ::typeof(abs), y)
     s = sign(x)
     iszero(s) ? y * one(x) : y * s
 end
+set(x, ::typeof(abs2), y) = set(x, abs, √y)
 
 set(x, ::typeof(mod2pi), y) = set(x, @optic(mod(_, 2π)), y)
 set(x, f::Base.Fix2{typeof(fld)}, y) = set(x, @optic(first(fldmod(_, f.x))), y)
 set(x, f::Base.Fix2{typeof(mod)}, y) = set(x, @optic(last(fldmod(_, f.x))), y)
 set(x, f::Base.Fix2{typeof(div)}, y) = set(x, @optic(first(divrem(_, f.x))), y)
 set(x, f::Base.Fix2{typeof(rem)}, y) = set(x, @optic(last(divrem(_, f.x))), y)
+set(x, f::Base.Fix2{typeof(mod),<:AbstractUnitRange}, y) = @set mod($x - first(f.x), length(f.x)) + first(f.x) = y
 
 set(x::AbstractString, f::Base.Fix1{typeof(parse), Type{T}}, y::T) where {T} = string(y)
 
@@ -171,6 +173,7 @@ delete(s::AbstractString, o::typeof(last)) = chop(s; head=0, tail=1)
 delete(s::AbstractString, o::Base.Fix2{typeof(first)}) = chop(s; head=o.x, tail=0)
 delete(s::AbstractString, o::Base.Fix2{typeof(last)}) = chop(s; head=0, tail=o.x)
 
+set(s::AbstractString, o::typeof(chomp), v) = endswith(s, '\n') ? v * '\n' : v
 if VERSION >= v"1.8"
     set(s::AbstractString, o::Base.Fix2{typeof(chopsuffix), <:AbstractString}, v) =
         endswith(s, o.x) ? v * o.x : v

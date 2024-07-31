@@ -263,6 +263,19 @@ end
         test_getset_laws(o, x, 10, 20; cmp=isapprox)
         @inferred set(x, o, 10)
     end
+
+    @testset for (rng, x, y) in [
+        (0:3, 2, 1),
+        (0:3, 32, 1),
+        (20:23, 2, 20),
+        (20:23, 32, 21),
+        (5:8, 20, 6),
+    ]
+        test_getset_laws((@o mod(_, rng)), x, y, y+1)
+    end
+    @test_throws Exception mod(3, 1:0)
+    @test_throws Exception @set mod($3, 1:0) = 1
+    @test_throws Exception @set mod($3, 1:5) = 10
     
     x = 3 + 4im
     @test @set(abs(-2u"m") = 1u"m") === -1u"m"
@@ -272,6 +285,7 @@ end
     @test set(0+0im, abs, 10) == 10
     @test set(0+1e-100im, abs, 10) == 10im
     @test_throws DomainError @set(abs(x) = -10)
+    test_getset_laws(abs2, 1+2im, 3, 4, cmp=(≈))
 
     # composition
     o = @optic 1/(1 + exp(-_))
@@ -362,6 +376,9 @@ end
     test_getset_laws(@optic(lstrip(==(' '), _)), " abc  ", "def", "")
     test_getset_laws(@optic(rstrip(==(' '), _)), " abc  ", "def", "")
     test_getset_laws(@optic(strip(==(' '), _)), " abc  ", "def", "")
+    test_getset_laws(chomp, "abc", "def", "")
+    test_getset_laws(chomp, "abc\n", "def", "")
+    test_getset_laws(chomp, "abc\n\n", "def\n", "")
 
     if VERSION >= v"1.8"
         test_getset_laws(@optic(chopprefix(_, "def")), "def abc", "xyz", "")
