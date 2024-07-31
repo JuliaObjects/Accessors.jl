@@ -151,7 +151,7 @@ set(f, ::typeof(inverse), invf) = setinverse(f, invf)
 
 set(obj, ::typeof(Base.splat(atan)), val) = @set Tuple(obj) = hypot(obj...) .* sincos(val)
 function set(obj, ::typeof(Base.splat(hypot)), val)
-    omul = iszero(val) ? one(hypot(obj...)) : hypot(obj...)
+    omul = iszero(val) ? oneunit(hypot(obj...)) : hypot(obj...)
     map(Base.Fix2(*, val / omul), obj)
 end
 
