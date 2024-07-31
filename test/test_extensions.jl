@@ -66,6 +66,10 @@ VERSION >= v"1.9-" && @testset "IntervalSets" begin
     @test 2 === @set 2 |> mod(_, 20..23) = 20
     @test 33 === @set 32 |> mod(_, 20..23) = 21
     test_getset_laws(@optic(mod(_, 5..8)), 20, 6, 5)
+    
+    @test_throws Exception mod(3, 1..0)
+    @test_throws Exception @set mod($3, 1..0) = 1
+    @test_throws Exception @set mod($3, 1..5) = 10
 end
 
 @testset "StaticArrays" begin

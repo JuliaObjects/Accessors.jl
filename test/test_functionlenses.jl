@@ -257,12 +257,25 @@ end
             # invertible lenses below: no need for extensive testing, simply forwarded to InverseFunctions
             inv, +, exp, sqrt, @optic(2 + _), @optic(_ * 3), @optic(log(2, _)),
             # non-invertible lenses, indirectly forwarded to InverseFunctions
-            @optic(mod(_, 21)), @optic(fld(_, 3)), @optic(rem(_, 21)), @optic(div(_, 3)), @optic(mod(_, 1:22)),
+            @optic(mod(_, 21)), @optic(fld(_, 3)), @optic(rem(_, 21)), @optic(div(_, 3)),
         ]
         x = 5
         test_getset_laws(o, x, 10, 20; cmp=isapprox)
         @inferred set(x, o, 10)
     end
+
+    @testset for (rng, x, y) in [
+        (0:3, 2, 1),
+        (0:3, 32, 1),
+        (20:23, 2, 20),
+        (20:23, 32, 21),
+        (5:8, 20, 6),
+    ]
+        test_getset_laws((@o mod(_, rng)), x, y, y+1)
+    end
+    @test_throws Exception mod(3, 1:0)
+    @test_throws Exception @set mod($3, 1:0) = 1
+    @test_throws Exception @set mod($3, 1:5) = 10
     
     x = 3 + 4im
     @test @set(abs(-2u"m") = 1u"m") === -1u"m"
