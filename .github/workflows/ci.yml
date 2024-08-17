@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - 1.6 # LTS
+          - 1.10 # LTS
           - 1
           - 'nightly'
         os:
