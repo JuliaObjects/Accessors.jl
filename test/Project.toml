@@ -18,6 +18,9 @@ StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
+[weakdeps]
+ConstructionBaseExtras = "914cd950-b775-4282-9f32-54fc4544c321"
+
 [compat]
 Aqua = "0.8"
 AxisKeys = "0.2"
