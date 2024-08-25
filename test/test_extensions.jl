@@ -53,6 +53,7 @@ VERSION >= v"1.9-" && @testset "IntervalSets" begin
 
     @test Interval{:open, :closed}(1, 10) === @set int.right = 10
     @test Interval{:open, :closed}(10.0, 11.0) === @set endpoints(int) = (10.0, 11.0)
+    @test Interval{:open, :closed}(10.0, 11.0) === @set endpoints(int) = (10, 11.0)
     @test Interval{:open, :closed}(-2, 5) === @set leftendpoint(int) = -2
     @test Interval{:open, :closed}(1, 2) === @set rightendpoint(int) = 2
     @test Interval{:closed, :closed}(1, 5) === @set first(closedendpoints(int)) = true
