@@ -8,8 +8,8 @@
 using Test
 using Accessors
 
-import Accessors: modify, OpticStyle
-using Accessors: ModifyBased, SetBased, setindex
+import Accessors: modify
+using Accessors: setindex
 
 # ### Increment all even numbers
 # We have the following data and the goal is to increment all nested even numbers.
@@ -22,7 +22,6 @@ end
 mapvals(f, nt::NamedTuple) = map(f, nt)
 
 struct Vals end
-OpticStyle(::Type{Vals}) = ModifyBased()
 modify(f, obj, ::Vals) = mapvals(f, obj)
 
 # Now we can increment as follows:

@@ -300,7 +300,7 @@ end
         # @optic(parse(Int, _)) isa Base.Fix1{typeof(parse), Type{T}} where {T}
         # doesn't hold
         @test @inferred(modify(x -> -2x, "3", @optic parse(Int, _))) == "-6"
-        @test_throws ErrorException modify(log10, "100", @optic parse(Int, _))
+        @test_throws Exception modify(log10, "100", @optic parse(Int, _))
         @test modify(log10, "100", @optic parse(Float64, _)) == "2.0"
         test_getset_laws(@optic(parse(Int, _)), "3", -10, 123)
         test_getset_laws(@optic(parse(Float64, _)), "3.0", -10., 123.)
@@ -410,6 +410,14 @@ end
     @test set(x, o2, 10) == 12
     test_getset_laws(o1, x, 2, -3)
     test_getset_laws(o2, x, 2, -3)
+end
+
+@testset "non-callable" begin
+    struct MyF end
+    Accessors.set(x, ::MyF, y) = y + 1
+    Accessors.modify(f, x, ::MyF) = f(x)
+    @test set(1, (@o _ + 2 |> MyF()), 3) == 2
+    @test modify(x -> 10x, 1, (@o _ + 2 |> MyF())) == 28
 end
 
 end # module
