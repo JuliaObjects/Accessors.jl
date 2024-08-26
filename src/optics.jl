@@ -171,7 +171,7 @@ function _set(obj, optic, val, ::SetBased)
     Optic = typeof(optic)
     error("""
     This should be unreachable. You probably need to overload
-    `Accessors.set(obj, ::$Optic, val)
+    `Accessors.set(obj::$(nameof(typeof(obj))), ::$Optic, val::$(nameof(typeof(val))))`
     """)
 end
 
@@ -201,9 +201,9 @@ end
 function _modify(f, obj, optic, ::ModifyBased)
     Optic = typeof(optic)
     error("""
-          This should be unreachable. You probably need to overload:
-          `Accessors.modify(f, obj, ::$Optic)`
-          """)
+    This should be unreachable. You probably need to overload:
+    `Accessors.modify(f, obj::$(nameof(typeof(obj))), ::$Optic)`
+    """)
 end
 
 function _modify(f, obj, optic::ComposedOptic, ::ModifyBased)
