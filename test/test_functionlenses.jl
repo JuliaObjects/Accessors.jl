@@ -341,9 +341,9 @@ end
         test_getset_laws(lens, Time(1, 2, 3, 4, 5, 6), rand(0:23), rand(0:23))
     end
     @testset for x in [DateTime(2020, 1, 2, 3, 4, 5, 6), Date(2020, 1, 2)]
-        test_getset_laws(yearmonth, x, (rand(1:5000), rand(1:12)), (rand(1:5000), rand(1:12)))
-        test_getset_laws(monthday, x, (rand(1:12), rand(1:28)), (rand(1:12), rand(1:28)))
-        test_getset_laws(yearmonthday, x, (rand(1:5000), rand(1:12), rand(1:28)), (rand(1:5000), rand(1:12), rand(1:28)))
+        test_getset_laws(yearmonth, x, (rand(1:5000), rand(1:12) |> Int8), (rand(1:5000), rand(1:12)))
+        test_getset_laws(monthday, x, (rand(1:12), rand(1:28) |> Int8), (rand(1:12), rand(1:28)))
+        test_getset_laws(yearmonthday, x, (rand(1:5000), rand(1:12) |> Int8, rand(1:28)), (rand(1:5000), rand(1:12), rand(1:28)))
     end
 
     @testset for x in [DateTime(2020, 1, 2, 3, 4, 5, 6), Date(2020, 1, 2), Time(1, 2, 3, 4, 5, 6)]
