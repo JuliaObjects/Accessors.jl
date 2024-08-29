@@ -17,9 +17,12 @@ include("functionlenses.jl")
 include("testing.jl")
 
 # always included for now
-include("../ext/AccessorsDatesExt.jl")
 include("../ext/AccessorsLinearAlgebraExt.jl")
-include("../ext/AccessorsTestExt.jl")
+
+if !isdefined(Base, :get_extension)
+    include("../ext/AccessorsDatesExt.jl")
+    include("../ext/AccessorsTestExt.jl")
+end
 
 function __init__()
     @static if !isdefined(Base, :get_extension)
@@ -47,6 +50,8 @@ function __init__()
                    (0, 1, 2, 3, 4)
                    ```
                    """)
+            elseif (exc.f === test_getset_laws || exc.f === test_modify_law || exc.f === test_getsetall_laws || exc.f === test_insertdelete_laws) && isdefined(Base, :get_extension) && Base.get_extension(Accessors, :AccessorsTestExt) === nothing
+                print(io, "\nDid you forget to load Test?")
             end
         end
     end
