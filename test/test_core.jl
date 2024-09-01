@@ -603,9 +603,13 @@ end
 @accessor Base.Float64(s::MyStruct) = s.x[2]
 @accessor (t::MyStruct)(s::MyStruct) = s.x + t.x
 
+#https://github.com/JuliaLang/julia/issues/54664: the return type of @doc f changes depending on REPL being loaded.
+__string(s) = string(s)
+__string(s::Base.Docs.DocStr) = join(collect(x.text),'\n')
+
 @testset "@accessor" begin
     s = MyStruct((a=123,))
-    @test strip(string(@doc(my_x))) == "Documentation for my_x"
+    @test strip(__string(@doc(my_x))) == "Documentation for my_x"
     @test (@set my_x(s) = 456) === MyStruct(456)
     @test (@set +s = 456) === MyStruct((a=5-456,))
     test_getset_laws(my_x, s, 456, "1")
