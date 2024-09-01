@@ -605,7 +605,7 @@ end
 
 #https://github.com/JuliaLang/julia/issues/54664: the return type of @doc f changes depending on REPL being loaded.
 __string(s) = string(s)
-__string(s::Base.Docs.DocStr) = join(collect(x.text),'\n')
+__string(s::Base.Docs.DocStr) = join(collect(s.text),'\n')
 
 @testset "@accessor" begin
     s = MyStruct((a=123,))
