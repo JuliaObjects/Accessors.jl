@@ -6,5 +6,6 @@ using PrecompileTools
         setmacro(identity, :(a.x = 1), overwrite=false)
         setmacro(identity, :(a.x = 1), overwrite=true)
         insertmacro(identity, :(a.x = 1), overwrite=false)
+        Accessors.set(a, identity(Accessors.opticcompose(PropertyLens{:x}())), 2)
     end
 end
