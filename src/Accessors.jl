@@ -15,6 +15,7 @@ include("getsetall.jl")
 include("sugar.jl")
 include("functionlenses.jl")
 include("testing.jl")
+include("precompile.jl")
 
 # always included for now
 include("../ext/AccessorsLinearAlgebraExt.jl")
