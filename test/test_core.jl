@@ -603,6 +603,10 @@ end
 @accessor Base.Float64(s::MyStruct) = s.x[2]
 @accessor (t::MyStruct)(s::MyStruct) = s.x + t.x
 
+# https://github.com/JuliaLang/julia/issues/54664: the return type of @doc f changes depending on REPL being loaded.
+# let's load REPL until that regression is fixed
+import REPL
+
 @testset "@accessor" begin
     s = MyStruct((a=123,))
     @test strip(string(@doc(my_x))) == "Documentation for my_x"
