@@ -83,6 +83,9 @@ end
         @test setindex(obj, 5, 2, 1) === StaticArrays.@SMatrix [1 2; 5 4]
     end
 
+    test_getset_laws((@optic _[1]), (@SVector [1,2,3]), 1.5, 2.5)
+    test_insertdelete_laws((@optic _[1]), (@SVector [1,2,3]), 1.5)
+
     v = @SVector [1.,2,3]
     @test (@set v[1] = 10) === @SVector [10.,2,3]
     @test (@set v[1] = π) === @SVector [π,2,3]
