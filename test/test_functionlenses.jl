@@ -399,7 +399,7 @@ end
 VERSION ≥ v"1.11" && @testset "AnnotatedStrings" begin
     using Base: AnnotatedChar, AnnotatedString, annotations
 
-    s = Base.AnnotatedString("good bad", [(region=1:4, label=:sentiment, value=+1), (region=6:8, label=:sentiment, value=-1)])
+    s = AnnotatedString("good bad", [(region=1:4, label=:sentiment, value=+1), (region=6:8, label=:sentiment, value=-1)])
     
     @test (@delete annotations(s))::String == "good bad"
     
@@ -407,7 +407,7 @@ VERSION ≥ v"1.11" && @testset "AnnotatedStrings" begin
     @test String(snew) == "good bad"
     @test annotations(snew) == [(region=1:4, label=:sentiment, value=+1)]
 
-    snew = (@set Base.annotations(s)[1].region = 2:6)
+    snew = (@set annotations(s)[1].region = 2:6)
     @test String(snew) == "good bad"
     @test annotations(snew) == [(region=2:6, label=:sentiment, value=+1), (region=6:8, label=:sentiment, value=-1)]
 
@@ -415,6 +415,23 @@ VERSION ≥ v"1.11" && @testset "AnnotatedStrings" begin
     test_getset_laws((@o annotations(_)[2].label), s, :abc, :def)
     test_getset_laws((@o annotations(_)[2].value), s, "sad", +2)
     test_insertdelete_laws((@o annotations(_)[2]), s, (region=2:2, label=:mylabel, value=+1))
+
+    
+    c = AnnotatedChar('x', [(label=:level, value="warning"), (label=:alphabet, value=1)])
+    
+    @test (@delete annotations(c))::Char == 'x'
+    
+    cnew = @delete annotations(c)[2]
+    @test Char(cnew) == 'x'
+    @test annotations(cnew) == [(label=:level, value="warning")]
+
+    cnew = (@set annotations(c)[1].label = :severity)
+    @test Char(cnew) == 'x'
+    @test annotations(cnew) == [(label=:severity, value="warning"), (label=:alphabet, value=1)]
+
+    test_getset_laws((@o annotations(_)[2].label), c, :abc, :def)
+    test_getset_laws((@o annotations(_)[1].value), c, 5, "bad")
+    test_insertdelete_laws((@o annotations(_)[2]), c, (label=:mylabel, value=+1))
 end
 
 @testset "custom binary function" begin
