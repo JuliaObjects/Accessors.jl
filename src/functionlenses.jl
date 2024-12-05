@@ -207,9 +207,15 @@ end
 
 if isdefined(Base, :AnnotatedString)
     # 1.11+
-    using Base: AnnotatedString, annotations
+    using Base: AnnotatedString, AnnotatedChar, annotations
+
     set(s::AbstractString, ::typeof(annotations), anns) = AnnotatedString(s, anns)
     set(s::AnnotatedString, ::typeof(annotations), anns) = AnnotatedString(s.string, anns)
     delete(s::AnnotatedString, ::typeof(annotations)) = s.string
     insert(s::AbstractString, ::typeof(annotations), anns) = AnnotatedString(s, anns)
+
+    set(s::AbstractChar, ::typeof(annotations), anns) = AnnotatedChar(s, anns)
+    set(s::AnnotatedChar, ::typeof(annotations), anns) = AnnotatedChar(s.char, anns)
+    delete(s::AnnotatedChar, ::typeof(annotations)) = s.char
+    insert(s::AbstractChar, ::typeof(annotations), anns) = AnnotatedChar(s, anns)
 end
