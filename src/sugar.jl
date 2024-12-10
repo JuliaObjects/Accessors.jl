@@ -493,7 +493,7 @@ IndexLens(::Tuple{Properties}) = Properties()
 ### nice show() for optics
 _shortstring(prev, o::PropertyLens{field}) where {field} = "$prev.$field"
 _shortstring(prev, o::IndexLens) ="$prev[$(join(repr.(o.indices), ", "))]"
-_shortstring(prev, o::Function) = _isoperator(o) ? "$o$prev" : "$o($prev)"
+_shortstring(prev, o::Union{Function,Type}) = _isoperator(o) ? "$o$prev" : "$o($prev)"
 _shortstring(prev, o::Base.Fix1) = _isoperator(o.f) ? "$(o.x) $(o.f) $prev" : "$(o.f)($(o.x), $prev)"
 _shortstring(prev, o::Base.Fix2) = _isoperator(o.f) ? "$prev $(o.f) $(o.x)" : "$(o.f)($prev, $(o.x))"
 _shortstring(prev, o::Elements) = "$prev[∗]"
