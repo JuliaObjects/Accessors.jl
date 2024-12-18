@@ -468,6 +468,8 @@ end
     @test sprint(show, (@optic Tuple(_.a[2]))) == "(@o Tuple(_.a[2]))"
     @test sprint(show, (@optic log(_).a[2])) == "(@o _.a[2]) ∘ log"  # could be shorter, but difficult to dispatch correctly without piracy
     @test sprint(show, (@optic log(_.a[2])); context=:compact => true) == "log(_.a[2])"
+    @test sprint(show, (@optic Base.tail(_.a[2])); context=:compact => true) == "tail(_.a[2])"  # non-exported function
+    @test sprint(show, (@optic Base.Fix2(_.a[2])); context=:compact => true) == "Fix2(_.a[2])"  # non-exported type
 end
 
 @testset "text/plain show" begin
