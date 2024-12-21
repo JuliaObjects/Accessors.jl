@@ -280,7 +280,7 @@ function get_update_op(sym::Symbol)
         msg = "Operation $sym doesn't look like an assignment"
         throw(ArgumentError(msg))
     end
-    Symbol(s[1:end-1])
+    Symbol(chop(s))
 end
 
 """
