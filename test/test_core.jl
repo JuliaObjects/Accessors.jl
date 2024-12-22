@@ -46,6 +46,10 @@ end
     @reset nt.a = 5
     @test nt === (a=5,)
 
+    issue184 = 0x5eb720ca5fd4f4b6
+    z = 0x82307475878967f2
+    @test (issue184 ⊻ z ) === (@set issue184 ⊻= z)
+
     @test_throws Exception eval(:(@reset func(x, y) = 100))
 end
 
