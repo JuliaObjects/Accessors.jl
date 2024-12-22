@@ -470,6 +470,11 @@ end
     @test sprint(show, (@optic log(_.a[2])); context=:compact => true) == "log(_.a[2])"
     @test sprint(show, (@optic Base.tail(_.a[2])); context=:compact => true) == "tail(_.a[2])"  # non-exported function
     @test sprint(show, (@optic Base.Fix2(_.a[2])); context=:compact => true) == "Fix2(_.a[2])"  # non-exported type
+
+    # show_optic is reasonable even for types without special show_optic handling:
+    o = Recursive(x->true, Properties())
+    @test sprint(Accessors.show_optic, o) == "$o"
+    @test sprint(Accessors.show_optic, (@o _.a) ∘ o) == "(@o _.a) ∘ $o"
 end
 
 @testset "text/plain show" begin

@@ -521,19 +521,23 @@ function show_optic(io, optic)
     outer = Iterators.dropwhile(x -> applicable(_shortstring, "", x), opts)
     if !isempty(outer)
         show(io, opcompose(outer...))
+    end
+    if !isempty(inner) && !isempty(outer)
         print(io, " ∘ ")
     end
-    shortstr = reduce(inner; init=("_", false)) do (prev, need_parens_prev), o
-        # if _need_parens is true for this o and the one before, wrap the previous one in parentheses
-        if need_parens_prev && _need_parens(o)
-            prev = "($prev)"
+    if !isempty(inner)
+        shortstr = reduce(inner; init=("_", false)) do (prev, need_parens_prev), o
+            # if _need_parens is true for this o and the one before, wrap the previous one in parentheses
+            if need_parens_prev && _need_parens(o)
+                prev = "($prev)"
+            end
+            _shortstring(prev, o), _need_parens(o)
+        end |> first
+        if get(io, :compact, false)
+            print(io, shortstr)
+        else
+            print(io, "(@o ", shortstr, ")")
         end
-        _shortstring(prev, o), _need_parens(o)
-    end |> first
-    if get(io, :compact, false)
-        print(io, shortstr)
-    else
-        print(io, "(@o ", shortstr, ")")
     end
 end
 
