@@ -469,8 +469,16 @@ end
     @test sprint(show, (@optic (_.a + 1) * 2)) == "(@o (_.a + 1) * 2)"
     @test sprint(show, (@optic (_.a * 2) + 1)) == "(@o (_.a * 2) + 1)"
     @test sprint(show, (@optic log(_.a[2]))) == "(@o log(_.a[2]))"
+    @test sprint(show, (@optic Tuple(_.a[2]))) == "(@o Tuple(_.a[2]))"
     @test sprint(show, (@optic log(_).a[2])) == "(@o _.a[2]) ∘ log"  # could be shorter, but difficult to dispatch correctly without piracy
     @test sprint(show, (@optic log(_.a[2])); context=:compact => true) == "log(_.a[2])"
+    @test sprint(show, (@optic Base.tail(_.a[2])); context=:compact => true) == "tail(_.a[2])"  # non-exported function
+    @test sprint(show, (@optic Base.Fix2(_.a[2])); context=:compact => true) == "Fix2(_.a[2])"  # non-exported type
+
+    # show_optic is reasonable even for types without special show_optic handling:
+    o = Recursive(x->true, Properties())
+    @test sprint(Accessors.show_optic, o) == "$o"
+    @test sprint(Accessors.show_optic, (@o _.a) ∘ o) == "(@o _.a) ∘ $o"
 end
 
 @testset "text/plain show" begin

@@ -497,11 +497,16 @@ IndexLens(::Tuple{Properties}) = Properties()
 ### nice show() for optics
 _shortstring(prev, o::PropertyLens{field}) where {field} = "$prev.$field"
 _shortstring(prev, o::IndexLens) ="$prev[$(join(repr.(o.indices), ", "))]"
-_shortstring(prev, o::Function) = _isoperator(o) ? "$o$prev" : "$o($prev)"
-_shortstring(prev, o::Base.Fix1) = _isoperator(o.f) ? "$(o.x) $(o.f) $prev" : "$(o.f)($(o.x), $prev)"
-_shortstring(prev, o::Base.Fix2) = _isoperator(o.f) ? "$prev $(o.f) $(o.x)" : "$(o.f)($prev, $(o.x))"
+_shortstring(prev, o::Union{Function,Type}) = _isoperator(o) ? "$(_fT_repr(o))$prev" : "$(_fT_repr(o))($prev)"
+_shortstring(prev, o::Base.Fix1) = _isoperator(o.f) ? "$(o.x) $(_fT_repr(o.f)) $prev" : "$(_fT_repr(o.f))($(o.x), $prev)"
+_shortstring(prev, o::Base.Fix2) = _isoperator(o.f) ? "$prev $(_fT_repr(o.f)) $(o.x)" : "$(_fT_repr(o.f))($prev, $(o.x))"
 _shortstring(prev, o::Elements) = "$prev[∗]"
 _shortstring(prev, o::Properties) = "$prev[∗ₚ]"
+
+# compact representation of functions and types
+# most notably, it deals with the module name in a consistent way: doesn't show it
+# by default, it's not shown for functions but shown for types, see https://github.com/JuliaLang/julia/issues/56790
+_fT_repr(o) = repr(o; context=:compact => true)
 
 # can f be stringfied using the operator (infix) syntax?
 # otherwise uses regular function call syntax
@@ -520,19 +525,23 @@ function show_optic(io, optic)
     outer = Iterators.dropwhile(x -> applicable(_shortstring, "", x), opts)
     if !isempty(outer)
         show(io, opcompose(outer...))
+    end
+    if !isempty(inner) && !isempty(outer)
         print(io, " ∘ ")
     end
-    shortstr = reduce(inner; init=("_", false)) do (prev, need_parens_prev), o
-        # if _need_parens is true for this o and the one before, wrap the previous one in parentheses
-        if need_parens_prev && _need_parens(o)
-            prev = "($prev)"
+    if !isempty(inner)
+        shortstr = reduce(inner; init=("_", false)) do (prev, need_parens_prev), o
+            # if _need_parens is true for this o and the one before, wrap the previous one in parentheses
+            if need_parens_prev && _need_parens(o)
+                prev = "($prev)"
+            end
+            _shortstring(prev, o), _need_parens(o)
+        end |> first
+        if get(io, :compact, false)
+            print(io, shortstr)
+        else
+            print(io, "(@o ", shortstr, ")")
         end
-        _shortstring(prev, o), _need_parens(o)
-    end |> first
-    if get(io, :compact, false)
-        print(io, shortstr)
-    else
-        print(io, "(@o ", shortstr, ")")
     end
 end
 
