@@ -602,6 +602,7 @@ struct MyStruct
 end
 "Documentation for my_x"
 @accessor my_x(v) = v.x
+@accessor my_identity(v) = v
 @accessor Base.:(+)(s::MyStruct) = 5 - s.x.a
 @accessor Base.Int(s::MyStruct) = s.x[1]
 @accessor Base.Float64(s::MyStruct) = s.x[2]
@@ -617,6 +618,7 @@ import REPL
     @test (@set my_x(s) = 456) === MyStruct(456)
     @test (@set +s = 456) === MyStruct((a=5-456,))
     test_getset_laws(my_x, s, 456, "1")
+    test_getset_laws(my_identity, 123, 456, "1")
     test_getset_laws(+, s, 456, 1.0)
 
     s = MyStruct((1, 2.0))

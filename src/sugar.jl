@@ -248,6 +248,10 @@ function parse_obj_optics(ex)
             obj, frontoptic = parse_obj_optics(args[2])
             optic = :(Base.Fix1($f, $(esc(args[1]))))
         end
+    elseif @capture(ex, s_Symbol)
+        # the symbol can be wrapped in quote ... end, need to unwrap for reliable handling downstream
+        obj = esc(s)
+        return obj, ()
     else
         obj = esc(ex)
         return obj, ()
