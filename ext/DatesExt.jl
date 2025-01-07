@@ -1,4 +1,4 @@
-module AccessorsDatesExt
+module DatesExt
 
 using Accessors
 import Accessors: set

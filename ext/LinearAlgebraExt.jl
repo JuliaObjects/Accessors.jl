@@ -1,4 +1,4 @@
-module AccessorsLinearAlgebraExt
+module LinearAlgebraExt
 
 import Accessors: set, @set
 using LinearAlgebra: norm, normalize, diag, diagind

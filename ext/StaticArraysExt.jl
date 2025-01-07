@@ -1,4 +1,4 @@
-module AccessorsStaticArraysExt
+module StaticArraysExt
 isdefined(Base, :get_extension) ? (using StaticArrays) : (using ..StaticArrays)
 using Accessors
 import Accessors: setindex, delete, insert

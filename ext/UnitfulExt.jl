@@ -1,4 +1,4 @@
-module AccessorsUnitfulExt
+module UnitfulExt
 
 import Accessors: set
 using Unitful

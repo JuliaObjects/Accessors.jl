@@ -1,4 +1,4 @@
-module AccessorsAxisKeysExt
+module AxisKeysExt
 using Accessors
 using AxisKeys
 
