@@ -17,14 +17,14 @@ include("functionlenses.jl")
 include("testing.jl")
 
 if !isdefined(Base, :get_extension)
-    include("../ext/AccessorsDatesExt.jl")
-    include("../ext/AccessorsLinearAlgebraExt.jl")
-    include("../ext/AccessorsTestExt.jl")
+    include("../ext/DatesExt.jl")
+    include("../ext/LinearAlgebraExt.jl")
+    include("../ext/TestExt.jl")
 end
 
 function __init__()
     @static if !isdefined(Base, :get_extension)
-        @require StaticArrays = "90137ffa-7385-5640-81b9-e52037218182" include("../ext/AccessorsStaticArraysExt.jl")
+        @require StaticArrays = "90137ffa-7385-5640-81b9-e52037218182" include("../ext/StaticArraysExt.jl")
     end
     if isdefined(Base.Experimental, :register_error_hint)
         Base.Experimental.register_error_hint(MethodError) do io, exc, argtypes, kwargs

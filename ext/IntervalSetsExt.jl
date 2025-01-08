@@ -1,4 +1,4 @@
-module AccessorsIntervalSetsExt
+module IntervalSetsExt
 using Accessors
 using IntervalSets
 

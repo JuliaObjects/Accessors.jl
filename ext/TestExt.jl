@@ -1,4 +1,4 @@
-module AccessorsTestExt
+module TestExt
 
 using Accessors
 using Test: @test
