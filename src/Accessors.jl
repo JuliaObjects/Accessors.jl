@@ -2,7 +2,6 @@ module Accessors
 using MacroTools
 using MacroTools: isstructdef, splitstructdef, postwalk
 using InverseFunctions
-using Markdown: Markdown, @md_str, term
 
 if !isdefined(Base, :get_extension)
     using Requires
@@ -30,7 +29,7 @@ function __init__()
         Base.Experimental.register_error_hint(MethodError) do io, exc, argtypes, kwargs
             if exc.f === insert && argtypes[2] <: Accessors.DynamicIndexLens
                 println(io)
-                term(io, md"""
+                print(io, """
                    `insert` with a `DynamicIndexLens` is not supported, this can happen when you write
                    code such as `@insert a[end] = 1` or `@insert a[begin] = 1` since `end` and `begin`
                    are functions of `a`. The reason we do not support these with `insert` is that 
