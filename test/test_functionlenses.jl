@@ -294,17 +294,11 @@ end
     @test o(2) ≈ 0.8807970779778823
     @test @inferred(set(2, o, 0.999)) ≈ 6.906754778648465
 
-    # parse-related
-    if VERSION >= v"1.8"
-        # on earlier versions,
-        # @optic(parse(Int, _)) isa Base.Fix1{typeof(parse), Type{T}} where {T}
-        # doesn't hold
-        @test @inferred(modify(x -> -2x, "3", @optic parse(Int, _))) == "-6"
-        @test_throws ErrorException modify(log10, "100", @optic parse(Int, _))
-        @test modify(log10, "100", @optic parse(Float64, _)) == "2.0"
-        test_getset_laws(@optic(parse(Int, _)), "3", -10, 123)
-        test_getset_laws(@optic(parse(Float64, _)), "3.0", -10., 123.)
-    end
+    @test @inferred(modify(x -> -2x, "3", @optic parse(Int, _))) == "-6"
+    @test_throws ErrorException modify(log10, "100", @optic parse(Int, _))
+    @test modify(log10, "100", @optic parse(Float64, _)) == "2.0"
+    test_getset_laws(@optic(parse(Int, _)), "3", -10, 123)
+    test_getset_laws(@optic(parse(Float64, _)), "3.0", -10., 123.)
 
     # setting inverse
     myasin(x) = asin(x)+2π
@@ -364,10 +358,9 @@ end
 end
 
 @testset "strings" begin
-    if VERSION >= v"1.8"
-        @test @inferred(modify(x -> x+1, " abc def", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements()))) == " bcd def"
-        @test @inferred(modify(x -> x+1, " abc xyz", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements()))) == " bcd!yz{"
-    end
+    @test @inferred(modify(x -> x+1, " abc def", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements()))) == " bcd def"
+    @test @inferred(modify(x -> x+1, " abc xyz", @optic(_ |> chopsuffix(_, "def") |> strip |> Elements()))) == " bcd!yz{"
+
     @test @inferred(modify(x -> x^2, "abc xyz", @optic(split(_, ' ') |> Elements()))) == "abcabc xyzxyz"
     @test @inferred(modify(x -> x^2, " abc  xyz", @optic(split(_, ' ') |> Elements()))) == " abcabc  xyzxyz"
 
@@ -384,12 +377,10 @@ end
     test_getset_laws(chomp, "abc\n", "def", "")
     test_getset_laws(chomp, "abc\n\n", "def\n", "")
 
-    if VERSION >= v"1.8"
-        test_getset_laws(@optic(chopprefix(_, "def")), "def abc", "xyz", "")
-        test_getset_laws(@optic(chopsuffix(_, "def")), "abc def", "xyz", "")
-        test_getset_laws(@optic(chopprefix(_, "abc")), "def abc", "xyz", "")
-        test_getset_laws(@optic(chopsuffix(_, "abc")), "abc def", "xyz", "")
-    end
+    test_getset_laws(@optic(chopprefix(_, "def")), "def abc", "xyz", "")
+    test_getset_laws(@optic(chopsuffix(_, "def")), "abc def", "xyz", "")
+    test_getset_laws(@optic(chopprefix(_, "abc")), "def abc", "xyz", "")
+    test_getset_laws(@optic(chopsuffix(_, "abc")), "abc def", "xyz", "")
     
     test_getset_laws(@optic(split(_, ' ')), " abc def ", ["z"], [])
     test_getset_laws(@optic(split(_, ' ')), " abc def ", ["", "z"], [])

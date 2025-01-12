@@ -175,15 +175,6 @@ function _set(obj, optic, val, ::SetBased)
     """)
 end
 
-if VERSION < v"1.7"
-    struct Returns{V}
-        value::V
-    end
-    (o::Returns)(x) = o.value
-else
-    using Base: Returns
-end
-
 @inline function _set(obj, optic, val, ::ModifyBased)
     modify(Returns(val), obj, optic)
 end
