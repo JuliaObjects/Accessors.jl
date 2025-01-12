@@ -5,11 +5,6 @@ using Accessors: test_getsetall_laws, test_modify_law
 using StaticNumbers
 using StaticArrays
 
-@static if VERSION < v"1.9-"
-    # for StaticArrays constructorof: ConstructionBase itself only supports it through 1.9 extension
-    using ConstructionBaseExtras
-end
-
 @testset "getall" begin
     obj = (a=1, b=2.0, c='3')
     @test (1,) === @inferred getall(obj, @optic _.a)
@@ -133,13 +128,8 @@ end
     ) |> enumerate
         @test (@inferred setall(obj, o, getall(obj, o))) === obj
         @test setall(obj, o, collect(getall(obj, o))) === obj
-        if VERSION ≥ v"1.10" || i == 2
-            @test (@inferred setall(obj, o, Vector{Float64}(collect(getall(obj, o))))) == obj
-            @test (@inferred setall(obj, o, SVector(getall(obj, o)))) == obj
-        else
-            @test setall(obj, o, Vector{Float64}(collect(getall(obj, o)))) == obj
-            @test setall(obj, o, SVector(getall(obj, o))) == obj
-        end
+        @test (@inferred setall(obj, o, Vector{Float64}(collect(getall(obj, o))))) == obj
+        @test (@inferred setall(obj, o, SVector(getall(obj, o)))) == obj
     end
 
     obj = ([1, 2], 3:5, (6,))

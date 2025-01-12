@@ -9,11 +9,7 @@ using StructArrays
 using Unitful
 
 
-# most of the tests run on Julia 1.9 and later because of package extensions support
-# StaticArrays is the exception: it's supported on earlier Julia versions with Requires
-
-
-VERSION >= v"1.9-" && @testset "AxisKeys" begin
+@testset "AxisKeys" begin
     A = KeyedArray([1 2 3; 4 5 6], x=[:a, :b], y=11:13)
 
     for B in (
@@ -48,7 +44,7 @@ VERSION >= v"1.9-" && @testset "AxisKeys" begin
     @test_throws ArgumentError @set named_axiskeys(A) = (;)
 end
 
-VERSION >= v"1.9-" && @testset "IntervalSets" begin
+@testset "IntervalSets" begin
     int = Interval{:open, :closed}(1, 5)
 
     @test Interval{:open, :closed}(1, 10) === @set int.right = 10
@@ -90,7 +86,7 @@ end
     @test (@set v[1] = 10) === @SVector [10.,2,3]
     @test (@set v[1] = π) === @SVector [π,2,3]
     # requires ConstructionBase extension:
-    VERSION >= v"1.9-" && @test (@set v.x = 10) === @SVector [10.,2,3]
+    @test (@set v.x = 10) === @SVector [10.,2,3]
 
     v = @MVector [1.,2,3]
     @test (@set v[1] = 10)::MVector == @MVector [10.,2,3]
@@ -122,13 +118,11 @@ end
     cmp(a::NamedTuple, b::NamedTuple) = Set(keys(a)) == Set(keys(b)) && NamedTuple{keys(b)}(a) === b
     cmp(a::T, b::T) where {T} = a == b
 
-    if VERSION >= v"1.9-"
-        # require ConstructionBase extension
-        test_getset_laws(Tuple, SVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
-        test_getset_laws(Tuple, MVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
-        test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (x='x', y='y'), (x=1, y=2); cmp=cmp)
-        test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (y='x', x='y'), (x=1, y=2); cmp=cmp)
-    end
+    test_getset_laws(Tuple, SVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
+    test_getset_laws(Tuple, MVector(0, 1), ('x', 'y'), (1, 2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (x='x', y='y'), (x=1, y=2); cmp=cmp)
+    test_getset_laws(NamedTuple{(:x, :y)}, SVector(0, 1), (y='x', x='y'), (x=1, y=2); cmp=cmp)
+
     test_getset_laws(SVector, (0, 1), SVector('x', 'y'), SVector(1, 2); cmp=cmp)
     test_getset_laws(MVector, (0, 1), MVector('x', 'y'), MVector(1, 2); cmp=cmp)
 
@@ -142,7 +136,7 @@ struct S{TA, TB}
     b::TB
 end
 
-VERSION >= v"1.9-" && @testset "StructArrays" begin
+@testset "StructArrays" begin
     s = StructArray(([1, 2, 3],))
     ss = @set s.:1 = 10:12
     @test ss.:1 === 10:12
@@ -186,7 +180,7 @@ VERSION >= v"1.9-" && @testset "StructArrays" begin
     test_getset_laws(propertynames, s, (1, 2), (:u, :v))
 end
 
-VERSION ≥ v"1.9-" && @testset "Unitful" begin
+@testset "Unitful" begin
     test_getset_laws(ustrip, 1u"m", 2., 3)
     test_getset_laws(ustrip, 1u"m/mm", 2., 3)
 end

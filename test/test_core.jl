@@ -224,19 +224,9 @@ end
           ((@optic _.b.a.b[end]),     4.0),
           ((@optic _.b.a.b[end÷2+1]), 4.0),
          ]
-        if VERSION < v"1.7" || VERSION >= v"1.10-"
-            @inferred lens(obj)
-            @inferred set(obj, lens, val)
-            @inferred modify(identity, obj, lens)
-        else
-            @inferred lens(obj)
-            @inferred set(obj, lens, val)
-            @test_broken begin
-                # https://github.com/JuliaLang/julia/issues/43296
-                @inferred modify(identity, obj, lens)
-                true
-            end
-        end
+        @inferred lens(obj)
+        @inferred set(obj, lens, val)
+        @inferred modify(identity, obj, lens)
     end
 end
 
@@ -278,7 +268,7 @@ end
     nt = (a=1, b=2, c=3)
     l = @optic _[(:a, :c)]
     @test l isa IndexLens
-    VERSION >= v"1.7" && @test l(nt) === (a=1, c=3)
+    @test l(nt) === (a=1, c=3)
     @test set(nt, l, ('1', '2')) === (a='1', b=2, c='2')
     @test set(nt, l, (c='2', a='1')) === (a='1', b=2, c='2')
 

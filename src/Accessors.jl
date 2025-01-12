@@ -3,10 +3,6 @@ using MacroTools
 using MacroTools: isstructdef, splitstructdef, postwalk
 using InverseFunctions
 
-if !isdefined(Base, :get_extension)
-    using Requires
-end
-
 
 include("setindex.jl")
 include("optics.jl")
@@ -17,15 +13,8 @@ include("testing.jl")
 
 # always include for now; see https://github.com/JuliaObjects/Accessors.jl/issues/192
 include("../ext/DatesExt.jl")
-if !isdefined(Base, :get_extension)
-    include("../ext/LinearAlgebraExt.jl")
-    include("../ext/TestExt.jl")
-end
 
 function __init__()
-    @static if !isdefined(Base, :get_extension)
-        @require StaticArrays = "90137ffa-7385-5640-81b9-e52037218182" include("../ext/StaticArraysExt.jl")
-    end
     if isdefined(Base.Experimental, :register_error_hint)
         Base.Experimental.register_error_hint(MethodError) do io, exc, argtypes, kwargs
             if exc.f === insert && argtypes[2] <: Accessors.DynamicIndexLens
@@ -48,7 +37,7 @@ function __init__()
                    (0, 1, 2, 3, 4)
                    ```
                    """)
-            elseif (exc.f === test_getset_laws || exc.f === test_modify_law || exc.f === test_getsetall_laws || exc.f === test_insertdelete_laws) && isdefined(Base, :get_extension) && Base.get_extension(Accessors, :AccessorsTestExt) === nothing
+            elseif (exc.f === test_getset_laws || exc.f === test_modify_law || exc.f === test_getsetall_laws || exc.f === test_insertdelete_laws) && Base.get_extension(Accessors, :AccessorsTestExt) === nothing
                 print(io, "\nDid you forget to load Test?")
             end
         end

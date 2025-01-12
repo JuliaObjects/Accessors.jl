@@ -177,12 +177,8 @@ delete(s::AbstractString, o::Base.Fix2{typeof(first)}) = chop(s; head=o.x, tail=
 delete(s::AbstractString, o::Base.Fix2{typeof(last)}) = chop(s; head=0, tail=o.x)
 
 set(s::AbstractString, o::typeof(chomp), v) = endswith(s, '\n') ? v * '\n' : v
-if VERSION >= v"1.8"
-    set(s::AbstractString, o::Base.Fix2{typeof(chopsuffix), <:AbstractString}, v) =
-        endswith(s, o.x) ? v * o.x : v
-    set(s::AbstractString, o::Base.Fix2{typeof(chopprefix), <:AbstractString}, v) =
-        startswith(s, o.x) ? o.x * v : v
-end
+set(s::AbstractString, o::Base.Fix2{typeof(chopsuffix), <:AbstractString}, v) = endswith(s, o.x) ? v * o.x : v
+set(s::AbstractString, o::Base.Fix2{typeof(chopprefix), <:AbstractString}, v) = startswith(s, o.x) ? o.x * v : v
 
 set(s::AbstractString, ::typeof(strip), v) = @set lstrip(rstrip(s)) = v
 set(s::AbstractString, ::typeof(lstrip), v) = @set s |> lstrip(isspace, _) = v
