@@ -15,8 +15,9 @@ include("sugar.jl")
 include("functionlenses.jl")
 include("testing.jl")
 
+# always include for now; see https://github.com/JuliaObjects/Accessors.jl/issues/192
+include("../ext/DatesExt.jl")
 if !isdefined(Base, :get_extension)
-    include("../ext/DatesExt.jl")
     include("../ext/LinearAlgebraExt.jl")
     include("../ext/TestExt.jl")
 end
