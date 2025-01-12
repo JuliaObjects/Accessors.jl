@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Molecules · Accessors.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Accessors.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../../getting_started/">Getting started</a></li></ul></li><li><span class="tocitem">Explanation</span><ul><li><a class="tocitem" href="../../lenses/">Lenses</a></li></ul></li><li><span class="tocitem">Reference</span><ul><li><a class="tocitem" href="../../docstrings/">Docstrings</a></li></ul></li><li><span class="tocitem">How-to guides</span><ul><li><a class="tocitem" href="../custom_optics/">Custom Optics</a></li><li><a class="tocitem" href="../custom_macros/">Custom Macros</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Molecules</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Molecules</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaObjects/Accessors.jl/blob/master/examples/molecules.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Molecules"><a class="docs-heading-anchor" href="#Molecules">Molecules</a><a id="Molecules-1"></a><a class="docs-heading-anchor-permalink" href="#Molecules" title="Permalink"></a></h1><p>inspired by https://hackage.haskell.org/package/lens-tutorial-1.0.3/docs/Control-Lens-Tutorial.html</p><pre><code class="language-julia hljs">using Accessors
+using Test
+
+molecule = (
+    name=&quot;water&quot;,
+    atoms=[
+        (name=&quot;H&quot;, position=(x=0,y=1)), # in reality the angle is about 104deg
+        (name=&quot;O&quot;, position=(x=0,y=0)),
+        (name=&quot;H&quot;, position=(x=1,y=0)),
+    ]
+)
+
+oc = @optic _.atoms |&gt; Elements() |&gt; _.position.x
+res_modify = modify(x-&gt;x+1, molecule, oc)
+
+res_macro = @set molecule.atoms |&gt; Elements() |&gt; _.position.x += 1
+@test res_macro == res_modify
+
+res_expected = (
+    name=&quot;water&quot;,
+    atoms=[
+        (name=&quot;H&quot;, position=(x=1,y=1)),
+        (name=&quot;O&quot;, position=(x=1,y=0)),
+        (name=&quot;H&quot;, position=(x=2,y=0)),
+    ]
+)
+
+@test res_expected == res_macro
+
+res_set = set(molecule, oc, 4.0)
+res_macro = @set molecule.atoms |&gt; Elements() |&gt; _.position.x = 4.0
+@test res_macro == res_set
+
+res_expected = (
+    name=&quot;water&quot;,
+    atoms=[
+        (name=&quot;H&quot;, position=(x=4.0,y=1)),
+        (name=&quot;O&quot;, position=(x=4.0,y=0)),
+        (name=&quot;H&quot;, position=(x=4.0,y=0)),
+    ]
+)
+@test res_expected == res_set</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Test Passed
+  Expression: res_expected == res_set
+   Evaluated: (name = &quot;water&quot;, atoms = NamedTuple{(:name, :position), Tuple{String, NamedTuple{(:x, :y), Tuple{Float64, Int64}}}}[(name = &quot;H&quot;, position = (x = 4.0, y = 1)), (name = &quot;O&quot;, position = (x = 4.0, y = 0)), (name = &quot;H&quot;, position = (x = 4.0, y = 0))]) == (name = &quot;water&quot;, atoms = NamedTuple{(:name, :position), Tuple{String, NamedTuple{(:x, :y), Tuple{Float64, Int64}}}}[(name = &quot;H&quot;, position = (x = 4.0, y = 1)), (name = &quot;O&quot;, position = (x = 4.0, y = 0)), (name = &quot;H&quot;, position = (x = 4.0, y = 0))])</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Sunday 12 January 2025 03:46">Sunday 12 January 2025</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
