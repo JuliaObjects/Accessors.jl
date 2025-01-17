@@ -389,9 +389,9 @@ function (l::PropertyLens{field})(obj) where {field}
     getproperty(obj, field)
 end
 
-@inline set(obj, l::PropertyLens{field}, val) where {field} = setproperties(obj, (; field => val))
+@inline set(obj, l::PropertyLens{field}, val) where {field} = setproperties(obj, NamedTuple{(field,)}((val,)))
 @inline delete(obj::NamedTuple, l::PropertyLens{field}) where {field} = Base.structdiff(obj, NamedTuple{(field,)})
-@inline insert(obj::NamedTuple, l::PropertyLens{field}, val) where {field} = (; obj..., (;field => val)...)
+@inline insert(obj::NamedTuple{KS}, l::PropertyLens{field}, val) where {KS, field} = NamedTuple{(KS..., field)}((values(obj)..., val))
 
 @inline set(obj::Tuple, l::PropertyLens{field}, val) where {field} = set(obj, IndexLens(field), val)
 @inline delete(obj::Tuple, l::PropertyLens{field}) where {field} = delete(obj, IndexLens(field))
