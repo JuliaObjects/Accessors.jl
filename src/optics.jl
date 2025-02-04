@@ -389,6 +389,7 @@ function (l::PropertyLens{field})(obj) where {field}
     getproperty(obj, field)
 end
 
+# Julia seems to prefers if types stay in the type domain the whole time like NamedTuple{(field,)}, instead of going through the value domain and constprop like (; field => val)
 @inline set(obj, l::PropertyLens{field}, val) where {field} = setproperties(obj, NamedTuple{(field,)}((val,)))
 @inline delete(obj::NamedTuple, l::PropertyLens{field}) where {field} = Base.structdiff(obj, NamedTuple{(field,)})
 @inline insert(obj::NamedTuple{KS}, l::PropertyLens{field}, val) where {KS, field} = NamedTuple{(KS..., field)}((values(obj)..., val))
