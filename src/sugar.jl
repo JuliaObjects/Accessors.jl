@@ -141,7 +141,7 @@ foldtree(op, init, ex::Expr) =
 
 need_dynamic_optic(ex) =
     foldtree(false, ex) do yes, x
-        yes || x === :end || (x === :begin) || x === :_
+        yes || x === :end || x === :begin || x == Expr(:end) || x == Expr(:begin) || x === :_
     end
 
 replace_underscore(ex, to) = postwalk(x -> x === :_ ? to : x, ex)
@@ -153,6 +153,15 @@ function lower_index(collection::Symbol, index, dim)
     )
     index = MacroTools.replace(
         index, :begin,
+        dim === nothing ? :($(Base.firstindex)($collection)) : :($(Base.firstindex)($collection, $dim))
+    )
+    # New syntax for begin/end in indexing expression, see https://github.com/JuliaLang/julia/pull/57368
+    index = MacroTools.replace(
+        index, Expr(:end),
+        dim === nothing ? :($(Base.lastindex)($collection)) : :($(Base.lastindex)($collection, $dim))
+    )
+    index = MacroTools.replace(
+        index, Expr(:begin),
         dim === nothing ? :($(Base.firstindex)($collection)) : :($(Base.firstindex)($collection, $dim))
     )
 end
