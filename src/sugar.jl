@@ -147,23 +147,13 @@ need_dynamic_optic(ex) =
 replace_underscore(ex, to) = postwalk(x -> x === :_ ? to : x, ex)
 
 function lower_index(collection::Symbol, index, dim)
-    index = MacroTools.replace(
-        index, :end,
-        dim === nothing ? :($(Base.lastindex)($collection)) : :($(Base.lastindex)($collection, $dim))
-    )
-    index = MacroTools.replace(
-        index, :begin,
-        dim === nothing ? :($(Base.firstindex)($collection)) : :($(Base.firstindex)($collection, $dim))
-    )
+    lasti = dim === nothing ? :($(Base.lastindex)($collection)) : :($(Base.lastindex)($collection, $dim))
+    firsti = dim === nothing ? :($(Base.firstindex)($collection)) : :($(Base.firstindex)($collection, $dim))
+    index = MacroTools.replace(index, :end, lasti)
+    index = MacroTools.replace(index, :begin, firsti)
     # New syntax for begin/end in indexing expression, see https://github.com/JuliaLang/julia/pull/57368
-    index = MacroTools.replace(
-        index, Expr(:end),
-        dim === nothing ? :($(Base.lastindex)($collection)) : :($(Base.lastindex)($collection, $dim))
-    )
-    index = MacroTools.replace(
-        index, Expr(:begin),
-        dim === nothing ? :($(Base.firstindex)($collection)) : :($(Base.firstindex)($collection, $dim))
-    )
+    index = MacroTools.replace(index, Expr(:end), lasti)
+    index = MacroTools.replace(index, Expr(:begin), firsti)
 end
 
 _secondarg(_, x) = x
