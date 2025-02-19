@@ -141,7 +141,7 @@ foldtree(op, init, ex::Expr) =
 
 need_dynamic_optic(ex) =
     foldtree(false, ex) do yes, x
-        yes || x === :end || x === :begin || x == Expr(:end) || x == Expr(:begin) || x === :_
+        yes || x ∈ (:end, :begin, Expr(:end), Expr(:begin), :_)
     end
 
 replace_underscore(ex, to) = postwalk(x -> x === :_ ? to : x, ex)
