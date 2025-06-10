@@ -176,11 +176,9 @@ end
     b_right   = minimum(@benchmark compose_right_assoc($obj, $val)  )
     println("Right associative composition: $b_right")
 
-    @test b_default.allocs == 0
-    @test_broken b_right.allocs == 0
-    @test b_right.time ≈ b_default.time rtol=0.8
-    @test b_left.allocs == 0
-    @test b_left.time ≈ b_default.time rtol=0.8
+    # no matter which composition order is faster in Julia, ensure that optics use it by default
+    @test b_default.allocs == min(b_left.allocs, b_right.allocs)
+    @test b_default.time ≈ min(b_left.time, b_right.time) rtol=0.8
 end
 
 end

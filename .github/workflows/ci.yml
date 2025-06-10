@@ -17,9 +17,6 @@ jobs:
           - ubuntu-latest
           - macOS-latest
           - windows-latest
-        exclude:
-          - os: macOS-latest # Apple Silicon
-            version: '1.6'
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
