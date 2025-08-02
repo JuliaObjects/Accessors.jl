@@ -5,6 +5,8 @@ using Accessors: test_getset_laws, test_modify_law
 using Accessors: compose, get_update_op
 using ConstructionBase: ConstructionBase
 using StaticNumbers: StaticNumbers, static
+using LinearAlgebra
+using Unitful
 
 struct T
     a
@@ -461,14 +463,29 @@ end
     @test sprint(show, (@optic log(_.a[2]))) == "(@o log(_.a[2]))"
     @test sprint(show, (@optic Tuple(_.a[2]))) == "(@o Tuple(_.a[2]))"
     @test sprint(show, (@optic log(_).a[2])) == "(@o _.a[2]) ∘ log"  # could be shorter, but difficult to dispatch correctly without piracy
-    @test sprint(show, (@optic log(_.a[2])); context=:compact => true) == "log(_.a[2])"
-    @test sprint(show, (@optic Base.tail(_.a[2])); context=:compact => true) == "tail(_.a[2])"  # non-exported function
-    @test sprint(show, (@optic Base.Fix2(_.a[2])); context=:compact => true) == "Fix2(_.a[2])"  # non-exported type
+    @test sprint(show, (@optic √log(_.a[2])); context=:compact => true) == "√ln(a[2])"
+    @test sprint(show, (@optic √(log(_.a[2]) + 1)); context=:compact => true) == "√(ln(a[2]) + 1)"
+    @test sprint(show, (@optic Base.tail(_.a[2])); context=:compact => true) == "tail(a[2])"  # non-exported function
+    @test sprint(show, (@optic Base.Fix2(_.a[2])); context=:compact => true) == "Fix2(a[2])"  # non-exported type
 
     # show_optic is reasonable even for types without special show_optic handling:
     o = Recursive(x->true, Properties())
     @test sprint(Accessors.show_optic, o) == "$o"
     @test sprint(Accessors.show_optic, (@o _.a) ∘ o) == "(@o _.a) ∘ $o"
+
+    # compact handling of specific functions
+    @test sprint(show, (@o splat(max)(_.a))) == "(@o splat(max)(_.a))"
+    @test sprint(show, (@o splat(max)(_.a)); context=:compact => true) == "max(a...)"
+    @test sprint(show, (@o abs(_.a))) == "(@o abs(_.a))"
+    @test sprint(show, (@o abs(_.a)); context=:compact => true) == "|a|"
+    @test sprint(show, (@o real(_.a))) == "(@o real(_.a))"
+    @test sprint(show, (@o real(_.a)); context=:compact => true) == "Re(a)"
+    @test sprint(show, (@o imag(_.a))) == "(@o imag(_.a))"
+    @test sprint(show, (@o imag(_.a)); context=:compact => true) == "Im(a)"
+    @test sprint(show, (@o norm(_.a))) == "(@o norm(_.a))"
+    @test sprint(show, (@o norm(_.a)); context=:compact => true) == "‖a‖"
+    @test sprint(show, (@o log10(ustrip(u"km", _.a)))) == "(@o log10(ustrip(km, _.a)))"
+    @test sprint(show, (@o log10(ustrip(u"km", _.a))); context=:compact => true) == "log₁₀(a [km])"
 end
 
 @testset "text/plain show" begin
