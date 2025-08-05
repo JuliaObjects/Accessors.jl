@@ -218,7 +218,12 @@ function parse_obj_optics(ex)
                    "an `Int`, `Symbol` or `String` literal, received `$property` instead.")
         ))
         obj, frontoptic = parse_obj_optics(front)
-        optic = :($PropertyLens{$(QuoteNode(property))}())
+        if property isa Union{Int,Symbol}
+            optic = :($PropertyLens{$(QuoteNode(property))}())
+        else
+            # For String and other types that can't be type parameters
+            optic = :($PropertyLensRuntime($(esc(property))))
+        end
     elseif @capture(ex, f_(front_))
         # regular function call
         obj, frontoptic = parse_obj_optics(front)
@@ -495,6 +500,7 @@ IndexLens(::Tuple{Properties}) = Properties()
 
 ### nice show() for optics
 _shortstring(prev, o::PropertyLens{field}) where {field} = "$prev.$field"
+_shortstring(prev, o::PropertyLensRuntime) = "$prev.$(o.propertyname)"
 _shortstring(prev, o::IndexLens) ="$prev[$(join(repr.(o.indices), ", "))]"
 _shortstring(prev, o::Union{Function,Type}) = _isoperator(o) ? "$(_fT_repr(o))$prev" : "$(_fT_repr(o))($prev)"
 _shortstring(prev, o::Base.Fix1) = _isoperator(o.f) ? "$(o.x) $(_fT_repr(o.f)) $prev" : "$(_fT_repr(o.f))($(o.x), $prev)"
@@ -544,7 +550,7 @@ function show_optic(io, optic)
     end
 end
 
-const _OpticsTypes = Union{IndexLens,PropertyLens,Elements,Properties}
+const _OpticsTypes = Union{IndexLens,PropertyLens,PropertyLensRuntime,Elements,Properties}
 
 Base.show(io::IO, optic::_OpticsTypes) = show_optic(io, optic)
 Base.show(io::IO, ::MIME"text/plain", optic::_OpticsTypes) = show(io, optic)
