@@ -99,6 +99,10 @@ end
         @test delete("абв", last) == "аб"
         @test delete("абв", @optic(first(_, 2))) == "в"
         @test delete("абв", @optic(last(_, 1))) == "аб"
+        @test delete("αβγδε", @optic(_[3])) == "αγδε"
+        @test delete("αβγδε", @optic(_[9])) == "αβγδ"
+        @test delete("αβγδε", @optic(_[1:0])) == "αβγδε"
+        @test delete("αβγδε", @optic(_[1:5])) == "δε"
 
         let A = [1,2,3]
             @test delete(A, @optic(_[2])) == [1, 3]

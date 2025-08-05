@@ -457,6 +457,14 @@ end
 @inline delete(obj::CartesianIndex, l::IndexLens{Tuple{Int}}) = delete(obj, l ∘ Tuple)
 @inline insert(obj::CartesianIndex, l::IndexLens{Tuple{Int}}, val) = insert(obj, l ∘ Tuple, val)
 
+function delete(s::AbstractString, l::IndexLens{<:Tuple{Union{Integer,UnitRange}}})
+    I = only(l.indices)
+    # these work for both single index and range:
+    i = prevind(s, first(I))
+    j = nextind(s, last(I))
+    return s[1:i] * s[j:end]
+end
+
 struct DynamicIndexLens{F}
     f::F
 end
