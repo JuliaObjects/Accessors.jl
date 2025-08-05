@@ -557,7 +557,7 @@ Base.show(io::IO, optic::ComposedFunction{typeof(!), <:_OpticsTypes}) = show_opt
 # debugging
 show_composition_order(optic) = (show_composition_order(stdout, optic); println())
 show_composition_order(io::IO, optic) = show(io, optic)
-function show_composition_order(io::IO, optic::ComposedOptic)
+function show_composition_order(io::IO, optic::ComposedFunction)
     print(io, "(")
     show_composition_order(io, optic.outer)
     print(io, " ∘  ")

@@ -126,9 +126,11 @@ julia> lens(obj)
 """
 opcompose
 
-const ComposedOptic{Outer,Inner} = ComposedFunction{Outer,Inner}
-outertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Outer
-innertype(::Type{ComposedOptic{Outer,Inner}}) where {Outer,Inner} = Inner
+# for backwards compatibility only:
+const ComposedOptic = ComposedFunction
+
+outertype(::Type{ComposedFunction{Outer,Inner}}) where {Outer,Inner} = Outer
+innertype(::Type{ComposedFunction{Outer,Inner}}) where {Outer,Inner} = Inner
 
 # TODO better name
 # also better way to organize traits will
@@ -151,7 +153,7 @@ end
 # so we choose this as the default trait
 OpticStyle(::Type{T}) where {T} = SetBased()
 
-function OpticStyle(::Type{ComposedOptic{O,I}}) where {O,I}
+function OpticStyle(::Type{ComposedFunction{O,I}}) where {O,I}
     composed_optic_style(OpticStyle(O), OpticStyle(I))
 end
 composed_optic_style(::SetBased, ::SetBased) = SetBased()
@@ -179,7 +181,7 @@ end
     modify(Returns(val), obj, optic)
 end
 
-@inline function _set(obj, optic::ComposedOptic, val, ::SetBased)
+@inline function _set(obj, optic::ComposedFunction, val, ::SetBased)
     inner_obj = optic.inner(obj)
     inner_val = set(inner_obj, optic.outer, val)
     set(obj, optic.inner, inner_val)
@@ -197,7 +199,7 @@ function _modify(f, obj, optic, ::ModifyBased)
     """)
 end
 
-function _modify(f, obj, optic::ComposedOptic, ::ModifyBased)
+function _modify(f, obj, optic::ComposedFunction, ::ModifyBased)
     otr = optic.outer
     inr = optic.inner
     modify(obj, inr) do o1
@@ -209,13 +211,13 @@ end
     set(obj, optic, f(optic(obj)))
 end
 
-function delete(obj, optic::ComposedOptic)
+function delete(obj, optic::ComposedFunction)
     modify(obj, optic.inner) do inner_obj
         delete(inner_obj, optic.outer)
     end
 end
 
-function insert(obj, optic::ComposedOptic, val)
+function insert(obj, optic::ComposedFunction, val)
     modify(obj, optic.inner) do inner_obj
         insert(inner_obj, optic.outer, val)
     end
