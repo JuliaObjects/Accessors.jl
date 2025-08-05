@@ -120,6 +120,16 @@ end
         @test delete( (a=1, b=(2, 3, 4)), @optic(first(_.b)) ) == (a=1, b=(3, 4))
         @test delete( "path/to/file", @optic(basename(_)) ) == "path/to"
         @test delete( "path/to/file", @optic(dirname(_)) ) == "file"
+        
+        # delete with Elements creates empty collections
+        @test delete((1, 2, 3), Elements()) === ()
+        @test delete([1, 2, 3], Elements()) == Int[]
+        @test delete(Set([1, 2, 3]), Elements()) == Set{Int}()
+        @test delete(Dict(1 => :a, 2 => :b), Elements()) == Dict{Int, Symbol}()
+        @test delete((a=1, b=2, c=3), Elements()) === NamedTuple()
+        # nested case: delete all elements from nested collections
+        nested_dict = Dict("a" => (1, 2, 3))
+        @test delete(nested_dict, @optic _["a"][∗]) == Dict("a" => ())
     end
 
     @testset "macro" begin
