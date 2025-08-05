@@ -368,6 +368,38 @@ end
     @test identity === @optic(_)
 end
 
+
+struct AnyProperties
+    data::Dict{Any, Any}
+end
+
+Base.:(==)(a::AnyProperties, b::AnyProperties) = a.data == b.data
+
+Base.getproperty(obj::AnyProperties, prop::Symbol) = prop === :data ? getfield(obj, :data) : obj.data[prop]
+Base.getproperty(obj::AnyProperties, prop) = obj.data[prop]
+
+Accessors.set(obj::AnyProperties, lens::PropertyLensRuntime, val) = @set obj.data[lens.propertyname] = val
+
+@testset "PropertyLensRuntime" begin
+    custom = AnyProperties(Dict("x" => 10, complex(1, 2) => 20, :z => 30))
+    lens_1 = @o _."x"
+    lens_2 = PropertyLensRuntime(complex(1, 2))
+    lens_3 = PropertyLensRuntime(:z)
+
+    @test lens_1(custom) == 10
+    @test lens_2(custom) == 20
+    @test lens_3(custom) == 30
+
+    @test set(custom, lens_1, 100) == AnyProperties(Dict("x" => 100, complex(1, 2) => 20, :z => 30))
+
+    # Test with @optic syntax on custom struct
+    @test (@set custom."x" = 30) == set(custom, lens_1, 30)
+
+    for l in [lens_1, lens_2, lens_3]
+        test_getset_laws(l, custom, "val", 50)
+    end
+end
+
 struct ABC{A,B,C}
     a::A
     b::B

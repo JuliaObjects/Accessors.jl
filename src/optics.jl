@@ -1,4 +1,4 @@
-export PropertyLens, IndexLens
+export PropertyLens, PropertyLensRuntime, IndexLens
 export set, modify, delete, insert, getall, setall
 export ∘, opcompose, var"⨟"
 export Elements, Recursive, If, Properties
@@ -400,6 +400,21 @@ end
 @inline delete(obj::Tuple, l::PropertyLens{field}) where {field} = delete(obj, IndexLens(field))
 @inline insert(obj::Tuple, l::PropertyLens{field}, val) where {field} = insert(obj, IndexLens(field), val)
 
+"""
+    PropertyLensRuntime(propertyname)
+
+Construct a lens for accessing a property `propertyname` of an object where the property name
+is stored as a runtime value rather than a type parameter. This is useful when the property
+name cannot be a type parameter (e.g., strings, arbitrary objects).
+
+Automatically supports getting a value, but `set` requires explicit support for each object type.
+"""
+struct PropertyLensRuntime{T}
+    propertyname::T
+end
+
+(l::PropertyLensRuntime)(obj) = getproperty(obj, l.propertyname)
+
 struct IndexLens{I<:Tuple}
     indices::I
 end
@@ -477,10 +492,10 @@ end
 
 
 Broadcast.broadcastable(
-    o::Union{PropertyLens,IndexLens,DynamicIndexLens,Elements,Properties,If,Recursive}
+    o::Union{PropertyLens,PropertyLensRuntime,IndexLens,DynamicIndexLens,Elements,Properties,If,Recursive}
 ) = Ref(o)
 
-Base.:(!)(f::Union{PropertyLens,IndexLens,DynamicIndexLens}) = (!) ∘ f
+Base.:(!)(f::Union{PropertyLens,PropertyLensRuntime,IndexLens,DynamicIndexLens}) = (!) ∘ f
 
 
 function make_salt(s64::UInt64)::UInt
