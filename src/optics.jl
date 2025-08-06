@@ -249,6 +249,10 @@ modify(f, obj, ::Elements) = map(f, obj)
 modify(f, obj::Set, ::Elements) = Set(f(p) for p in obj)
 modify(f, obj::Dict, ::Elements) = Dict(f(p)::Pair for p in obj)
 
+# delete all elements, creating an empty collection of the same type
+delete(obj::Union{Tuple, NamedTuple, AbstractVector, AbstractDict, AbstractSet}, ::Elements) = empty(obj)
+delete(obj::AbstractString, ::Elements) = ""
+
 """
     If(modify_condition)
 
