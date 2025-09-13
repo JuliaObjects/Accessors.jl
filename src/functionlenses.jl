@@ -92,6 +92,12 @@ end
 set(::Tuple, ::typeof(reverse), v) = reverse(Tuple(v))
 set(x::NamedTuple, ::typeof(reverse), v) = @set reverse(Tuple(x)) = v
 function set(x::AbstractVector, ::typeof(reverse), v)
+    res = similar(x, eltype(v))
+    res .= v
+    reverse!(res)
+    res
+end
+function set(x::AbstractVector, ::typeof(reverse), v::AbstractVector)
     res = similar(x, eltype(v), size(v))
     res .= v
     reverse!(res)
