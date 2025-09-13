@@ -11,7 +11,7 @@ Accessors.set(x::KeyedArray, f::Base.Fix2{typeof(axiskeys), Symbol}, v) = @set n
 
 Accessors.set(x::KeyedArray, ::typeof(AxisKeys.keyless_unname), v::AbstractArray) = KeyedArray(v; named_axiskeys(x)...)
 
-function set(x::AbstractVector, ::typeof(reverse), v::KeyedArray)
+function set(x::KeyedArray, ::typeof(reverse), v)
     res = similar(x, eltype(v))
     res .= v
     reverse!(res)
