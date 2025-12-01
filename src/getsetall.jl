@@ -113,7 +113,7 @@ _getall(obj, optics::Tuple{Any}) = getall(obj, only(optics))
 for N in [2:10; :(<: Any)]
     @eval function _getall(obj, optics::NTuple{$N,Any})
         _reduce_concat(
-            map(getall(obj, last(optics))) do obj
+            mapspec(getall(obj, last(optics))) do obj
                 _getall(obj, Base.front(optics))
             end
         )
@@ -125,7 +125,7 @@ end
 _setall(obj, optics::Tuple{Any}, vs) = setall(obj, only(optics), vs)
 for N in [2:10; :(<: Any)]
     @eval function _setall(obj, optics::NTuple{$N,Any}, vs)
-        setall(obj, last(optics), map(getall(obj, last(optics)), vs) do obj, vss
+        setall(obj, last(optics), mapspec(getall(obj, last(optics)), vs) do obj, vss
             _setall(obj, Base.front(optics), vss)
         end)
     end
@@ -134,11 +134,21 @@ end
 
 # helper functions
 
-_concat(a::Tuple, b::Tuple) = (a..., b...)
+# before using @ntuple, tried: map, broadcast, ntuple function
+# all of these suffer from catastrophic performance drop at some point, around 32 elements
+@generated _concat(a::NTuple{N,Any}, b::NTuple{M,Any}) where {N,M} =
+	:(Base.Cartesian.@ntuple $(N + M) i -> i ≤ $N ? a[i] : b[i - $N])
+
 _concat(a::Tuple, b::AbstractVector) = vcat(collect(a), b)
 _concat(a::AbstractVector, b::Tuple) = vcat(a, collect(b))
 _concat(a::AbstractVector, b::AbstractVector) = vcat(a, b)
-_reduce_concat(xs::Tuple) = reduce(_concat, xs; init=())
+@generated function _reduce_concat(xs::NTuple{N,Any}) where {N}
+	expr = :(())
+	for i in 1:N
+		expr = :(_concat($expr, xs[$i]))
+	end
+	expr
+end
 _reduce_concat(xs::AbstractVector) = reduce(append!, xs; init=eltype(eltype(xs))[])
 # fast path:
 _reduce_concat(xs::Tuple{AbstractVector, Vararg{AbstractVector}}) = reduce(vcat, xs)
@@ -150,7 +160,7 @@ _staticlength(x::AbstractVector) = length(x)
 getall_lengths(obj, optics::Tuple{Any}) = _staticlength(getall(obj, only(optics)))
 for N in [2:10; :(<: Any)]
     @eval getall_lengths(obj, optics::NTuple{$N,Any}) =
-        map(getall(obj, last(optics))) do o
+        mapspec(getall(obj, last(optics))) do o
             getall_lengths(o, Base.front(optics))
         end
 end
@@ -195,7 +205,7 @@ for i in 2:10
         elems, elemstail = splitelems(vs, n)
         reshead = to_nested_shape(elems, lss, $(Val(i - 1)))
         restail = to_nested_shape(elemstail, Base.tail(ls), $(Val(i)))
-        return (reshead, restail...)
+        return _concat((reshead,), restail)
     end
 
     @eval function to_nested_shape(vs, ls::Vector, ::Val{$i})
@@ -209,3 +219,10 @@ for i in 2:10
         end
     end
 end
+
+# like Base map(), but always specializes for tuples, no matter the heuristics
+# Accessors are notoriously heavy for inference, Julia compiler often stops specializing too early, and map() ends up among the first sactifices
+# note: tests may pass with regular map(), but still be very careful removing this optimization!
+mapspec(f, xs...) = map(f, xs...)
+@generated mapspec(f, t::NTuple{N,Any}) where {N} = :(Base.Cartesian.@ntuple $N i -> f(t[i]))
+@generated mapspec(f, t1::NTuple{N,Any}, t2::NTuple{N,Any}) where {N} = :(Base.Cartesian.@ntuple $N i -> f(t1[i], t2[i]))
