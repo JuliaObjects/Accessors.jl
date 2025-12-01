@@ -21,8 +21,8 @@ delete(obj::AbstractRange, o::Base.Fix2{typeof(first)}) = obj[begin+o.x:end]
 delete(obj::AbstractRange, o::Base.Fix2{typeof(last)}) = obj[begin:end-o.x]
 
 
-set(obj::Tuple, ::typeof(Base.front), val::Tuple) = (val..., last(obj))
-set(obj::Tuple, ::typeof(Base.tail), val::Tuple) = (first(obj), val...)
+set(obj::Tuple, ::typeof(Base.front), val::Tuple) = _concat(val, (last(obj),))
+set(obj::Tuple, ::typeof(Base.tail), val::Tuple) = _concat((first(obj),), val)
 
 function set(obj, ::typeof(only), val)
     only(obj) # error check
