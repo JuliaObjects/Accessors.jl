@@ -15,6 +15,12 @@ Base.@propagate_inbounds function setindex(xs::AbstractArray, v, I_raw...)
     return ys
 end
 
+Base.@propagate_inbounds function setindex(xs::AbstractArray, v, ::Colon)
+    ys = similar(xs, eltype(v))
+    ys[:] = v
+    return ys
+end
+
 Base.@propagate_inbounds function setindex(d0::AbstractDict, v, k)
     K = promote_type(keytype(d0), typeof(k))
     V = promote_type(valtype(d0), typeof(v))
