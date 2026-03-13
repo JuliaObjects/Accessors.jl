@@ -40,6 +40,10 @@ end
     @test Accessors.setindex([1, 2, 3], [4, 5, 6], :) ==ₜ [4, 5, 6]
     @test @inferred(Accessors.setindex([1, 2, 3], ["a", "b", "c"], :)) ==ₜ ["a", "b", "c"]
 
+    # sort: replacing all elements with different eltype
+    @test @inferred(set([3, 1, 2], @optic(sort(_)), ["a", "b", "c"])) ==ₜ ["c", "a", "b"]
+    @test @inferred(set([3, 1, 2], @optic(sort(_)), [1.0, 2.0, 3.0])) ==ₜ [3.0, 1.0, 2.0]
+
     d = Dict(:a => 1, :b => 2)
     @test_throws MethodError Base.setindex(d, 10, :a)
     @test Accessors.setindex(d, 10, :a) == Dict(:a=>10, :b=>2)
