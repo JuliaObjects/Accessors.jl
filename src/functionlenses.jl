@@ -82,11 +82,7 @@ set(obj::Type{<:Dict{K}}, lens::typeof(valtype), ::Type{V}) where {K,V} = Dict{K
 set(obj, ::typeof(size), v::Tuple) = reshape(obj, v)
 
 # set vec(): keep array shape and type, change its values
-function set(x::AbstractArray, ::typeof(vec), v::AbstractVector)
-    res = similar(x, eltype(v))
-    vec(res) .= v
-    res
-end
+set(x::AbstractArray, ::typeof(vec), v::AbstractVector) = _setindex_fresh(x, v, :)
 
 # set reverse(): keep collection type, change its values
 set(::Tuple, ::typeof(reverse), v) = reverse(Tuple(v))
@@ -112,8 +108,11 @@ delete(obj, o::Base.Fix1{typeof(filter)}) = filter(!o.x, obj)
 set(obj, o::typeof(skipmissing), val) = @set obj |> filter(!ismissing, _) = collect(val)
 modify(f, obj, o::typeof(skipmissing)) = @modify(f, obj |> filter(!ismissing, _))
 
-set(obj, ::typeof(sort), val) = @set obj[sortperm(obj)] = val
-modify(f, obj, ::typeof(sort)) = @modify(f, obj[sortperm(obj)])
+set(obj, ::typeof(sort), val) = _setindex_fresh(obj, val, sortperm(obj))
+function modify(f, obj, ::typeof(sort))
+    perm = sortperm(obj)
+    _setindex_fresh(obj, f(obj[perm]), perm)
+end
 
 ################################################################################
 ##### os
