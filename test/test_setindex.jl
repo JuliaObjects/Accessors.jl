@@ -34,6 +34,12 @@ end
     @test Accessors.setindex([1. 2; 3 4], zeros(2), 1, :) ==ₜ [0. 0; 3 4]
     @test Accessors.setindex([[i, j] for i in 1:2, j in 1:2], [im, im], 1, :) ==ₜ Any[[im] [im]; [[2, 1]] [[2, 2]]]
 
+    # Colon: replacing all elements uses eltype(v), not promote_type
+    @test Accessors.setindex([1, 2, 3], ["a", "b", "c"], :) ==ₜ ["a", "b", "c"]
+    @test Accessors.setindex([1, 2, 3], [1.0, 2.0, 3.0], :) ==ₜ [1.0, 2.0, 3.0]
+    @test Accessors.setindex([1, 2, 3], [4, 5, 6], :) ==ₜ [4, 5, 6]
+    @test @inferred(Accessors.setindex([1, 2, 3], ["a", "b", "c"], :)) ==ₜ ["a", "b", "c"]
+
     d = Dict(:a => 1, :b => 2)
     @test_throws MethodError Base.setindex(d, 10, :a)
     @test Accessors.setindex(d, 10, :a) == Dict(:a=>10, :b=>2)
