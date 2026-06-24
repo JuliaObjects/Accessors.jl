@@ -366,7 +366,6 @@ end
 _macro_expression_result(obj, ret; overwrite) =
     if overwrite
         @assert Meta.isexpr(obj, :escape)
-        only(obj.args) isa Symbol || throw(ArgumentError("Rebinding macros can only be used with plain variables as targets. Got expression: $obj"))
         return :($obj = $ret)
     else
         return ret
