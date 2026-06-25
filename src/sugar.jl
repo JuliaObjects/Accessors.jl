@@ -366,6 +366,8 @@ end
 _macro_expression_result(obj, ret; overwrite) =
     if overwrite
         @assert Meta.isexpr(obj, :escape)
+        target = only(obj.args)
+        Meta.isexpr(target, :call) && throw(ArgumentError("Rebinding macros cannot use function calls as targets. Got expression: $target"))
         return :($obj = $ret)
     else
         return ret
