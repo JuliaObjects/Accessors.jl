@@ -153,11 +153,25 @@ end
     @test (@set $(x[2]) + 2 = 100) == 98
     @test (@set first($x, 2) = [10, 20]) == [10, 20, 3]
 
-    @test_throws Exception eval(:(@reset $(x[2]) = 100))
-    @test_throws Exception eval(:(@reset $(x)[2] = 200))
-
     # ensure the object itself didn't change:
     @test x_orig === x == [1, 2, 3]
+
+    x = [1, 2, 3]
+    x_orig = x
+    @reset $(x[2]) = 100
+    @test x === x_orig == [1, 100, 3]
+
+    x = [1, 2, 3]
+    x_orig = x
+    @reset x[2] = 200
+    @test x == [1, 200, 3]
+    @test x_orig == [1, 2, 3]
+
+    target = Ref((nestedprop=1, other=2))
+    target_orig = target
+    @reset $(target[]).nestedprop = 100
+    @test target === target_orig
+    @test target[] === (nestedprop=100, other=2)
 end
 
 
