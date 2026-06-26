@@ -32,6 +32,10 @@ Base.@propagate_inbounds function setindex(d0::AbstractDict, v, k)
     return d
 end
 
+function setindex(d::Base.ImmutableDict, v, k)
+    Base.ImmutableDict(d, k => v)
+end
+
 # may be added to Base in https://github.com/JuliaLang/julia/pull/46453
 @inline function setindex(t::Tuple, v, inds::AbstractVector{<:Integer})
     ntuple(length(t)) do i

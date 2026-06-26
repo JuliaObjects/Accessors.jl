@@ -53,6 +53,10 @@ end
     @test Accessors.setindex(d, 30, "c") ==ₜ Dict(:a=>1, :b=>2, "c"=>30)
     @test Accessors.setindex(d, 10.0, :a) ==ₜ Dict(:a=>10.0, :b=>2.0)
 
+    d = Base.ImmutableDict(:a => 1, :b => 2)
+    @test @set(d[:a] = 3) == Base.ImmutableDict(:a => 1, :b => 2, :a => 3)
+    @test @set(d[:c] = 3) == Base.ImmutableDict(:a => 1, :b => 2, :c => 3)
+
     nt = (a=1, b='2')
     @test @set(nt[:a] = "abc") == (a="abc", b='2')
     @test @set(nt[1] = "abc") == (a="abc", b='2')
