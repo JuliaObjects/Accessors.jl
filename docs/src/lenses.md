@@ -7,7 +7,7 @@ Accessors.jl is build around so called lenses. A Lens allows to access or replac
 ```jldoctest
 julia> using Accessors
 
-julia> struct T;a;b; end
+julia> struct T a; b end
 
 julia> obj = T("AA", "BB");
 
