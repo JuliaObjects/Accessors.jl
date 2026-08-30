@@ -128,7 +128,6 @@ end
 This function can be used to create a customized variant of [`@modify`](@ref).
 See also [`opticmacro`](@ref), [`setmacro`](@ref).
 """
-
 function modifymacro(optictransform, f, obj_optic)
     f = esc(f)
     obj, optic = parse_obj_optic(obj_optic)
