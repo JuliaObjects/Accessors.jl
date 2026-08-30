@@ -188,6 +188,7 @@ end
     @test set([1, 2], reverse, (3, 4)) == [4, 3]
     @test set((1, 2), reverse, [3, 4]) === (4, 3)
     @test set((a=1, b=2), reverse, [3, 4]) === (a=4, b=3)
+    @test set([1, 2, 3], reverse, [5, 6]) == [6, 5]
 
     C = KeyedArray([1,2,3], x=[:a, :b, :c])
     @test (@set vec(C) = [5,6,7])::KeyedArray == KeyedArray([5,6,7], x=[:a, :b, :c])

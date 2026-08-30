@@ -93,6 +93,12 @@ function set(x::AbstractVector, ::typeof(reverse), v)
     reverse!(res)
     res
 end
+function set(x::AbstractVector, ::typeof(reverse), v::AbstractVector)
+    res = similar(x, eltype(v), size(v))
+    res .= v
+    reverse!(res)
+    res
+end
 
 
 set(obj, o::Base.Fix1{typeof(map)}, val) = map((ob, v) -> set(ob, o.x, v), obj, val)
