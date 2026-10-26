@@ -474,7 +474,8 @@ ConstructionBase.constructorof(::Type{CustomProperties}) = error()
 end
 
 @testset "issue #83" begin
-    @test_throws ArgumentError Accessors.opticmacro(identity, :(_.[:a]))
+    # Julia 1.14 rejects `_.[:a]` when parsing, so build the expression it used to parse to
+    @test_throws ArgumentError Accessors.opticmacro(identity, Expr(:., :_, QuoteNode(Expr(:vect, QuoteNode(:a)))))
 end
 
 @testset "|>" begin
@@ -572,11 +573,11 @@ end
         @test item === item2
     end
     
-    # base Julia, we cannot do anything here:
+    # before Julia 1.14, base Julia showed this in a form that does not parse back
     item = @optic _ + 1
     buf = IOBuffer()
     show(buf, item)
-    @test_broken (item === eval(Meta.parse(String(take!(buf)))); true)
+    @test (item === eval(Meta.parse(String(take!(buf)))); true) broken=VERSION < v"1.14.0-DEV.1701"
 end
 
 @testset "@modify" begin
